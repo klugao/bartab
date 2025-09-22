@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { PlusIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { tabsApi, customersApi } from '../services/api';
 import type { Tab, Customer } from '../types';
