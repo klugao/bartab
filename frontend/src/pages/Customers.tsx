@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, TrashIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { customersApi } from '../services/api';
 import type { Customer, CreateCustomerDto } from '../types';
+import IconInput from '../components/IconInput';
 
 const Customers = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
@@ -17,6 +20,15 @@ const Customers = () => {
   useEffect(() => {
     loadCustomers();
   }, []);
+
+  useEffect(() => {
+    const filtered = customers.filter(customer =>
+      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.phone?.includes(searchTerm)
+    );
+    setFilteredCustomers(filtered);
+  }, [customers, searchTerm]);
 
   const loadCustomers = async () => {
     try {
@@ -94,15 +106,35 @@ const Customers = () => {
           onClick={openNewForm}
           className="btn-primary inline-flex items-center"
         >
-          <PlusIcon className="h-5 w-5 mr-2" />
+          <PlusIcon className="h-3.5 w-3.5 mr-1.5" />
           Novo Cliente
         </button>
+      </div>
+
+      {/* Campo de busca */}
+      <div className="mb-6">
+        <IconInput
+          icon={<MagnifyingGlassIcon />}
+          placeholder="Buscar clientes por nome, email ou telefone..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+          iconSize="md"
+        />
+        {searchTerm && (
+          <p className="text-sm text-gray-600 mt-2">
+            {filteredCustomers.length} cliente(s) encontrado(s) de {customers.length} total
+          </p>
+        )}
       </div>
 
       {/* Lista de clientes */}
       <div className="card">
         {customers.length === 0 ? (
           <p className="text-gray-500 text-center py-8">Nenhum cliente cadastrado</p>
+        ) : filteredCustomers.length === 0 ? (
+          <p className="text-gray-500 text-center py-8">
+            Nenhum cliente encontrado com "{searchTerm}"
+          </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -126,7 +158,7 @@ const Customers = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {customers.map((customer) => (
+                {filteredCustomers.map((customer) => (
                   <tr key={customer.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
@@ -153,18 +185,20 @@ const Customers = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-1">
                         <button
                           onClick={() => handleEdit(customer)}
-                          className="text-primary-600 hover:text-primary-900"
+                          className="p-2 text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded-md transition-colors"
+                          title="Editar cliente"
                         >
-                          <PencilIcon className="h-4 w-4" />
+                          <PencilIcon className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => handleDelete(customer.id)}
-                          className="text-red-600 hover:text-red-900"
+                          className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors"
+                          title="Excluir cliente"
                         >
-                          <TrashIcon className="h-4 w-4" />
+                          <TrashIcon className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     </td>
@@ -178,8 +212,8 @@ const Customers = () => {
 
       {/* Modal do formulário */}
       {showForm && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="modal-overlay">
+          <div className="modal-content p-6">
             <h3 className="text-lg font-medium mb-4">
               {editingCustomer ? 'Editar Cliente' : 'Novo Cliente'}
             </h3>

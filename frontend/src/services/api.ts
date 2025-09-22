@@ -52,13 +52,36 @@ export const itemsApi = {
 
 // Tabs API
 export const tabsApi = {
-  open: (data: CreateTabDto) => api.post<Tab>('/tabs', data).then(res => res.data),
+  open: (data: CreateTabDto) => {
+    console.log('tabsApi.open - dados enviados:', JSON.stringify(data, null, 2));
+    return api.post<Tab>('/tabs', data).then(res => {
+      console.log('tabsApi.open - resposta recebida:', JSON.stringify(res.data, null, 2));
+      return res.data;
+    });
+  },
   getOpen: () => api.get<Tab[]>('/tabs').then(res => res.data),
-  getById: (id: string) => api.get<Tab>(`/tabs/${id}`).then(res => res.data),
-  addItem: (tabId: string, data: AddItemDto) => api.post<TabItem>(`/tabs/${tabId}/items`, data).then(res => res.data),
-  removeItem: (tabId: string, tabItemId: string) => api.delete(`/tabs/${tabId}/items/${tabItemId}`),
-  addPayment: (tabId: string, data: AddPaymentDto) => api.post<Payment>(`/tabs/${tabId}/payments`, data).then(res => res.data),
+  getClosed: () => api.get<Tab[]>('/tabs/closed').then(res => res.data),
+  getById: (id: string) => {
+    console.log('tabsApi.getById - Buscando conta:', id);
+    return api.get<Tab>(`/tabs/${id}`).then(res => res.data);
+  },
+  addItem: (tabId: string, data: AddItemDto) => {
+    console.log('tabsApi.addItem - Usando endpoint que funciona:', { tabId, ...data });
+    return api.post<TabItem>('/tabs/add-item', { tabId, ...data }).then(res => res.data);
+  },
+  removeItem: (tabId: string, tabItemId: string) => {
+    console.log('tabsApi.removeItem - Usando endpoint que funciona:', { tabId, tabItemId });
+    return api.post('/tabs/remove-item', { tabId, tabItemId });
+  },
+  addPayment: (tabId: string, data: AddPaymentDto) => {
+    console.log('tabsApi.addPayment - Enviando pagamento:', { tabId, ...data });
+    return api.post<Payment>('/tabs/add-payment', { tabId, ...data }).then(res => res.data);
+  },
   close: (id: string) => api.patch<Tab>(`/tabs/${id}/close`).then(res => res.data),
+  delete: (id: string) => {
+    console.log('tabsApi.delete - Usando endpoint que funciona:', id);
+    return api.post('/tabs/delete-tab', { tabId: id });
+  },
 };
 
 export default api;

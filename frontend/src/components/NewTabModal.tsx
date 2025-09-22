@@ -17,6 +17,7 @@ const NewTabModal = ({ isOpen, onClose, onConfirm }: NewTabModalProps) => {
   useEffect(() => {
     if (isOpen) {
       loadCustomers();
+      setSelectedCustomerId(''); // Reset selection when opening
     }
   }, [isOpen]);
 
@@ -30,26 +31,39 @@ const NewTabModal = ({ isOpen, onClose, onConfirm }: NewTabModalProps) => {
   };
 
   const handleConfirm = () => {
+    console.log('NewTabModal.handleConfirm - selectedCustomerId:', selectedCustomerId);
+    console.log('NewTabModal.handleConfirm - selectedCustomerId type:', typeof selectedCustomerId);
+    console.log('NewTabModal.handleConfirm - selectedCustomerId length:', selectedCustomerId?.length);
     setLoading(true);
-    onConfirm(selectedCustomerId || undefined);
+    const customerId = selectedCustomerId && selectedCustomerId.trim() !== '' ? selectedCustomerId : undefined;
+    console.log('NewTabModal.handleConfirm - customerId final:', customerId);
+    onConfirm(customerId);
     setLoading(false);
+    // Reset after confirm
+    setSelectedCustomerId('');
+  };
+
+  const handleClose = () => {
+    setSelectedCustomerId('');
+    setLoading(false);
+    onClose();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+    <div className="modal-overlay">
+      <div className="modal-content p-6">
         <div className="mt-3">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-gray-900">
               Nova Conta
             </h3>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="text-gray-400 hover:text-gray-600"
             >
-              <XMarkIcon className="h-6 w-6" />
+              <XMarkIcon className="h-4 w-4" />
             </button>
           </div>
 
@@ -73,7 +87,7 @@ const NewTabModal = ({ isOpen, onClose, onConfirm }: NewTabModalProps) => {
 
           <div className="flex space-x-3">
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="btn-secondary flex-1"
               disabled={loading}
             >
