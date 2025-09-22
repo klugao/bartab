@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import type { AddPaymentDto, PaymentMethod } from '../types';
+import type { AddPaymentDto } from '../types';
+import { PaymentMethod } from '../types';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -41,8 +42,8 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, total }: PaymentModalProps) 
   ];
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+    <div className="modal-overlay">
+      <div className="modal-content p-6">
         <div className="mt-3">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-medium text-gray-900">
@@ -52,7 +53,7 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, total }: PaymentModalProps) 
               onClick={handleClose}
               className="text-gray-400 hover:text-gray-600"
             >
-              <XMarkIcon className="h-6 w-6" />
+              <XMarkIcon className="h-4 w-4" />
             </button>
           </div>
 
@@ -78,7 +79,7 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, total }: PaymentModalProps) 
                     onClick={() => setMethod(pm.value)}
                     className={`p-3 border rounded-lg text-center transition-colors ${
                       method === pm.value
-                        ? 'border-primary-500 bg-primary-50 text-primary-700'
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
                         : 'border-gray-300 hover:border-gray-400'
                     }`}
                   >

@@ -17,7 +17,7 @@ const Layout = () => {
         <div className="container">
           <div className="nav">
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <Bars3Icon style={{ width: '2rem', height: '2rem', color: '#2563eb' }} />
+              <Bars3Icon style={{ width: '1.25rem', height: '1.25rem', color: '#2563eb' }} />
               <h1 style={{ marginLeft: '0.75rem', fontSize: '1.25rem', fontWeight: '600' }}>
                 Bartab
               </h1>
@@ -31,7 +31,7 @@ const Layout = () => {
                     to={item.href}
                     className={`nav-link ${isActive ? 'active' : ''}`}
                   >
-                    <item.icon style={{ width: '1.25rem', height: '1.25rem', marginRight: '0.25rem' }} />
+                    <item.icon style={{ width: '0.875rem', height: '0.875rem', marginRight: '0.25rem' }} />
                     {item.name}
                   </Link>
                 );

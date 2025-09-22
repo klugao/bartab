@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PlusIcon, TrashIcon, CreditCardIcon } from '@heroicons/react/24/outline';
 import { tabsApi, itemsApi } from '../services/api';
-import type { Tab, Item, AddItemDto, AddPaymentDto, PaymentMethod } from '../types';
+import type { Tab, Item, AddItemDto, AddPaymentDto } from '../types';
+import { PaymentMethod } from '../types';
 import PaymentModal from '../components/PaymentModal';
 
 const TabDetail = () => {
@@ -67,7 +68,16 @@ const TabDetail = () => {
     try {
       await tabsApi.addPayment(id!, paymentData);
       setShowPaymentModal(false);
-      loadTab(); // Recarregar dados da conta
+      
+      // Recarregar dados da conta para verificar se foi fechada
+      const updatedTab = await tabsApi.getById(id!);
+      
+      // Se a conta foi fechada, voltar para home
+      if (updatedTab.status === 'CLOSED') {
+        navigate('/');
+      } else {
+        loadTab(); // Recarregar dados se ainda estiver aberta
+      }
     } catch (error) {
       console.error('Erro ao processar pagamento:', error);
     }
@@ -113,36 +123,58 @@ const TabDetail = () => {
           <p className="text-gray-600">Cliente: {customerName}</p>
         </div>
         <div className="flex space-x-3">
-          <button
-            onClick={() => setShowAddItemModal(true)}
-            className="btn-primary inline-flex items-center"
-          >
-            <PlusIcon className="h-5 w-5 mr-2" />
-            Adicionar Item
-          </button>
-          <button
-            onClick={() => setShowPaymentModal(true)}
-            className="btn-primary inline-flex items-center"
-            disabled={tab.status === 'CLOSED'}
-          >
-            <CreditCardIcon className="h-5 w-5 mr-2" />
-            Pagar
-          </button>
+          {tab.status === 'OPEN' ? (
+            <>
+              <button
+                onClick={() => setShowAddItemModal(true)}
+                className="btn-primary inline-flex items-center"
+              >
+                <PlusIcon className="h-3.5 w-3.5 mr-1.5" />
+                Adicionar Produto
+              </button>
+              <button
+                onClick={() => setShowPaymentModal(true)}
+                className="btn-primary inline-flex items-center"
+              >
+                <CreditCardIcon className="h-3.5 w-3.5 mr-1.5" />
+                Pagar
+              </button>
+            </>
+          ) : (
+            <div className="px-4 py-2 bg-gray-100 text-gray-600 rounded-md text-sm">
+              Esta conta foi finalizada e não pode mais ser modificada
+            </div>
+          )}
         </div>
       </div>
 
       {/* Status da conta */}
       <div className="mb-6">
-        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-          tab.status === 'OPEN' 
-            ? 'bg-green-100 text-green-800' 
-            : 'bg-gray-100 text-gray-800'
-        }`}>
-          {tab.status === 'OPEN' ? 'Aberta' : 'Fechada'}
-        </span>
-        <span className="ml-4 text-sm text-gray-500">
-          Aberta em: {new Date(tab.opened_at).toLocaleString('pt-BR')}
-        </span>
+        <div className="flex items-center justify-between">
+          <div>
+            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+              tab.status === 'OPEN' 
+                ? 'bg-green-100 text-green-800' 
+                : 'bg-gray-100 text-gray-800'
+            }`}>
+            </span>
+            <span className="ml-4 text-sm text-gray-500">
+              Aberta em: {new Date(tab.opened_at).toLocaleString('pt-BR')}
+            </span>
+          </div>
+          {tab.status === 'CLOSED' && (
+            <div className="text-sm text-gray-500">
+              Finalizada em: {tab.closed_at ? new Date(tab.closed_at).toLocaleString('pt-BR') : 'Data não disponível'}
+            </div>
+          )}
+        </div>
+        {tab.status === 'CLOSED' && (
+          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-sm text-blue-800">
+              ✓ Esta conta foi finalizada. Todos os pagamentos foram processados e a conta está encerrada.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Lista de itens */}
@@ -155,19 +187,20 @@ const TabDetail = () => {
             {tab.tabItems.map((tabItem) => (
               <div key={tabItem.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                 <div>
-                  <span className="font-medium">{tabItem.item.name}</span>
+                  <span className="font-medium">{tabItem.item.name} </span>
                   <span className="text-gray-500 ml-2">
-                    x{tabItem.qty} @ R$ {parseFloat(tabItem.unit_price).toFixed(2)}
+                    - {tabItem.qty} UN  - R$ {parseFloat(tabItem.unit_price).toFixed(2)}
                   </span>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <span className="font-semibold">R$ {parseFloat(tabItem.total).toFixed(2)}</span>
+                <div className="flex items-center space-x-3"><br/>
+                  <span className="font-semibold">TOTAL: R$ {parseFloat(tabItem.total).toFixed(2)}</span>
                   {tab.status === 'OPEN' && (
                     <button
                       onClick={() => handleRemoveItem(tabItem.id)}
-                      className="text-red-600 hover:text-red-800"
+                      className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors"
+                      title="Remover item da conta"
                     >
-                      <TrashIcon className="h-5 w-5" />
+                      <TrashIcon className="h-3.5 w-3.5" />
                     </button>
                   )}
                 </div>
@@ -180,7 +213,7 @@ const TabDetail = () => {
       {/* Total */}
       <div className="card mb-6">
         <div className="flex justify-between items-center">
-          <span className="text-lg font-medium">Total da Conta:</span>
+          <span className="text-lg font-medium">Total da conta: </span>
           <span className="text-2xl font-bold text-primary-600">
             R$ {total.toFixed(2)}
           </span>
@@ -198,10 +231,10 @@ const TabDetail = () => {
       </div>
 
       {/* Modal para adicionar item */}
-      {showAddItemModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <h3 className="text-lg font-medium mb-4">Adicionar Item</h3>
+      {showAddItemModal && tab.status === 'OPEN' && (
+        <div className="modal-overlay">
+          <div className="modal-content p-6">
+            <h3 className="text-lg font-medium mb-4">Adicionar Produto</h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -261,7 +294,7 @@ const TabDetail = () => {
 
       {/* Modal de pagamento */}
       <PaymentModal
-        isOpen={showPaymentModal}
+        isOpen={showPaymentModal && tab.status === 'OPEN'}
         onClose={() => setShowPaymentModal(false)}
         onConfirm={handlePayment}
         total={total}

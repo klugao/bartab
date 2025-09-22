@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon } from '@heroicons/react/20/solid';
 import { itemsApi } from '../services/api';
 import type { Item, CreateItemDto } from '../types';
+import IconInput from '../components/IconInput';
 
 const Items = () => {
   const [items, setItems] = useState<Item[]>([]);
+  const [filteredItems, setFilteredItems] = useState<Item[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
@@ -16,6 +20,13 @@ const Items = () => {
   useEffect(() => {
     loadItems();
   }, []);
+
+  useEffect(() => {
+    const filtered = items.filter(item =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredItems(filtered);
+  }, [items, searchTerm]);
 
   const loadItems = async () => {
     try {
@@ -103,15 +114,35 @@ const Items = () => {
           onClick={openNewForm}
           className="btn-primary inline-flex items-center"
         >
-          <PlusIcon className="h-5 w-5 mr-2" />
+          <PlusIcon className="h-3.5 w-3.5 mr-1.5" />
           Novo Produto
         </button>
+      </div>
+
+      {/* Campo de busca */}
+      <div className="mb-6">
+        <IconInput
+          icon={<MagnifyingGlassIcon />}
+          placeholder="Buscar produtos por nome..."
+          value={searchTerm}
+          onChange={setSearchTerm}
+          iconSize="md"
+        />
+        {searchTerm && (
+          <p className="text-sm text-gray-600 mt-2">
+            {filteredItems.length} produto(s) encontrado(s) de {items.length} total
+          </p>
+        )}
       </div>
 
       {/* Lista de itens */}
       <div className="card">
         {items.length === 0 ? (
           <p className="text-gray-500 text-center py-8">Nenhum produto cadastrado</p>
+        ) : filteredItems.length === 0 ? (
+          <p className="text-gray-500 text-center py-8">
+            Nenhum produto encontrado com "{searchTerm}"
+          </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -132,7 +163,7 @@ const Items = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {items.map((item) => (
+                {filteredItems.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
@@ -154,28 +185,30 @@ const Items = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => handleEdit(item)}
-                          className="text-primary-600 hover:text-primary-900"
-                        >
-                          <PencilIcon className="h-4 w-4" />
-                        </button>
-                        {item.active ? (
-                          <button
-                            onClick={() => handleDeactivate(item.id)}
-                            className="text-yellow-600 hover:text-yellow-900"
-                            title="Desativar"
-                          >
-                            <EyeSlashIcon className="h-4 w-4" />
-                          </button>
-                        ) : null}
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </button>
+                      <div className="flex space-x-1">
+                       <button
+                         onClick={() => handleEdit(item)}
+                         className="p-2 text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded-md transition-colors"
+                         title="Editar item"
+                       >
+                         <PencilIcon className="h-3.5 w-3.5" />
+                       </button>
+                       {item.active ? (
+                         <button
+                           onClick={() => handleDeactivate(item.id)}
+                           className="p-2 text-yellow-600 hover:text-yellow-900 hover:bg-yellow-50 rounded-md transition-colors"
+                           title="Desativar item"
+                         >
+                           <EyeSlashIcon className="h-3.5 w-3.5" />
+                         </button>
+                       ) : null}
+                       <button
+                         onClick={() => handleDelete(item.id)}
+                         className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors"
+                         title="Excluir item"
+                       >
+                         <TrashIcon className="h-3.5 w-3.5" />
+                       </button>
                       </div>
                     </td>
                   </tr>
@@ -188,8 +221,8 @@ const Items = () => {
 
       {/* Modal do formulário */}
       {showForm && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div className="modal-overlay">
+          <div className="modal-content p-6">
             <h3 className="text-lg font-medium mb-4">
               {editingItem ? 'Editar Item' : 'Novo Item'}
             </h3>

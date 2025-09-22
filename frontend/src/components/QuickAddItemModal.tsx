@@ -1,0 +1,150 @@
+import { useState, useEffect } from 'react';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import { itemsApi } from '../services/api';
+import type { Item } from '../types';
+
+interface QuickAddItemModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (itemId: string, quantity: number) => void;
+  tabId: string;
+  customerName?: string;
+}
+
+const QuickAddItemModal = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  tabId, 
+  customerName 
+}: QuickAddItemModalProps) => {
+  const [items, setItems] = useState<Item[]>([]);
+  const [selectedItemId, setSelectedItemId] = useState<string>('');
+  const [quantity, setQuantity] = useState<number>(1);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadItems();
+      setSelectedItemId('');
+      setQuantity(1);
+    }
+  }, [isOpen]);
+
+  const loadItems = async () => {
+    try {
+      const activeItems = await itemsApi.getActive();
+      setItems(activeItems);
+    } catch (error) {
+      console.error('Erro ao carregar itens:', error);
+    }
+  };
+
+  const handleConfirm = () => {
+    if (!selectedItemId) return;
+    
+    setLoading(true);
+    onConfirm(selectedItemId, quantity);
+    setLoading(false);
+  };
+
+  const handleClose = () => {
+    setSelectedItemId('');
+    setQuantity(1);
+    setLoading(false);
+    onClose();
+  };
+
+  const selectedItem = items.find(item => item.id === selectedItemId);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-medium text-gray-900">
+            Adicionar Produto
+          </h3>
+          <button
+            onClick={handleClose}
+            className="text-gray-400 hover:text-gray-600"
+            disabled={loading}
+          >
+            <XMarkIcon className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+          <p className="text-sm text-blue-800">
+            <strong>Conta:</strong> {customerName || 'Mesa sem cliente'}
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Produto *
+            </label>
+            <select
+              value={selectedItemId}
+              onChange={(e) => setSelectedItemId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              disabled={loading}
+            >
+              <option value="">Selecione um produto</option>
+              {items.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name} - R$ {parseFloat(item.price).toFixed(2)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Quantidade *
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="99"
+              value={quantity}
+              onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              disabled={loading}
+            />
+          </div>
+
+          {selectedItem && (
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <div className="text-sm text-gray-600">Total do item:</div>
+              <div className="text-lg font-semibold text-gray-900">
+                R$ {(parseFloat(selectedItem.price) * quantity).toFixed(2)}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex space-x-3 mt-6">
+          <button
+            onClick={handleClose}
+            className="btn-secondary flex-1"
+            disabled={loading}
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleConfirm}
+            className="btn-primary flex-1"
+            disabled={loading || !selectedItemId}
+          >
+            {loading ? 'Adicionando...' : 'Adicionar'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default QuickAddItemModal;
