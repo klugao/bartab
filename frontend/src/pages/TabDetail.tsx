@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PlusIcon, TrashIcon, CreditCardIcon } from '@heroicons/react/24/outline';
 import { tabsApi, itemsApi } from '../services/api';
-import type { Tab, Item, AddItemDto, AddPaymentDto } from '../types';
-import { PaymentMethod } from '../types';
+import type { Tab, Item, AddPaymentDto } from '../types';
 import PaymentModal from '../components/PaymentModal';
 
 const TabDetail = () => {
