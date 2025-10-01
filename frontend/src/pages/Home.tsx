@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PlusIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { Plus, AlertTriangle } from 'lucide-react';
 import { tabsApi, customersApi } from '../services/api';
 import type { Tab, Customer } from '../types';
 import CardTab from '../components/CardTab';
@@ -7,6 +7,10 @@ import NewTabModal from '../components/NewTabModal';
 import ErrorBoundary from '../components/ErrorBoundary';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 import QuickAddItemModal from '../components/QuickAddItemModal';
+import { Button } from '../components/ui/button';
+import { Card, CardContent } from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { useToast } from '../hooks/use-toast';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState<'open' | 'closed'>('open');
@@ -27,6 +31,8 @@ const Home = () => {
   const [openDateFilter, setOpenDateFilter] = useState<string>('');
   const [closeDateFilter, setCloseDateFilter] = useState<string>('');
 
+  const { toast } = useToast();
+
   const loadOpenTabs = async () => {
     try {
       setError(null);
@@ -34,7 +40,13 @@ const Home = () => {
       setOpenTabs(data);
     } catch (error) {
       console.error('Erro ao carregar contas abertas:', error);
-      setError('Erro ao carregar contas abertas. Tente novamente.');
+      const errorMessage = 'Erro ao carregar contas abertas. Tente novamente.';
+      setError(errorMessage);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: errorMessage,
+      });
     }
   };
 
@@ -46,7 +58,13 @@ const Home = () => {
       setClosedTabs([]);
     } catch (error) {
       console.error('Erro ao carregar contas fechadas:', error);
-      setError('Erro ao carregar contas fechadas. Tente novamente.');
+      const errorMessage = 'Erro ao carregar contas fechadas. Tente novamente.';
+      setError(errorMessage);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: errorMessage,
+      });
     }
   };
 
@@ -56,6 +74,11 @@ const Home = () => {
       setCustomers(data);
     } catch (error) {
       console.error('Erro ao carregar clientes:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Erro ao carregar clientes.",
+      });
     }
   };
 
@@ -82,9 +105,20 @@ const Home = () => {
       await tabsApi.open(data);
       await loadOpenTabs();
       setShowNewTabModal(false);
+      toast({
+        variant: "default",
+        title: "Sucesso",
+        description: "Nova conta aberta com sucesso!",
+      });
     } catch (error) {
       console.error('Erro ao abrir nova conta:', error);
-      setError('Erro ao abrir nova conta. Tente novamente.');
+      const errorMessage = 'Erro ao abrir nova conta. Tente novamente.';
+      setError(errorMessage);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: errorMessage,
+      });
     }
   };
 
@@ -102,9 +136,20 @@ const Home = () => {
       await loadOpenTabs();
       setShowDeleteModal(false);
       setTabToDelete(null);
+      toast({
+        variant: "default",
+        title: "Sucesso",
+        description: "Conta excluída com sucesso!",
+      });
     } catch (error) {
       console.error('Erro ao excluir conta:', error);
-      setError('Erro ao excluir conta. Tente novamente.');
+      const errorMessage = 'Erro ao excluir conta. Tente novamente.';
+      setError(errorMessage);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: errorMessage,
+      });
     } finally {
       setDeleteLoading(false);
     }
@@ -122,6 +167,11 @@ const Home = () => {
     await loadOpenTabs();
     setShowQuickAddModal(false);
     setSelectedTabForAdd(null);
+    toast({
+      variant: "default",
+      title: "Sucesso",
+      description: "Item adicionado com sucesso!",
+    });
   };
 
   // Filtrar contas fechadas
@@ -142,124 +192,134 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
           {/* Header */}
           {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
-              <div className="flex">
-                <ExclamationTriangleIcon className="h-5 w-5 text-red-400" />
-                <div className="ml-3">
-                  <p className="text-sm text-red-800">{error}</p>
-                  <button
-                    onClick={loadData}
-                    className="mt-2 text-sm text-red-600 hover:text-red-500 underline"
-                  >
-                    Tentar novamente
-                  </button>
+            <Card className="mb-6 border-destructive bg-destructive/10">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-destructive mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-destructive font-medium">{error}</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={loadData}
+                      className="mt-3"
+                    >
+                      Tentar novamente
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
 
-          {/* Tabs */}
+          {/* Navigation Tabs */}
           <div className="mb-6">
-            <div className="border-b border-gray-200">
-              <nav className="-mb-px flex space-x-8">
+            <div className="bg-blue-400">
+              <div className="flex space-x-8">
                 <button
                   onClick={() => setActiveTab('open')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-4 px-2 border-b-2 font-medium text-lg transition-colors ${
                     activeTab === 'open'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                   }`}
                 >
                   Contas Abertas ({openTabs.length})
                 </button>
                 <button
                   onClick={() => setActiveTab('closed')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  className={`py-4 px-2 border-b-2 font-medium text-lg transition-colors ${
                     activeTab === 'closed'
-                      ? 'border-blue-500 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                   }`}
                 >
                   Contas Fechadas ({closedTabs.length})
                 </button>
-              </nav>
+              </div>
             </div>
           </div>
 
           {/* Actions and Filters */}
-          <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between">
+          <div className="mb-6 flex flex-col gap-4">
             {activeTab === 'open' ? (
-                <button
+              <div className="flex justify-between items-center">
+                <h1 className="text-2xl font-bold">Contas Abertas</h1>
+                <Button 
                   onClick={() => setShowNewTabModal(true)}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  size="lg"
+                  className="gap-2"
                 >
-                <PlusIcon className="h-3.5 w-3.5 mr-1.5" />
-                Nova Conta
-              </button>
+                  <Plus className="h-5 w-5" />
+                  Nova Conta
+                </Button>
+              </div>
             ) : (
-              <div className="flex flex-col sm:flex-row gap-4 flex-1">
-                {/* Filtro por Cliente */}
-                <div className="relative">
-                  <select
-                    value={customerFilter}
-                    onChange={(e) => setCustomerFilter(e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Todos os clientes</option>
-                    {customers.map(customer => (
-                      <option key={customer.id} value={customer.name}>
-                        {customer.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div className="space-y-4">
+                <h1 className="text-2xl font-bold">Contas Fechadas</h1>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Filtro por Cliente */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Cliente</label>
+                    <select
+                      value={customerFilter}
+                      onChange={(e) => setCustomerFilter(e.target.value)}
+                      className="w-full h-12 px-4 py-3 text-lg rounded-2xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                    >
+                      <option value="">Todos os clientes</option>
+                      {customers.map(customer => (
+                        <option key={customer.id} value={customer.name}>
+                          {customer.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                {/* Filtro por Data de Abertura */}
-                <div className="relative">
-                  <label className="block text-xs text-gray-500 mb-1">Aberta em:</label>
-                  <input
-                    type="date"
-                    value={openDateFilter}
-                    onChange={(e) => setOpenDateFilter(e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
+                  {/* Filtro por Data de Abertura */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Aberta em</label>
+                    <Input
+                      type="date"
+                      value={openDateFilter}
+                      onChange={(e) => setOpenDateFilter(e.target.value)}
+                    />
+                  </div>
 
-                {/* Filtro por Data de Fechamento */}
-                <div className="relative">
-                  <label className="block text-xs text-gray-500 mb-1">Fechada em:</label>
-                  <input
-                    type="date"
-                    value={closeDateFilter}
-                    onChange={(e) => setCloseDateFilter(e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
+                  {/* Filtro por Data de Fechamento */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Fechada em</label>
+                    <Input
+                      type="date"
+                      value={closeDateFilter}
+                      onChange={(e) => setCloseDateFilter(e.target.value)}
+                    />
+                  </div>
                 </div>
 
                 {/* Limpar Filtros */}
                 {(customerFilter || openDateFilter || closeDateFilter) && (
-                  <button
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       setCustomerFilter('');
                       setOpenDateFilter('');
                       setCloseDateFilter('');
                     }}
-                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md hover:bg-gray-50"
                   >
                     Limpar Filtros
-                  </button>
+                  </Button>
                 )}
               </div>
             )}
@@ -267,19 +327,30 @@ const Home = () => {
 
           {/* Tabs Grid */}
           {currentTabs.length === 0 ? (
-            <div className="text-center py-12">
-              {activeTab === 'open' && (
-                 <button
-                   onClick={() => setShowNewTabModal(true)}
-                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
-                 >
-                   <PlusIcon className="h-3.5 w-3.5 mr-1.5" />
-                   Nova Conta
-                 </button>
-              )}
-            </div>
+            <Card className="text-center py-12">
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-muted-foreground text-lg">
+                    {activeTab === 'open' 
+                      ? 'Nenhuma conta aberta no momento'
+                      : 'Nenhuma conta fechada encontrada'
+                    }
+                  </p>
+                  {activeTab === 'open' && (
+                    <Button 
+                      onClick={() => setShowNewTabModal(true)}
+                      size="lg"
+                      className="gap-2"
+                    >
+                      <Plus className="h-5 w-5" />
+                      Abrir Nova Conta
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {currentTabs.map((tab) => (
                 <CardTab
                   key={tab.id}
@@ -290,6 +361,18 @@ const Home = () => {
                 />
               ))}
             </div>
+          )}
+
+          {/* Floating Action Button for Mobile */}
+          {activeTab === 'open' && (
+            <Button
+              onClick={() => setShowNewTabModal(true)}
+              size="lg"
+              className="fixed bottom-6 right-6 rounded-full w-16 h-16 shadow-lg md:hidden z-50 p-0"
+              aria-label="Nova Conta"
+            >
+              <Plus className="h-8 w-8" />
+            </Button>
           )}
 
           {/* Modals */}

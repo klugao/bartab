@@ -188,7 +188,7 @@ const Items = () => {
                          onClick={() => handleEdit(item)}
                          className="p-2 text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded-md transition-colors"
                          title="Editar item"
-                       >
+                       >Editar item
                          <PencilIcon className="h-3.5 w-3.5" />
                        </button>
                        {item.active ? (
@@ -196,7 +196,7 @@ const Items = () => {
                            onClick={() => handleDeactivate(item.id)}
                            className="p-2 text-yellow-600 hover:text-yellow-900 hover:bg-yellow-50 rounded-md transition-colors"
                            title="Desativar item"
-                         >
+                         >Desativar item
                            <EyeSlashIcon className="h-3.5 w-3.5" />
                          </button>
                        ) : null}
@@ -204,7 +204,7 @@ const Items = () => {
                          onClick={() => handleDelete(item.id)}
                          className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors"
                          title="Excluir item"
-                       >
+                       >Excluir item
                          <TrashIcon className="h-3.5 w-3.5" />
                        </button>
                       </div>

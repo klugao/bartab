@@ -1,15 +1,19 @@
 import { Link } from 'react-router-dom';
-import { UserIcon, CurrencyDollarIcon, TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { User, DollarSign, Trash2, Plus } from 'lucide-react';
 import type { Tab } from '../types';
+import { formatCurrency, formatShortDate, formatFullDate } from '../utils/formatters';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
 
 interface CardTabProps {
   tab: Tab;
-  onUpdate: () => void;
+  onUpdate?: () => void;
   onDelete?: (tabId: string) => void;
   onAddItem?: (tabId: string) => void;
 }
 
-const CardTab = ({ tab, onUpdate, onDelete, onAddItem }: CardTabProps) => {
+const CardTab = ({ tab, onDelete, onAddItem }: CardTabProps) => {
   const calculateTotal = () => {
     if (!tab.tabItems || !Array.isArray(tab.tabItems)) {
       return 0;
@@ -31,108 +35,109 @@ const CardTab = ({ tab, onUpdate, onDelete, onAddItem }: CardTabProps) => {
   };
 
   return (
-    <Link to={`/tab/${tab.id}`} className="block">
-      <div className="card cursor-pointer" style={{ transition: 'box-shadow 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)'} onMouseLeave={(e) => e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)'}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <UserIcon style={{ width: '0.875rem', height: '0.875rem', color: '#9ca3af', marginRight: '0.375rem' }} />
-            <span style={{ fontSize: '0.875rem', fontWeight: '500', color: '#111827' }}>
-              {customerName}
-            </span>
-          </div>
-          <span 
-            className={`px-1.5 py-0.5 text-xs font-medium rounded-full ${
-              tab.status === 'OPEN' 
-                ? 'bg-green-100 text-green-800' 
-                : 'bg-gray-100 text-gray-800'
-            }`}
-            style={{ fontSize: '0.625rem' }}
-          >
-            {tab.status === 'OPEN' ? 'Aberta' : 'Fechada'}
-          </span>
-        </div>
-
-        <div style={{ marginBottom: '0.75rem' }}>
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', marginBottom: '0.25rem' }}>
-            Itens: {itemCount}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', fontSize: '1rem', fontWeight: '600', color: '#111827' }}>
-            <CurrencyDollarIcon style={{ width: '0.875rem', height: '0.875rem', color: '#9ca3af', marginRight: '0.25rem' }} />
-            R$ {total.toFixed(2)}
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          {onAddItem && tab.status === 'OPEN' && (
-            <button
-              onClick={(e) => handleButtonClick(e, () => onAddItem(tab.id))}
-              className="btn-primary"
-              
+    <Link to={`/tab/${tab.id}`} className="block group">
+      <Card className="h-full cursor-pointer transition-all hover:shadow-lg hover:shadow-primary/10 hover:border-primary/20">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-lg font-semibold truncate">
+                {customerName}
+              </CardTitle>
+            </div>
+            <Badge 
+              variant={tab.status === 'OPEN' ? 'success' : 'secondary'}
+              className="shrink-0"
             >
-              <PlusIcon className="h-3 w-3 mr-1 inline" />
-              Adicionar
-            </button>
-          )}
-          {tab.status === 'CLOSED' && (
-            <div 
-              className="px-2 py-1 text-gray-500 bg-gray-100 rounded-md"
-            >
-              Finalizada
+              {tab.status === 'OPEN' ? 'Aberta' : 'Fechada'}
+            </Badge>
+          </div>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          {/* Resumo da conta */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>Itens: {itemCount}</span>
+              <span>Aberta: {formatShortDate(tab.opened_at)}</span>
+            </div>
+            <div className="flex items-center gap-2 text-xl font-bold text-primary">
+              <DollarSign className="h-5 w-5" />
+              {formatCurrency(total)}
+            </div>
+          </div>
+
+          {/* Lista de itens da conta */}
+          {tab.tabItems && tab.tabItems.length > 0 && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-muted-foreground">
+                Itens recentes:
+              </h4>
+              <div className="space-y-1 max-h-24 overflow-y-auto">
+                {tab.tabItems.slice(-3).map((tabItem) => (
+                  <div 
+                    key={tabItem.id} 
+                    className="flex justify-between items-center text-sm bg-muted/50 rounded-lg p-2"
+                  >
+                    <span className="truncate">
+                      {tabItem.qty}× {tabItem.item.name}
+                    </span>
+                    <span className="font-medium text-primary shrink-0 ml-2">
+                      {formatCurrency(tabItem.total)}
+                    </span>
+                  </div>
+                ))}
+                {tab.tabItems.length > 3 && (
+                  <p className="text-xs text-muted-foreground text-center">
+                    +{tab.tabItems.length - 3} mais...
+                  </p>
+                )}
+              </div>
             </div>
           )}
-          {onDelete && itemCount === 0 && tab.status === 'OPEN' && (
-            <button
-              onClick={(e) => handleButtonClick(e, () => onDelete(tab.id))}
-              className="p-1.5 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors"
-              title="Excluir conta vazia"
-            >
-              <TrashIcon className="h-3 w-3" />
-            </button>
-          )}
-        </div>
 
-        <div style={{ marginTop: '0.5rem', fontSize: '0.625rem', color: '#6b7280' }}>
-          <div>
-            Aberta em: {(() => {
-              try {
-                if (!tab.opened_at) return 'Data não disponível';
-                const date = new Date(tab.opened_at);
-                if (isNaN(date.getTime())) return 'Data inválida';
-                return date.toLocaleString('pt-BR', {
-                  day: '2-digit',
-                  month: '2-digit', 
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                });
-              } catch (error) {
-                console.error('Erro ao formatar data de abertura:', error, tab.opened_at);
-                return 'Data não disponível';
-              }
-            })()}
+          {/* Ações */}
+          <div className="flex gap-2 pt-2">
+            {onAddItem && tab.status === 'OPEN' && (
+              <Button
+                onClick={(e) => handleButtonClick(e, () => onAddItem(tab.id))}
+                size="sm"
+                className="flex-1 gap-1"
+                aria-label={`Adicionar item à conta de ${customerName}`}
+              >
+                <Plus className="h-3 w-3" />
+                Adicionar
+              </Button>
+            )}
+            
+            {tab.status === 'CLOSED' && (
+              <Badge variant="secondary" className="flex-1 justify-center py-2">
+                Finalizada
+              </Badge>
+            )}
+            
+            {onDelete && itemCount === 0 && tab.status === 'OPEN' && (
+              <Button
+                onClick={(e) => handleButtonClick(e, () => onDelete(tab.id))}
+                variant="destructive"
+                size="sm"
+                className="gap-1"
+                aria-label={`Excluir conta vazia de ${customerName}`}
+              >
+                <Trash2 className="h-3 w-3" />
+                Excluir
+              </Button>
+            )}
           </div>
+
+          {/* Data de fechamento para contas fechadas */}
           {tab.status === 'CLOSED' && tab.closed_at && (
-            <div style={{ marginTop: '0.25rem' }}>
-              Fechada em: {(() => {
-                try {
-                  const date = new Date(tab.closed_at);
-                  if (isNaN(date.getTime())) return 'Data inválida';
-                  return date.toLocaleString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit', 
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  });
-                } catch (error) {
-                  console.error('Erro ao formatar data de fechamento:', error, tab.closed_at);
-                  return 'Data não disponível';
-                }
-              })()}
+            <div className="text-xs text-muted-foreground pt-2 border-t">
+              Fechada em: {formatFullDate(tab.closed_at)}
             </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </Link>
   );
 };

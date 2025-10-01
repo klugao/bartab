@@ -52,7 +52,7 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, total }: PaymentModalProps) 
             <button
               onClick={handleClose}
               className="text-gray-400 hover:text-gray-600"
-            >
+            >Fechar
               <XMarkIcon className="h-4 w-4" />
             </button>
           </div>

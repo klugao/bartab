@@ -4,6 +4,7 @@ import { PlusIcon, TrashIcon, CreditCardIcon } from '@heroicons/react/24/outline
 import { tabsApi, itemsApi } from '../services/api';
 import type { Tab, Item, AddPaymentDto } from '../types';
 import PaymentModal from '../components/PaymentModal';
+import { formatCurrency } from '../utils/formatters';
 
 const TabDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -188,17 +189,17 @@ const TabDetail = () => {
                 <div>
                   <span className="font-medium">{tabItem.item.name} </span>
                   <span className="text-gray-500 ml-2">
-                    - {tabItem.qty} UN  - R$ {parseFloat(tabItem.unit_price).toFixed(2)}
+                    - {tabItem.qty} UN  - {formatCurrency(tabItem.unit_price)}
                   </span>
                 </div>
                 <div className="flex items-center space-x-3"><br/>
-                  <span className="font-semibold">TOTAL: R$ {parseFloat(tabItem.total).toFixed(2)}</span>
+                  <span className="font-semibold">TOTAL: {formatCurrency(tabItem.total)}</span>
                   {tab.status === 'OPEN' && (
                     <button
                       onClick={() => handleRemoveItem(tabItem.id)}
                       className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors"
                       title="Remover item da conta"
-                    >
+                    >Excluir item
                       <TrashIcon className="h-3.5 w-3.5" />
                     </button>
                   )}
@@ -214,7 +215,7 @@ const TabDetail = () => {
         <div className="flex justify-between items-center">
           <span className="text-lg font-medium">Total da conta: </span>
           <span className="text-2xl font-bold text-primary-600">
-            R$ {total.toFixed(2)}
+            {formatCurrency(total)}
           </span>
         </div>
       </div>
@@ -250,7 +251,7 @@ const TabDetail = () => {
                   <option value="">Selecione um item</option>
                   {items.map((item) => (
                     <option key={item.id} value={item.id}>
-                      {item.name} - R$ {parseFloat(item.price).toFixed(2)}
+                      {item.name} - {formatCurrency(item.price)}
                     </option>
                   ))}
                 </select>

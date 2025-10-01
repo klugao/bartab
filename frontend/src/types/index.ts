@@ -36,6 +36,7 @@ export interface TabItem {
   qty: number;
   unit_price: string;
   total: string;
+  created_at: string;
 }
 
 export enum PaymentMethod {

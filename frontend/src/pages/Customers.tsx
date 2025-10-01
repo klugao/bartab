@@ -149,7 +149,7 @@ const Customers = () => {
                     Email
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Saldo Devedor
+                    Saldo
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ações
@@ -189,14 +189,14 @@ const Customers = () => {
                           onClick={() => handleEdit(customer)}
                           className="p-2 text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded-md transition-colors"
                           title="Editar cliente"
-                        >
+                        >Editar cliente
                           <PencilIcon className="h-3.5 w-3.5" />
                         </button>
                         <button
                           onClick={() => handleDelete(customer.id)}
                           className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors"
                           title="Excluir cliente"
-                        >
+                        >Excluir cliente
                           <TrashIcon className="h-3.5 w-3.5" />
                         </button>
                       </div>
