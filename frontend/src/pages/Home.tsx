@@ -41,8 +41,9 @@ const Home = () => {
   const loadClosedTabs = async () => {
     try {
       setError(null);
-      const data = await tabsApi.getClosed();
-      setClosedTabs(data);
+      // TODO: Implementar endpoint para contas fechadas no backend
+      // Por enquanto, deixamos vazio para evitar erro
+      setClosedTabs([]);
     } catch (error) {
       console.error('Erro ao carregar contas fechadas:', error);
       setError('Erro ao carregar contas fechadas. Tente novamente.');

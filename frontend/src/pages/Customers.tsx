@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
-import { PlusIcon, PencilIcon, TrashIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { customersApi } from '../services/api';
 import type { Customer, CreateCustomerDto } from '../types';
-import IconInput from '../components/IconInput';
 
 const Customers = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -113,12 +112,12 @@ const Customers = () => {
 
       {/* Campo de busca */}
       <div className="mb-6">
-        <IconInput
-          icon={<MagnifyingGlassIcon />}
+        <input
+          type="text"
           placeholder="Buscar clientes por nome, email ou telefone..."
           value={searchTerm}
-          onChange={setSearchTerm}
-          iconSize="md"
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
         {searchTerm && (
           <p className="text-sm text-gray-600 mt-2">
