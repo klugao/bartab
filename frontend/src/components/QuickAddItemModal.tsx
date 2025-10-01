@@ -7,7 +7,7 @@ interface QuickAddItemModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (itemId: string, quantity: number) => void;
-  tabId: string;
+  tabId?: string;
   customerName?: string;
 }
 
@@ -15,13 +15,14 @@ const QuickAddItemModal = ({
   isOpen, 
   onClose, 
   onConfirm, 
-  tabId, 
   customerName 
 }: QuickAddItemModalProps) => {
   const [items, setItems] = useState<Item[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string>('');
   const [quantity, setQuantity] = useState<number>(1);
   const [loading, setLoading] = useState(false);
+  
+  // tabId é usado implicitamente através da prop, não precisamos da variável
 
   useEffect(() => {
     if (isOpen) {
