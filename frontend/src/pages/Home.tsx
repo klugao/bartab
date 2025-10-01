@@ -226,7 +226,7 @@ const Home = () => {
 
           {/* Navigation Tabs */}
           <div className="mb-6">
-            <div className="bg-blue-400">
+            <div className="border-b">
               <div className="flex space-x-8">
                 <button
                   onClick={() => setActiveTab('open')}
