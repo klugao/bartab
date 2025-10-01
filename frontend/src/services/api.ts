@@ -60,8 +60,7 @@ export const tabsApi = {
     });
   },
   getOpen: () => api.get<Tab[]>('/tabs').then(res => res.data),
-  // Removendo getClosed temporariamente até implementar no backend
-  // getClosed: () => api.get<Tab[]>('/tabs/closed').then(res => res.data),
+  getClosed: () => api.get<Tab[]>('/tabs/closed').then(res => res.data),
   getById: (id: string) => {
     console.log('tabsApi.getById - Buscando conta:', id);
     return api.get<Tab>(`/tabs/${id}`).then(res => res.data);
