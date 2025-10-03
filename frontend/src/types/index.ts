@@ -64,7 +64,7 @@ export interface CreateCustomerDto {
 
 export interface CreateItemDto {
   name: string;
-  price: string;
+  price: number;
 }
 
 export interface CreateTabDto {
