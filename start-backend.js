@@ -6,7 +6,7 @@ const PORT = 3000;
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: 'http://localhost:5174',
   credentials: true
 }));
 app.use(express.json());
@@ -235,7 +235,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log('🚀 BarTab Backend iniciado com sucesso!');
   console.log(`📊 API rodando em: http://localhost:${PORT}/api`);
-  console.log(`🌐 Frontend deve acessar: http://localhost:5173`);
+  console.log(`🌐 Frontend deve acessar: http://localhost:5174`);
   console.log('');
   console.log('📋 Endpoints disponíveis:');
   console.log('  GET  /api/customers');

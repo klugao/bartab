@@ -12,7 +12,7 @@ const Items = () => {
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [formData, setFormData] = useState<CreateItemDto>({
     name: '',
-    price: '',
+    price: 0,
   });
 
   useEffect(() => {
@@ -59,7 +59,7 @@ const Items = () => {
     setEditingItem(item);
     setFormData({
       name: item.name,
-      price: item.price,
+      price: parseFloat(item.price),
     });
     setShowForm(true);
   };
@@ -87,7 +87,7 @@ const Items = () => {
   };
 
   const resetForm = () => {
-    setFormData({ name: '', price: '' });
+    setFormData({ name: '', price: 0 });
   };
 
   const openNewForm = () => {
@@ -246,8 +246,8 @@ const Items = () => {
                   step="0.01"
                   min="0.01"
                   required
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  value={Number.isNaN(formData.price) ? '' : formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value === '' ? (NaN as unknown as number) : parseFloat(e.target.value) })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
