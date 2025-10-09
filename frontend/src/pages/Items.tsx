@@ -69,8 +69,11 @@ const Items = () => {
       try {
         await itemsApi.delete(id);
         loadItems();
-      } catch (error) {
+      } catch (error: any) {
         console.error('Erro ao excluir item:', error);
+        // Exibir mensagem de erro ao usuário
+        const errorMessage = error.response?.data?.message || 'Erro ao excluir item';
+        alert(errorMessage);
       }
     }
   };
