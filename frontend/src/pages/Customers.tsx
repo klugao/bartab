@@ -44,17 +44,25 @@ const Customers = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      console.log('Enviando dados do cliente:', formData);
       if (editingCustomer) {
-        await customersApi.update(editingCustomer.id, formData);
+        const updated = await customersApi.update(editingCustomer.id, formData);
+        console.log('Cliente atualizado:', updated);
+        alert('Cliente atualizado com sucesso!');
       } else {
-        await customersApi.create(formData);
+        const created = await customersApi.create(formData);
+        console.log('Cliente criado:', created);
+        alert('Cliente criado com sucesso!');
       }
       setShowForm(false);
       setEditingCustomer(null);
       resetForm();
       loadCustomers();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar cliente:', error);
+      console.error('Resposta do erro:', error.response?.data);
+      const errorMessage = error.response?.data?.message || error.message || 'Erro desconhecido ao salvar cliente';
+      alert(`Erro ao salvar cliente: ${errorMessage}`);
     }
   };
 
