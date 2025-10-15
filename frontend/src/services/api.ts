@@ -8,6 +8,7 @@ import type {
   CreateCustomerDto,
   CreateItemDto,
   CreateTabDto,
+  UpdateTabDto,
   AddItemDto,
   AddPaymentDto
 } from '../types';
@@ -69,6 +70,10 @@ export const tabsApi = {
   getById: (id: string) => {
     console.log('tabsApi.getById - Buscando conta:', id);
     return api.get<Tab>(`/tabs/${id}`).then(res => res.data);
+  },
+  update: (id: string, data: UpdateTabDto) => {
+    console.log('tabsApi.update - Atualizando conta:', { id, ...data });
+    return api.patch<Tab>(`/tabs/${id}`, data).then(res => res.data);
   },
   addItem: (tabId: string, data: AddItemDto) => {
     console.log('tabsApi.addItem - Usando endpoint que funciona:', { tabId, ...data });

@@ -71,6 +71,10 @@ export interface CreateTabDto {
   customerId?: string;
 }
 
+export interface UpdateTabDto {
+  customerId?: string | null;
+}
+
 export interface AddItemDto {
   itemId: string;
   qty: number;
