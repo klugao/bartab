@@ -82,6 +82,26 @@ export const tabsApi = {
     console.log('tabsApi.delete - Usando endpoint que funciona:', id);
     return api.post('/tabs/delete-tab', { tabId: id });
   },
+  getConsumptionReport: (year: number, month: number) => {
+    console.log('tabsApi.getConsumptionReport - Buscando relatório:', { year, month });
+    return api.get(`/tabs/reports/consumption?year=${year}&month=${month}`).then(res => res.data);
+  },
+};
+
+// Expenses API
+export const expensesApi = {
+  create: (data: { description: string; amount: string; year: number; month: number }) => {
+    console.log('expensesApi.create - Dados enviados:', data);
+    return api.post('/expenses', data).then(res => res.data);
+  },
+  getByPeriod: (year: number, month: number) => {
+    console.log('expensesApi.getByPeriod - Buscando despesas:', { year, month });
+    return api.get(`/expenses?year=${year}&month=${month}`).then(res => res.data);
+  },
+  delete: (id: string) => {
+    console.log('expensesApi.delete - Deletando despesa:', id);
+    return api.delete(`/expenses/${id}`);
+  },
 };
 
 export default api;

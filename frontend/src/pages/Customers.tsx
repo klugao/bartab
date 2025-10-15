@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { customersApi } from '../services/api';
 import type { Customer, CreateCustomerDto } from '../types';
+import { useToast } from '../hooks/use-toast';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const Customers = () => {
+  const { toast } = useToast();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -15,6 +18,8 @@ const Customers = () => {
     phone: '',
     email: '',
   });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     loadCustomers();
@@ -48,11 +53,17 @@ const Customers = () => {
       if (editingCustomer) {
         const updated = await customersApi.update(editingCustomer.id, formData);
         console.log('Cliente atualizado:', updated);
-        alert('Cliente atualizado com sucesso!');
+        toast({
+          title: 'Sucesso!',
+          description: 'Cliente atualizado com sucesso!',
+        });
       } else {
         const created = await customersApi.create(formData);
         console.log('Cliente criado:', created);
-        alert('Cliente criado com sucesso!');
+        toast({
+          title: 'Sucesso!',
+          description: 'Cliente criado com sucesso!',
+        });
       }
       setShowForm(false);
       setEditingCustomer(null);
@@ -62,7 +73,11 @@ const Customers = () => {
       console.error('Erro ao salvar cliente:', error);
       console.error('Resposta do erro:', error.response?.data);
       const errorMessage = error.response?.data?.message || error.message || 'Erro desconhecido ao salvar cliente';
-      alert(`Erro ao salvar cliente: ${errorMessage}`);
+      toast({
+        title: 'Erro',
+        description: `Erro ao salvar cliente: ${errorMessage}`,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -76,14 +91,31 @@ const Customers = () => {
     setShowForm(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este cliente?')) {
-      try {
-        await customersApi.delete(id);
-        loadCustomers();
-      } catch (error) {
-        console.error('Erro ao excluir cliente:', error);
-      }
+  const handleDelete = (id: string) => {
+    setCustomerToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!customerToDelete) return;
+    
+    try {
+      await customersApi.delete(customerToDelete);
+      toast({
+        title: 'Sucesso!',
+        description: 'Cliente excluído com sucesso!',
+      });
+      loadCustomers();
+    } catch (error) {
+      console.error('Erro ao excluir cliente:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao excluir cliente',
+        variant: 'destructive',
+      });
+    } finally {
+      setShowDeleteModal(false);
+      setCustomerToDelete(null);
     }
   };
 
@@ -278,6 +310,18 @@ const Customers = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de confirmação de exclusão */}
+      <ConfirmDeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setCustomerToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Excluir Cliente"
+        message="Tem certeza que deseja excluir este cliente? Esta ação não pode ser desfeita."
+      />
     </div>
   );
 };
