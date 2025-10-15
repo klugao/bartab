@@ -37,6 +37,11 @@ export const customersApi = {
   create: (data: CreateCustomerDto) => api.post<Customer>('/customers', data).then(res => res.data),
   update: (id: string, data: Partial<CreateCustomerDto>) => api.patch<Customer>(`/customers/${id}`, data).then(res => res.data),
   delete: (id: string) => api.delete(`/customers/${id}`),
+  getCustomersWithDebts: () => api.get<Customer[]>('/customers/debts/list').then(res => res.data),
+  payDebt: (id: string, data: { amount: string; method: string; note?: string }) => {
+    console.log('customersApi.payDebt - Dados enviados:', { id, ...data });
+    return api.post<Customer>(`/customers/${id}/pay-debt`, data).then(res => res.data);
+  },
 };
 
 // Items API
