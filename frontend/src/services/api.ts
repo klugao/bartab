@@ -49,6 +49,7 @@ export const customersApi = {
 export const itemsApi = {
   getAll: () => api.get<Item[]>('/items').then(res => res.data),
   getActive: () => api.get<Item[]>('/items/active').then(res => res.data),
+  getActiveBestSellers: () => api.get<Item[]>('/items/active/best-sellers').then(res => res.data),
   getById: (id: string) => api.get<Item>(`/items/${id}`).then(res => res.data),
   create: (data: CreateItemDto) => api.post<Item>('/items', data).then(res => res.data),
   update: (id: string, data: Partial<CreateItemDto>) => api.patch<Item>(`/items/${id}`, data).then(res => res.data),
