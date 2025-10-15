@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect, useMemo } from 'react';
+import { XMarkIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { itemsApi } from '../services/api';
 import type { Item } from '../types';
 
@@ -21,6 +21,7 @@ const QuickAddItemModal = ({
   const [selectedItemId, setSelectedItemId] = useState<string>('');
   const [quantity, setQuantity] = useState<number>(1);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState<string>('');
   
   // tabId é usado implicitamente através da prop, não precisamos da variável
 
@@ -29,17 +30,28 @@ const QuickAddItemModal = ({
       loadItems();
       setSelectedItemId('');
       setQuantity(1);
+      setSearchTerm('');
     }
   }, [isOpen]);
 
   const loadItems = async () => {
     try {
-      const activeItems = await itemsApi.getActive();
+      const activeItems = await itemsApi.getActiveBestSellers();
       setItems(activeItems);
     } catch (error) {
       console.error('Erro ao carregar itens:', error);
     }
   };
+
+  // Filtrar itens com base no termo de busca
+  const filteredItems = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return items;
+    }
+    return items.filter(item => 
+      item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [items, searchTerm]);
 
   const handleConfirm = () => {
     if (!selectedItemId) return;
@@ -87,19 +99,40 @@ const QuickAddItemModal = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Produto *
             </label>
+            
+            {/* Campo de busca */}
+            <div className="relative mb-2">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                placeholder="Buscar produto..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                disabled={loading}
+              />
+            </div>
+
+            {/* Select de produtos */}
             <select
               value={selectedItemId}
               onChange={(e) => setSelectedItemId(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               disabled={loading}
+              size={8}
             >
               <option value="">Selecione um produto</option>
-              {items.map((item) => (
+              {filteredItems.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name} - R$ {parseFloat(item.price).toFixed(2).replace('.', ',')}
                 </option>
               ))}
             </select>
+            {filteredItems.length === 0 && searchTerm && (
+              <p className="text-sm text-gray-500 mt-1">Nenhum produto encontrado</p>
+            )}
           </div>
 
           <div>

@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { PlusIcon, TrashIcon, CreditCardIcon, PencilIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, CreditCardIcon, PencilIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { tabsApi, itemsApi } from '../services/api';
 import type { Tab, Item, AddPaymentDto } from '../types';
 import PaymentModal from '../components/PaymentModal';
@@ -18,6 +18,7 @@ const TabDetail = () => {
   const [showEditCustomerModal, setShowEditCustomerModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   useEffect(() => {
     if (id) {
@@ -40,17 +41,30 @@ const TabDetail = () => {
 
   const loadItems = async () => {
     try {
-      const activeItems = await itemsApi.getActive();
+      const activeItems = await itemsApi.getActiveBestSellers();
       setItems(activeItems);
     } catch (error) {
       console.error('Erro ao carregar itens:', error);
     }
   };
 
+  // Filtrar itens com base no termo de busca
+  const filteredItems = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return items;
+    }
+    return items.filter(item => 
+      item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [items, searchTerm]);
+
   const handleAddItem = async (itemId: string, qty: number) => {
     try {
       await tabsApi.addItem(id!, { itemId, qty });
       setShowAddItemModal(false);
+      setSearchTerm('');
+      setSelectedItem(null);
+      setQuantity(1);
       loadTab(); // Recarregar dados da conta
     } catch (error) {
       console.error('Erro ao adicionar item:', error);
@@ -263,21 +277,41 @@ const TabDetail = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Item
                 </label>
+                
+                {/* Campo de busca */}
+                <div className="relative mb-2">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Buscar produto..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  />
+                </div>
+
+                {/* Select de produtos */}
                 <select
                   value={selectedItem?.id || ''}
                   onChange={(e) => {
-                    const item = items.find(i => i.id === e.target.value);
+                    const item = filteredItems.find(i => i.id === e.target.value);
                     setSelectedItem(item || null);
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  size={8}
                 >
                   <option value="">Selecione um item</option>
-                  {items.map((item) => (
+                  {filteredItems.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.name} - {formatCurrency(item.price)}
                     </option>
                   ))}
                 </select>
+                {filteredItems.length === 0 && searchTerm && (
+                  <p className="text-sm text-gray-500 mt-1">Nenhum produto encontrado</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -293,7 +327,12 @@ const TabDetail = () => {
               </div>
               <div className="flex space-x-3">
                 <button
-                  onClick={() => setShowAddItemModal(false)}
+                  onClick={() => {
+                    setShowAddItemModal(false);
+                    setSearchTerm('');
+                    setSelectedItem(null);
+                    setQuantity(1);
+                  }}
                   className="btn-secondary flex-1"
                 >
                   Cancelar
