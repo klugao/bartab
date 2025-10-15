@@ -79,6 +79,17 @@ const Debts = () => {
     });
   };
 
+  const getPaymentMethodLabel = (method: string): string => {
+    const methodLabels: Record<string, string> = {
+      'CASH': 'Dinheiro',
+      'DEBIT': 'Débito',
+      'CREDIT': 'Crédito',
+      'PIX': 'PIX',
+      'LATER': 'Fiado'
+    };
+    return methodLabels[method] || method;
+  };
+
   const calculateTabTotal = (tab: Tab): number => {
     if (!tab.tabItems) return 0;
     return tab.tabItems.reduce((sum, item) => sum + parseFloat(item.total), 0);
@@ -261,7 +272,7 @@ const Debts = () => {
                                 {tab.payments.map((payment) => (
                                   <div key={payment.id} className="text-xs text-gray-600 flex justify-between">
                                     <span>
-                                      {payment.method === 'LATER' ? 'Fiado' : payment.method} - {formatFullDate(payment.paid_at)}
+                                      {getPaymentMethodLabel(payment.method)} - {formatFullDate(payment.paid_at)}
                                     </span>
                                     <span className="font-medium text-green-600">{formatCurrency(payment.amount)}</span>
                                   </div>
