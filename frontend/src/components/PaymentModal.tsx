@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import type { AddPaymentDto } from '../types';
 import { PaymentMethod } from '../types';
+import { formatCurrency } from '../utils/formatters';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -15,6 +16,13 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, total }: PaymentModalProps) 
   const [amount, setAmount] = useState(total.toFixed(2).replace('.', ','));
   const [note, setNote] = useState('');
 
+  // Resetar amount quando total mudar
+  const [prevTotal, setPrevTotal] = useState(total);
+  if (total !== prevTotal) {
+    setAmount(total.toFixed(2).replace('.', ','));
+    setPrevTotal(total);
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onConfirm({
@@ -22,6 +30,14 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, total }: PaymentModalProps) 
       amount: amount.replace(',', '.'), // Converter para formato numérico
       note: note.trim() || undefined,
     });
+  };
+
+  const handleMethodChange = (newMethod: PaymentMethod) => {
+    setMethod(newMethod);
+    // Se mudar para LATER, sempre setar o valor total
+    if (newMethod === PaymentMethod.LATER) {
+      setAmount(total.toFixed(2).replace('.', ','));
+    }
   };
 
   const handleClose = () => {
@@ -32,6 +48,10 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, total }: PaymentModalProps) 
   };
 
   if (!isOpen) return null;
+
+  const amountNum = parseFloat(amount.replace(',', '.') || '0');
+  const isPartialPayment = amountNum > 0 && amountNum < total;
+  const remainingAmount = total - amountNum;
 
   const paymentMethods = [
     { value: PaymentMethod.CASH, label: 'Dinheiro', icon: '💵' },
@@ -76,7 +96,7 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, total }: PaymentModalProps) 
                   <button
                     key={pm.value}
                     type="button"
-                    onClick={() => setMethod(pm.value)}
+                    onClick={() => handleMethodChange(pm.value)}
                     className={`p-3 border rounded-lg text-center transition-colors ${
                       method === pm.value
                         ? 'border-blue-500 bg-blue-50 text-blue-700'
@@ -93,22 +113,41 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, total }: PaymentModalProps) 
             {/* Valor do pagamento */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Valor *
+                Valor do Pagamento *
               </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0.01"
-                required
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder="0.00"
-              />
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-gray-600">R$</span>
+                <input
+                  type="text"
+                  required
+                  value={amount}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^\d,]/g, '');
+                    setAmount(value);
+                  }}
+                  disabled={method === PaymentMethod.LATER}
+                  className={`w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                    method === PaymentMethod.LATER ? 'bg-gray-100 cursor-not-allowed' : ''
+                  }`}
+                  placeholder="0,00"
+                />
+              </div>
+              
               {method === PaymentMethod.LATER && (
-                <p className="text-sm text-yellow-600 mt-1">
-                  ⚠️ O valor restante será adicionado ao saldo devedor do cliente
+                <p className="text-sm text-blue-600 mt-1">
+                  ℹ️ Valor fixo no total da conta (pagamento posterior)
                 </p>
+              )}
+              
+              {method !== PaymentMethod.LATER && isPartialPayment && (
+                <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                  <p className="text-sm text-amber-800 font-medium">
+                    ⚠️ Pagamento Parcial
+                  </p>
+                  <p className="text-xs text-amber-700 mt-1">
+                    Restante de <strong>{formatCurrency(remainingAmount)}</strong> será registrado como dívida (fiado)
+                  </p>
+                </div>
               )}
             </div>
 

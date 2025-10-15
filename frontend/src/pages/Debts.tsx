@@ -26,6 +26,21 @@ const Debts = () => {
     try {
       setLoading(true);
       const response = await customersApi.getCustomersWithDebts();
+      console.log('📥 Resposta da API:', response);
+      console.log('📋 Número de clientes:', response.length);
+      response.forEach((customer, index) => {
+        console.log(`Cliente ${index + 1}: ${customer.name}`);
+        console.log('  - balance_due:', customer.balance_due);
+        console.log('  - tabs:', customer.tabs?.length || 0);
+        customer.tabs?.forEach((tab, tabIndex) => {
+          console.log(`  Conta ${tabIndex + 1}:`, {
+            id: tab.id,
+            status: tab.status,
+            items: tab.tabItems?.length || 0,
+            payments: tab.payments?.length || 0
+          });
+        });
+      });
       setCustomers(response);
     } catch (error) {
       console.error('Erro ao carregar clientes com dívidas:', error);
@@ -71,11 +86,21 @@ const Debts = () => {
 
   const calculateTabPaid = (tab: Tab): number => {
     if (!tab.payments) return 0;
-    return tab.payments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+    // NÃO contar pagamentos LATER como efetivamente pagos
+    return tab.payments.reduce((sum, payment) => {
+      if (payment.method === 'LATER') {
+        return sum; // Não adiciona pagamentos fiados
+      }
+      return sum + parseFloat(payment.amount);
+    }, 0);
   };
 
   const calculateTabRemaining = (tab: Tab): number => {
-    return calculateTabTotal(tab) - calculateTabPaid(tab);
+    const total = calculateTabTotal(tab);
+    const paid = calculateTabPaid(tab);
+    const remaining = total - paid;
+    console.log('💰 Calculando restante da conta:', { total, paid, remaining });
+    return remaining;
   };
 
   if (loading) {
@@ -113,9 +138,23 @@ const Debts = () => {
           {customers.map((customer) => {
             const isExpanded = expandedCustomers.has(customer.id);
             const debtAmount = parseFloat(customer.balance_due);
-            const closedTabsWithDebt = customer.tabs?.filter(tab => 
-              tab.status === 'CLOSED' && calculateTabRemaining(tab) > 0
-            ) || [];
+            const closedTabsWithDebt = customer.tabs?.filter(tab => {
+              const isClosedTab = tab.status === 'CLOSED';
+              const remaining = calculateTabRemaining(tab);
+              const hasDebt = remaining > 0;
+              
+              console.log(`🔍 Filtrando conta ${tab.id}:`, {
+                status: tab.status,
+                isClosed: isClosedTab,
+                remaining: remaining,
+                hasDebt: hasDebt,
+                includeInList: isClosedTab && hasDebt
+              });
+              
+              return isClosedTab && hasDebt;
+            }) || [];
+            
+            console.log(`👤 Cliente ${customer.name}: ${closedTabsWithDebt.length} conta(s) com dívida`);
 
             return (
               <div key={customer.id} className="card hover:shadow-md transition-shadow">
