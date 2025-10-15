@@ -18,9 +18,9 @@ pkill -f "node.*nest" 2>/dev/null || true
 pkill -f "vite" 2>/dev/null || true
 
 # Limpar portas
-echo -e "${YELLOW}🔌 Liberando portas 3000 e 5173...${NC}"
+echo -e "${YELLOW}🔌 Liberando portas 3000 e 5174...${NC}"
 lsof -ti:3000 | xargs kill -9 2>/dev/null || true
-lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+lsof -ti:5174 | xargs kill -9 2>/dev/null || true
 
 sleep 2
 

@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import { itemsApi } from '../services/api';
 import type { Item, CreateItemDto } from '../types';
+import { useToast } from '../hooks/use-toast';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const Items = () => {
+  const { toast } = useToast();
   const [items, setItems] = useState<Item[]>([]);
   const [filteredItems, setFilteredItems] = useState<Item[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,6 +17,10 @@ const Items = () => {
     name: '',
     price: 0,
   });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showDeactivateModal, setShowDeactivateModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+  const [itemToDeactivate, setItemToDeactivate] = useState<string | null>(null);
 
   useEffect(() => {
     loadItems();
@@ -43,15 +50,29 @@ const Items = () => {
     try {
       if (editingItem) {
         await itemsApi.update(editingItem.id, formData);
+        toast({
+          title: 'Sucesso!',
+          description: 'Produto atualizado com sucesso!',
+        });
       } else {
         await itemsApi.create(formData);
+        toast({
+          title: 'Sucesso!',
+          description: 'Produto criado com sucesso!',
+        });
       }
       setShowForm(false);
       setEditingItem(null);
       resetForm();
       loadItems();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar item:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Erro desconhecido ao salvar produto';
+      toast({
+        title: 'Erro',
+        description: errorMessage,
+        variant: 'destructive',
+      });
     }
   };
 
@@ -64,28 +85,61 @@ const Items = () => {
     setShowForm(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Tem certeza que deseja excluir este item?')) {
-      try {
-        await itemsApi.delete(id);
-        loadItems();
-      } catch (error: any) {
-        console.error('Erro ao excluir item:', error);
-        // Exibir mensagem de erro ao usuário
-        const errorMessage = error.response?.data?.message || 'Erro ao excluir item';
-        alert(errorMessage);
-      }
+  const handleDelete = (id: string) => {
+    setItemToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    
+    try {
+      await itemsApi.delete(itemToDelete);
+      toast({
+        title: 'Sucesso!',
+        description: 'Produto excluído com sucesso!',
+      });
+      loadItems();
+    } catch (error: any) {
+      console.error('Erro ao excluir item:', error);
+      const errorMessage = error.response?.data?.message || 'Erro ao excluir produto';
+      toast({
+        title: 'Erro',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    } finally {
+      setShowDeleteModal(false);
+      setItemToDelete(null);
     }
   };
 
-  const handleDeactivate = async (id: string) => {
-    if (window.confirm('Tem certeza que deseja desativar este item?')) {
-      try {
-        await itemsApi.deactivate(id);
-        loadItems();
-      } catch (error) {
-        console.error('Erro ao desativar item:', error);
-      }
+  const handleDeactivate = (id: string) => {
+    setItemToDeactivate(id);
+    setShowDeactivateModal(true);
+  };
+
+  const confirmDeactivate = async () => {
+    if (!itemToDeactivate) return;
+    
+    try {
+      await itemsApi.deactivate(itemToDeactivate);
+      toast({
+        title: 'Sucesso!',
+        description: 'Produto desativado com sucesso!',
+      });
+      loadItems();
+    } catch (error: any) {
+      console.error('Erro ao desativar item:', error);
+      const errorMessage = error.response?.data?.message || 'Erro ao desativar produto';
+      toast({
+        title: 'Erro',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    } finally {
+      setShowDeactivateModal(false);
+      setItemToDeactivate(null);
     }
   };
 
@@ -273,6 +327,30 @@ const Items = () => {
           </div>
         </div>
       )}
+
+      {/* Modal de confirmação de exclusão */}
+      <ConfirmDeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Excluir Produto"
+        message="Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita."
+      />
+
+      {/* Modal de confirmação de desativação */}
+      <ConfirmDeleteModal
+        isOpen={showDeactivateModal}
+        onClose={() => {
+          setShowDeactivateModal(false);
+          setItemToDeactivate(null);
+        }}
+        onConfirm={confirmDeactivate}
+        title="Desativar Produto"
+        message="Tem certeza que deseja desativar este produto?"
+      />
     </div>
   );
 };

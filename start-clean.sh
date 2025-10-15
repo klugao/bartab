@@ -18,9 +18,9 @@ pkill -f "node.*nest" 2>/dev/null || true
 pkill -f "vite" 2>/dev/null || true
 
 # Limpar portas específicas
-echo -e "${YELLOW}🔌 Limpando portas 3000 e 5173...${NC}"
+echo -e "${YELLOW}🔌 Limpando portas 3000 e 5174...${NC}"
 lsof -ti:3000 | xargs kill -9 2>/dev/null || true
-lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+lsof -ti:5174 | xargs kill -9 2>/dev/null || true
 
 # Aguardar um pouco para garantir que os processos pararam
 sleep 2
@@ -78,7 +78,7 @@ if [ ! -d "node_modules" ]; then
 fi
 
 # Iniciar frontend
-echo -e "${GREEN}🔥 Iniciando frontend na porta 5173...${NC}"
+echo -e "${GREEN}🔥 Iniciando frontend na porta 5174...${NC}"
 npm run dev &
 FRONTEND_PID=$!
 
@@ -87,7 +87,7 @@ sleep 5
 
 echo -e "${GREEN}🎉 Projeto iniciado com sucesso!${NC}"
 echo -e "${BLUE}📊 Backend: http://localhost:3000/api${NC}"
-echo -e "${BLUE}🌐 Frontend: http://localhost:5173${NC}"
+echo -e "${BLUE}🌐 Frontend: http://localhost:5174${NC}"
 echo ""
 echo -e "${YELLOW}Para parar os serviços:${NC}"
 echo "  Backend PID: $BACKEND_PID"
