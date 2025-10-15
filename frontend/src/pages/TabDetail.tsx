@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { PlusIcon, TrashIcon, CreditCardIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, CreditCardIcon, PencilIcon } from '@heroicons/react/24/outline';
 import { tabsApi, itemsApi } from '../services/api';
 import type { Tab, Item, AddPaymentDto } from '../types';
 import PaymentModal from '../components/PaymentModal';
+import EditCustomerModal from '../components/EditCustomerModal';
 import { formatCurrency } from '../utils/formatters';
 
 const TabDetail = () => {
@@ -14,6 +15,7 @@ const TabDetail = () => {
   const [loading, setLoading] = useState(true);
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showEditCustomerModal, setShowEditCustomerModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [quantity, setQuantity] = useState(1);
 
@@ -83,6 +85,16 @@ const TabDetail = () => {
     }
   };
 
+  const handleEditCustomer = async (customerId: string | null) => {
+    try {
+      await tabsApi.update(id!, { customerId });
+      setShowEditCustomerModal(false);
+      loadTab(); // Recarregar dados da conta
+    } catch (error) {
+      console.error('Erro ao editar cliente:', error);
+    }
+  };
+
   const calculateTotal = () => {
     if (!tab) return 0;
     return tab.tabItems.reduce((sum, item) => {
@@ -120,7 +132,18 @@ const TabDetail = () => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Detalhes da Conta</h1>
-          <p className="text-gray-600">Cliente: {customerName}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-gray-600">Cliente: {customerName}</p>
+            {tab.status === 'OPEN' && (
+              <button
+                onClick={() => setShowEditCustomerModal(true)}
+                className="p-1 text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded-md transition-colors"
+                title="Editar cliente"
+              >
+                <PencilIcon className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
         <div className="flex space-x-3">
           {tab.status === 'OPEN' ? (
@@ -298,6 +321,14 @@ const TabDetail = () => {
         onClose={() => setShowPaymentModal(false)}
         onConfirm={handlePayment}
         total={total}
+      />
+
+      {/* Modal de edição de cliente */}
+      <EditCustomerModal
+        isOpen={showEditCustomerModal}
+        onClose={() => setShowEditCustomerModal(false)}
+        onConfirm={handleEditCustomer}
+        currentCustomerId={tab.customer?.id}
       />
     </div>
   );
