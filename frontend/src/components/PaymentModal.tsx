@@ -12,21 +12,21 @@ interface PaymentModalProps {
 
 const PaymentModal = ({ isOpen, onClose, onConfirm, total }: PaymentModalProps) => {
   const [method, setMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
-  const [amount, setAmount] = useState(total.toFixed(2));
+  const [amount, setAmount] = useState(total.toFixed(2).replace('.', ','));
   const [note, setNote] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onConfirm({
       method,
-      amount,
+      amount: amount.replace(',', '.'), // Converter para formato numérico
       note: note.trim() || undefined,
     });
   };
 
   const handleClose = () => {
     setMethod(PaymentMethod.CASH);
-    setAmount(total.toFixed(2));
+    setAmount(total.toFixed(2).replace('.', ','));
     setNote('');
     onClose();
   };
@@ -62,7 +62,7 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, total }: PaymentModalProps) 
             <div className="bg-gray-50 p-3 rounded-lg">
               <div className="text-sm text-gray-600">Total da Conta:</div>
               <div className="text-xl font-bold text-gray-900">
-                R$ {total.toFixed(2)}
+                R$ {total.toFixed(2).replace('.', ',')}
               </div>
             </div>
 

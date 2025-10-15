@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { HomeIcon, UsersIcon, CubeIcon, ChartBarIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, UsersIcon, CubeIcon, ChartBarIcon, BanknotesIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 
 const Layout = () => {
   const location = useLocation();
@@ -9,6 +9,7 @@ const Layout = () => {
     { name: 'Contas', href: '/', icon: HomeIcon },
     { name: 'Clientes', href: '/customers', icon: UsersIcon },
     { name: 'Produtos', href: '/items', icon: CubeIcon },
+    { name: 'Dívidas', href: '/debts', icon: BanknotesIcon },
     { name: 'Relatórios', href: '/reports', icon: ChartBarIcon },
   ];
 

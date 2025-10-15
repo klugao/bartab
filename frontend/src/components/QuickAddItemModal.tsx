@@ -96,7 +96,7 @@ const QuickAddItemModal = ({
               <option value="">Selecione um produto</option>
               {items.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.name} - R$ {parseFloat(item.price).toFixed(2)}
+                  {item.name} - R$ {parseFloat(item.price).toFixed(2).replace('.', ',')}
                 </option>
               ))}
             </select>
@@ -121,7 +121,7 @@ const QuickAddItemModal = ({
             <div className="p-3 bg-gray-50 rounded-lg">
               <div className="text-sm text-gray-600">Total do item:</div>
               <div className="text-lg font-semibold text-gray-900">
-                R$ {(parseFloat(selectedItem.price) * quantity).toFixed(2)}
+                R$ {(parseFloat(selectedItem.price) * quantity).toFixed(2).replace('.', ',')}
               </div>
             </div>
           )}

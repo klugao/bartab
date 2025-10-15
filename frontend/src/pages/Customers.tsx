@@ -216,11 +216,15 @@ const Customers = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className={`text-sm font-medium ${
-                        parseFloat(customer.balance_due) > 0 
+                        parseFloat(customer.balance_due) < 0 
                           ? 'text-red-600' 
                           : 'text-green-600'
                       }`}>
-                        R$ {parseFloat(customer.balance_due).toFixed(2)}
+                        {parseFloat(customer.balance_due) < 0 ? (
+                          <span>R$ {Math.abs(parseFloat(customer.balance_due)).toFixed(2).replace('.', ',')}</span>
+                        ) : (
+                          <span>R$ {parseFloat(customer.balance_due).toFixed(2).replace('.', ',')}</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
