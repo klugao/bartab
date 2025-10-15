@@ -30,6 +30,7 @@ const Home = () => {
   const [customerFilter, setCustomerFilter] = useState<string>('');
   const [openDateFilter, setOpenDateFilter] = useState<string>('');
   const [closeDateFilter, setCloseDateFilter] = useState<string>('');
+  const [showAllClosed, setShowAllClosed] = useState<boolean>(false);
 
   const { toast } = useToast();
 
@@ -53,7 +54,27 @@ const Home = () => {
   const loadClosedTabs = async () => {
     try {
       setError(null);
-      const data = await tabsApi.getClosed();
+      let data;
+      
+      // Se houver filtro de data de fechamento, buscar apenas aquela data específica
+      if (closeDateFilter) {
+        const filterDate = new Date(closeDateFilter);
+        const startDate = new Date(filterDate.getFullYear(), filterDate.getMonth(), filterDate.getDate(), 0, 0, 0, 0).toISOString();
+        const endDate = new Date(filterDate.getFullYear(), filterDate.getMonth(), filterDate.getDate(), 23, 59, 59, 999).toISOString();
+        data = await tabsApi.getClosed(startDate, endDate);
+      }
+      // Se "Mostrar todas" estiver ativo, buscar últimos 90 dias
+      else if (showAllClosed) {
+        const today = new Date();
+        const startDate = new Date(today.getFullYear(), today.getMonth() - 3, today.getDate()).toISOString();
+        const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59, 999).toISOString();
+        data = await tabsApi.getClosed(startDate, endDate);
+      }
+      // Senão, buscar apenas do dia atual (comportamento padrão do backend)
+      else {
+        data = await tabsApi.getClosed();
+      }
+      
       setClosedTabs(data);
     } catch (error) {
       console.error('Erro ao carregar contas fechadas:', error);
@@ -97,6 +118,13 @@ const Home = () => {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Recarregar contas fechadas quando filtros mudarem
+  useEffect(() => {
+    if (activeTab === 'closed') {
+      loadClosedTabs();
+    }
+  }, [closeDateFilter, showAllClosed]);
 
   const handleNewTab = async (customerId?: string) => {
     try {
@@ -267,7 +295,17 @@ const Home = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                <h1 className="text-2xl font-bold">Contas Fechadas</h1>
+                <div className="flex justify-between items-start">
+                  <h1 className="text-2xl font-bold">Contas Fechadas</h1>
+                  <div className="text-sm text-muted-foreground bg-muted px-3 py-2 rounded-lg">
+                    {showAllClosed 
+                      ? '📅 Exibindo últimos 90 dias' 
+                      : closeDateFilter 
+                        ? `📅 ${new Date(closeDateFilter).toLocaleDateString('pt-BR')}` 
+                        : '📅 Hoje'}
+                  </div>
+                </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {/* Filtro por Cliente */}
                   <div>
@@ -303,23 +341,37 @@ const Home = () => {
                       type="date"
                       value={closeDateFilter}
                       onChange={(e) => setCloseDateFilter(e.target.value)}
+                      disabled={showAllClosed}
                     />
                   </div>
                 </div>
 
-                {/* Limpar Filtros */}
-                {(customerFilter || openDateFilter || closeDateFilter) && (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setCustomerFilter('');
-                      setOpenDateFilter('');
-                      setCloseDateFilter('');
-                    }}
-                  >
-                    Limpar Filtros
-                  </Button>
-                )}
+                <div className="flex gap-2">
+                  {/* Botão para mostrar todas as contas */}
+                  {!showAllClosed && !closeDateFilter && (
+                    <Button
+                      variant="secondary"
+                      onClick={() => setShowAllClosed(true)}
+                    >
+                      Ver últimos 90 dias
+                    </Button>
+                  )}
+                  
+                  {/* Limpar Filtros */}
+                  {(customerFilter || openDateFilter || closeDateFilter || showAllClosed) && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setCustomerFilter('');
+                        setOpenDateFilter('');
+                        setCloseDateFilter('');
+                        setShowAllClosed(false);
+                      }}
+                    >
+                      Limpar Filtros
+                    </Button>
+                  )}
+                </div>
               </div>
             )}
           </div>

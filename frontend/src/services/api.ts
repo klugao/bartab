@@ -66,7 +66,13 @@ export const tabsApi = {
     });
   },
   getOpen: () => api.get<Tab[]>('/tabs').then(res => res.data),
-  getClosed: () => api.get<Tab[]>('/tabs/closed').then(res => res.data),
+  getClosed: (startDate?: string, endDate?: string) => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const queryString = params.toString();
+    return api.get<Tab[]>(`/tabs/closed${queryString ? `?${queryString}` : ''}`).then(res => res.data);
+  },
   getById: (id: string) => {
     console.log('tabsApi.getById - Buscando conta:', id);
     return api.get<Tab>(`/tabs/${id}`).then(res => res.data);
