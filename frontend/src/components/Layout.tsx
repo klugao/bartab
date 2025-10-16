@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { HomeIcon, UsersIcon, CubeIcon, ChartBarIcon, BanknotesIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, UsersIcon, CubeIcon, ChartBarIcon, BanknotesIcon, Bars3Icon, XMarkIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '../contexts/AuthContext';
+import { Button } from './ui/button';
 
 const Layout = () => {
   const location = useLocation();
+  const { user, logout } = useAuth();
 
   const navigation = [
     { name: 'Contas', href: '/', icon: HomeIcon },
@@ -60,6 +63,29 @@ const Layout = () => {
                 );
               })}
             </nav>
+            {/* User menu */}
+            <div className="flex items-center gap-3">
+              <div className="hidden md:block text-right">
+                <div className="text-sm font-medium text-gray-900">{user?.establishment.name}</div>
+                <div className="text-xs text-gray-500">{user?.name}</div>
+              </div>
+              {user?.picture && (
+                <img 
+                  src={user.picture} 
+                  alt={user.name} 
+                  className="w-8 h-8 rounded-full"
+                />
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={logout}
+                className="flex items-center gap-1"
+              >
+                <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                <span className="hidden md:inline">Sair</span>
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -87,6 +113,21 @@ const Layout = () => {
                 <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
+            <div className="px-4 py-3 border-b bg-gray-50">
+              <div className="flex items-center gap-3">
+                {user?.picture && (
+                  <img 
+                    src={user.picture} 
+                    alt={user.name} 
+                    className="w-10 h-10 rounded-full"
+                  />
+                )}
+                <div>
+                  <div className="text-sm font-medium text-gray-900">{user?.establishment.name}</div>
+                  <div className="text-xs text-gray-500">{user?.name}</div>
+                </div>
+              </div>
+            </div>
             <nav className="px-2 py-2">
               {navigation.map((item) => {
                 const isActive = location.pathname === item.href;
@@ -102,6 +143,16 @@ const Layout = () => {
                   </Link>
                 );
               })}
+              <button
+                onClick={() => {
+                  closeDrawer();
+                  logout();
+                }}
+                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50 w-full mt-2"
+              >
+                <ArrowRightOnRectangleIcon className="h-5 w-5" />
+                Sair
+              </button>
             </nav>
           </div>
         </div>
