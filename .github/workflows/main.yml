@@ -100,13 +100,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-frontend-
       
-      - name: Limpar node_modules se existir
+      - name: Limpar cache npm e node_modules
         working-directory: ./frontend
-        run: rm -rf node_modules
+        run: |
+          rm -rf node_modules package-lock.json
+          npm cache clean --force
       
       - name: Instalar dependências do Frontend
         working-directory: ./frontend
-        run: npm install
+        run: npm install --force
       
       - name: Build Frontend
         working-directory: ./frontend
@@ -136,13 +138,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-frontend-
       
-      - name: Limpar node_modules se existir
+      - name: Limpar cache npm e node_modules
         working-directory: ./frontend
-        run: rm -rf node_modules
+        run: |
+          rm -rf node_modules package-lock.json
+          npm cache clean --force
       
       - name: Instalar dependências do Frontend
         working-directory: ./frontend
-        run: npm install
+        run: npm install --force
       
       - name: Executar testes do Frontend
         working-directory: ./frontend
