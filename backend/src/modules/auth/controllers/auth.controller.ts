@@ -78,6 +78,26 @@ export class AuthController {
     return { authenticated: true };
   }
 
+  // Endpoint temporário para login direto (apenas desenvolvimento/testes)
+  @Post('dev-login')
+  async devLogin(@Body() body: { email: string }) {
+    try {
+      const user = await this.userRepository.findOne({ 
+        where: { email: body.email },
+        relations: ['establishment']
+      });
+      
+      if (!user) {
+        throw new UnauthorizedException('Usuário não encontrado');
+      }
+      
+      // Retorna token diretamente
+      return this.authService.login(user);
+    } catch (error) {
+      throw new UnauthorizedException('Erro ao fazer login');
+    }
+  }
+
   // Endpoint temporário para corrigir o admin
   @Get('fix-admin')
   async fixAdmin() {
