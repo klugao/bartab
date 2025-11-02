@@ -52,7 +52,6 @@ services:
     runtime: static
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: ./frontend/dist
-    plan: free
     envVars:
       - key: VITE_API_BASE_URL
         value: https://bartab-backend.onrender.com/api # Atualize com sua URL do backend
