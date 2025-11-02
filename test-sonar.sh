@@ -12,7 +12,18 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 SONAR_HOST_URL="${SONAR_HOST_URL:-http://localhost:9000}"
-SONAR_TOKEN="${SONAR_TOKEN:-sqa_38ad5c3247d3aa2765223a9e033bbae8a648cfb2}"
+# SECURITY: Token deve ser fornecido via variável de ambiente SONAR_TOKEN
+# Nunca faça commit de tokens reais no código
+SONAR_TOKEN="${SONAR_TOKEN:-}"
+
+if [[ -z "$SONAR_TOKEN" ]]; then
+    echo -e "${RED}✗ SONAR_TOKEN não configurado${NC}"
+    echo -e "${YELLOW}  Configure a variável de ambiente:${NC}"
+    echo -e "  export SONAR_TOKEN=seu-token-aqui"
+    echo -e "${YELLOW}  Ou execute:${NC}"
+    echo -e "  SONAR_TOKEN=seu-token ./test-sonar.sh"
+    exit 1
+fi
 
 echo -e "${GREEN}╔════════════════════════════════════════╗${NC}"
 echo -e "${GREEN}║   Teste SonarQube - Projeto BarTab    ║${NC}"

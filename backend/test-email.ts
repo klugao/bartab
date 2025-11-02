@@ -75,7 +75,9 @@ async function main() {
     console.log('  SMTP_HOST=smtp.gmail.com');
     console.log('  SMTP_PORT=587');
     console.log('  SMTP_USER=seu-email@gmail.com');
-    console.log('  SMTP_PASS=sua-senha-de-app');
+    console.log('  SMTP_PASS=<sua-senha-de-app-aqui>');
+    console.log('\n⚠️  IMPORTANTE: Nunca faça commit de credenciais reais!');
+    console.log('   Use o arquivo .env (já está no .gitignore)');
     process.exit(1);
   }
   
