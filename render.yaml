@@ -10,7 +10,7 @@ services:
     name: bartab-backend
     runtime: node
     region: oregon # mude para sua região preferida (frankfurt, singapore, etc)
-    rootDirectory: ./backend
+    rootDirectory: backend
     buildCommand: npm install && npm run build
     startCommand: npm run start:prod
     healthCheckPath: /api
@@ -51,9 +51,9 @@ services:
   - type: web
     name: bartab-frontend
     runtime: static
-    rootDirectory: ./frontend
+    rootDirectory: frontend
     buildCommand: npm install && npm run build
-    staticPublishPath: ./dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_API_BASE_URL
         value: https://bartab-backend.onrender.com/api # Atualize com sua URL do backend
