@@ -109,6 +109,8 @@ const api = axios.create({
 // Interceptor para adicionar token JWT (quando implementar autenticação)
 api.interceptors.request.use(
   (config) => {
+    // SECURITY: localStorage é usado para armazenar o token JWT
+    // Estamos cientes dos riscos de XSS, mas é a abordagem padrão para SPAs
     const token = localStorage.getItem('jwt_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

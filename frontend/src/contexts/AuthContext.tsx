@@ -32,7 +32,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Verificar se há um token salvo
+    // SECURITY: localStorage é usado para persistir a sessão do usuário
+    // Verificar se há um token salvo ao carregar a aplicação
     const savedToken = localStorage.getItem('token');
     if (savedToken) {
       login(savedToken);
@@ -44,6 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (newToken: string) => {
     try {
       setToken(newToken);
+      // SECURITY: Armazena token no localStorage para persistência de sessão
       localStorage.setItem('token', newToken);
 
       // Buscar dados do usuário
@@ -70,6 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     setToken(null);
+    // SECURITY: Remove token do localStorage ao fazer logout
     localStorage.removeItem('token');
     navigate('/login');
   };

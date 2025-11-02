@@ -87,8 +87,11 @@ export const announceToScreenReader = (message: string) => {
 };
 
 // Gera IDs únicos para associar labels com inputs
+// Usa crypto.randomUUID() para gerar IDs seguros e únicos
 export const generateId = (prefix: string) => {
-  return `${prefix}-${Math.random().toString(36).substr(2, 9)}`;
+  // Usar apenas os primeiros 8 caracteres do UUID para manter IDs curtos
+  const uuid = crypto.randomUUID().split('-')[0];
+  return `${prefix}-${uuid}`;
 };
 
 // Valida contraste de cor (básico)
