@@ -5,7 +5,10 @@ import { Button } from '../components/ui/button';
 const Login: React.FC = () => {
   const handleGoogleLogin = () => {
     // Redirecionar para o endpoint de autenticação do Google
-    window.location.href = 'http://localhost:3000/api/auth/google';
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+    // Remove /api do final se existir, pois vamos adicionar o caminho completo
+    const baseUrl = apiBaseUrl.replace(/\/api$/, '');
+    window.location.href = `${baseUrl}/api/auth/google`;
   };
 
   return (
