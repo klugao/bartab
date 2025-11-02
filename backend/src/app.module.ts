@@ -24,6 +24,13 @@ import { NotificationModule } from './modules/notification/notification.module';
       logging: true,
       autoLoadEntities: true,
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      extra: {
+        // Força uso de IPv4 para evitar erro ENETUNREACH com IPv6
+        connectionTimeoutMillis: 10000,
+        query_timeout: 10000,
+        statement_timeout: 10000,
+        idle_in_transaction_session_timeout: 10000,
+      },
     }),
     AuthModule,
     CustomersModule,
