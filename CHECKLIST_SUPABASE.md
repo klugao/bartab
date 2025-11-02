@@ -18,14 +18,16 @@ Marque cada item conforme completa. Tempo total: ~20 minutos.
 
 ### Obter Connection String
 - [ ] **Settings** → **Database**
-- [ ] Rolar até "Connection Pooling"
-- [ ] Copiar URI (porta 6543):
+- [ ] Rolar até "Connection Pooling" (IMPORTANTE!)
+- [ ] **Modo:** Transaction
+- [ ] Copiar URI (porta 6543 - NÃO use 5432!):
   ```
-  postgresql://postgres.[ref]:[senha]@...pooler.supabase.com:6543/postgres
+  postgresql://postgres.xxxxx:[senha]@aws-0-sa-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true
   ```
-- [ ] Substituir `[senha]` pela senha real
+- [ ] Substituir `[senha]` pela senha real (sem colchetes!)
 - [ ] Salvar URL: `_________________________________`
-postgresql://postgres:tcc123!@db.trzpxzqjdxyttxfudpqv.supabase.co:5432/postgres
+
+**⚠️ IMPORTANTE:** Use a URL de Connection Pooling (porta 6543), não a direta!
 
 ---
 
@@ -209,6 +211,38 @@ git push origin main
 - Render Frontend: **Grátis** (ilimitado)
 
 **Total: R$ 0,00/mês** 🎉
+
+---
+
+## 🔧 Troubleshooting
+
+### ❌ Erro: "Cannot find module '/opt/render/project/src/backend/dist/main'"
+**Solução:** O script `start:prod` no `package.json` deve ser:
+```json
+"start:prod": "node dist/src/main"
+```
+
+### ❌ Erro: "ECONNREFUSED ::1:5432" ou "Unable to connect to database"
+**Causas possíveis:**
+1. ❌ Usando porta 5432 (direta) - Use **6543** (pooling)
+2. ❌ DATABASE_URL não configurada no Render
+3. ❌ Senha incorreta na DATABASE_URL
+4. ❌ Faltando configuração SSL
+
+**Solução:**
+1. No Supabase: **Settings** → **Database** → **Connection Pooling**
+2. Copie a URL com porta **6543**
+3. No Render: **Environment** → Editar `DATABASE_URL`
+4. Cole a URL correta (substitua [senha] pela senha real!)
+5. Salve e aguarde o redeploy
+
+### ❌ Build falha com erros TypeScript
+**Solução:** Execute localmente antes:
+```bash
+cd backend
+npm run build
+```
+Se houver erros, corrija antes do deploy.
 
 ---
 

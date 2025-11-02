@@ -23,6 +23,7 @@ import { NotificationModule } from './modules/notification/notification.module';
       synchronize: true,
       logging: true,
       autoLoadEntities: true,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     }),
     AuthModule,
     CustomersModule,
