@@ -24,6 +24,9 @@ const api = axios.create({
 
 // Interceptor para adicionar token JWT
 api.interceptors.request.use((config) => {
+  // SECURITY: localStorage é usado para armazenar o token JWT
+  // Estamos cientes dos riscos de XSS, mas é a abordagem padrão para SPAs
+  // O backend valida e expira tokens, e o frontend usa HTTPS em produção
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -36,6 +39,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      // SECURITY: Remove token ao receber 401 (não autorizado)
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
