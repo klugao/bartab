@@ -100,6 +100,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-frontend-
       
+      - name: Limpar node_modules se existir
+        working-directory: ./frontend
+        run: rm -rf node_modules
+      
       - name: Instalar dependências do Frontend
         working-directory: ./frontend
         run: npm install
@@ -131,6 +135,10 @@ jobs:
           key: ${{ runner.os }}-frontend-${{ hashFiles('frontend/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-frontend-
+      
+      - name: Limpar node_modules se existir
+        working-directory: ./frontend
+        run: rm -rf node_modules
       
       - name: Instalar dependências do Frontend
         working-directory: ./frontend
