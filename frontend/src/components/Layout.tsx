@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { HomeIcon, UsersIcon, CubeIcon, ChartBarIcon, BanknotesIcon, Bars3Icon, XMarkIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, UsersIcon, CubeIcon, ChartBarIcon, BanknotesIcon, Bars3Icon, XMarkIcon, ArrowRightOnRectangleIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/button';
 
@@ -15,6 +15,12 @@ const Layout = () => {
     { name: 'Dívidas', href: '/debts', icon: BanknotesIcon },
     { name: 'Relatórios', href: '/reports', icon: ChartBarIcon },
   ];
+
+  // Adiciona link de admin se for administrador
+  const isAdmin = user?.role === 'AdministradorSistema';
+  if (isAdmin) {
+    navigation.push({ name: 'Admin', href: '/admin', icon: ShieldCheckIcon });
+  }
 
   const [mobileOpen, setMobileOpen] = useState(false);
 
