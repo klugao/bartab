@@ -183,7 +183,7 @@ jobs:
           path: frontend/coverage/
       
       - name: SonarCloud Scan - Backend
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarcloud-github-action@383f7e52eae3ab0510c3cb0e7d9d150bbaeab838  # v3.1.0
         with:
           projectBaseDir: backend
         env:
@@ -191,7 +191,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       
       - name: SonarCloud Scan - Frontend
-        uses: SonarSource/sonarcloud-github-action@master
+        uses: SonarSource/sonarcloud-github-action@383f7e52eae3ab0510c3cb0e7d9d150bbaeab838  # v3.1.0
         with:
           projectBaseDir: frontend
         env:
