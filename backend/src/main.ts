@@ -6,8 +6,23 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // CORS configurado
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174', 
+    'http://localhost:5175',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174',
+    'http://127.0.0.1:5175',
+    'https://bartab-frontend.onrender.com',
+  ];
+
+  // Adicionar CORS_ORIGIN do ambiente se existir
+  if (process.env.CORS_ORIGIN) {
+    allowedOrigins.push(process.env.CORS_ORIGIN);
+  }
+
   app.enableCors({
-    origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174', 'http://127.0.0.1:5175'],
+    origin: allowedOrigins,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
     credentials: true,
