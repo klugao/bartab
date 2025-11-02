@@ -562,3 +562,4 @@ O banco no Supabase continua intacto (dados não são perdidos).
 
 **💡 Salve essas URLs e compartilhe com sua equipe!**
 
+

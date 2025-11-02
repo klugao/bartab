@@ -20,22 +20,33 @@ git push origin main
 
 ### 2️⃣ Obter URL Correta do Supabase
 
+#### **Método Mais Simples (Recomendado):**
+
 1. Acesse: https://app.supabase.com
 2. Selecione seu projeto `bartab`
-3. Vá em **Settings** → **Database**
-4. Role até **"Connection Pooling"**
-5. **Modo:** Transaction
-6. Copie a URI completa (porta **6543**, não 5432!)
+3. Vá em **⚙️ Settings** → **Database**
+4. Procure por **"Connection string"**
+5. Clique na aba **"URI"** (primeira aba)
+6. Copie a URL que aparece
+7. **Adicione `?sslmode=require` no final**
 
-**Formato esperado:**
+**Exemplo do que você vai ver:**
 ```
-postgresql://postgres.xxxxx:[senha]@aws-0-sa-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+postgresql://postgres:[YOUR-PASSWORD]@db.trzpxzqjdxyttxfudpqv.supabase.co:5432/postgres
+```
+
+**Formato final (depois de substituir a senha e adicionar SSL):**
+```
+postgresql://postgres:tcc123!@db.trzpxzqjdxyttxfudpqv.supabase.co:5432/postgres?sslmode=require
 ```
 
 **⚠️ IMPORTANTE:**
-- Use a URL de **Connection Pooling** (porta 6543)
-- Substitua `[senha]` pela sua senha real do Supabase
+- Substitua `[YOUR-PASSWORD]` pela sua senha real do Supabase
 - Remova os colchetes!
+- Adicione `?sslmode=require` no final da URL
+
+**Não lembra a senha?**
+- Settings → Database → "Reset database password"
 
 ### 3️⃣ Configurar no Render
 
