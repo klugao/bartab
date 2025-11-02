@@ -10,6 +10,23 @@ Sistema completo de PDV para gerenciar **contas/mesas**, itens consumidos e paga
 ✅ **API**: Endpoints CRUD para todas as funcionalidades  
 ✅ **Interface**: Páginas principais e componentes  
 
+## ⚡ **Início Rápido - Um Comando Para Tudo**
+
+```bash
+npm start
+```
+
+✨ Este comando inicia **tudo automaticamente**: PostgreSQL + Backend + Frontend!
+
+Para parar:
+```bash
+npm stop
+```
+
+📖 **Mais detalhes**: [INICIO_RAPIDO.md](./INICIO_RAPIDO.md) | [COMANDOS_RAPIDOS.md](./COMANDOS_RAPIDOS.md)
+
+---
+
 ## 🎯 **Funcionalidades Implementadas**
 
 - **CRUD de Clientes** e **Itens**

@@ -1,4 +1,18 @@
 {
+  "name": "bartab",
+  "version": "1.0.0",
+  "description": "BarTab - Sistema de Gerenciamento de Bar",
+  "scripts": {
+    "start": "bash start-clean.sh",
+    "dev": "bash start-clean.sh",
+    "stop": "bash stop-project.sh",
+    "db:start": "docker-compose up -d db",
+    "db:stop": "docker-compose down",
+    "backend": "cd backend && npm run start:dev",
+    "frontend": "cd frontend && npm run dev",
+    "test": "bash run-tests.sh",
+    "clean": "bash stop-project.sh && docker-compose down -v"
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0"
