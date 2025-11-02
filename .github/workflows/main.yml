@@ -159,8 +159,8 @@ jobs:
           path: frontend/coverage/
           retention-days: 1
 
-  sonar_analysis:
-    name: SonarQube Analysis
+  sonarcloud_analysis:
+    name: SonarCloud Analysis
     runs-on: ubuntu-latest
     needs: [test-backend, test-frontend]
     
@@ -168,7 +168,7 @@ jobs:
       - name: Checkout código
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Importante para análise completa do histórico
       
       - name: Download Backend Coverage
         uses: actions/download-artifact@v4
@@ -182,38 +182,18 @@ jobs:
           name: frontend-coverage
           path: frontend/coverage/
       
-      # Nota: SONAR_TOKEN é automaticamente convertido para sonar.login (SonarQube < 10.0)
-      # ou sonar.token (SonarQube >= 10.0) pela action do SonarSource
-      - name: SonarQube Scan - Backend
-        uses: sonarsource/sonarqube-scan-action@master
+      - name: SonarCloud Scan - Backend
+        uses: SonarSource/sonarcloud-github-action@master
         with:
           projectBaseDir: backend
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Necessário para PR decoration
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
       
-      - name: Aguardar Quality Gate - Backend
-        uses: sonarsource/sonarqube-quality-gate-action@master
-        timeout-minutes: 5
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-          scanMetadataReportFile: backend/.scannerwork/report-task.txt
-      
-      - name: SonarQube Scan - Frontend
-        uses: sonarsource/sonarqube-scan-action@master
+      - name: SonarCloud Scan - Frontend
+        uses: SonarSource/sonarcloud-github-action@master
         with:
           projectBaseDir: frontend
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Necessário para PR decoration
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-      
-      - name: Aguardar Quality Gate - Frontend
-        uses: sonarsource/sonarqube-quality-gate-action@master
-        timeout-minutes: 5
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        with:
-          scanMetadataReportFile: frontend/.scannerwork/report-task.txt

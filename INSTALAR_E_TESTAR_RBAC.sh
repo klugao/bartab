@@ -18,19 +18,25 @@ NC='\033[0m' # No Color
 
 # Função para printar com cor
 print_success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    local message="$1"
+    echo -e "${GREEN}✅ ${message}${NC}"
+    return 0
 }
 
 print_error() {
-    echo -e "${RED}❌ $1${NC}"
+    local message="$1"
+    echo -e "${RED}❌ ${message}${NC}"
+    return 0
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    local message="$1"
+    echo -e "${YELLOW}⚠️  ${message}${NC}"
+    return 0
 }
 
 # Verificar se está no diretório correto
-if [ ! -d "backend" ]; then
+if [[ ! -d "backend" ]]; then
     print_error "Erro: Execute este script na raiz do projeto (onde está a pasta backend/)"
     exit 1
 fi
@@ -51,7 +57,7 @@ echo ""
 # Passo 2: Verificar arquivo .env
 echo "🔧 Passo 2: Verificando configuração..."
 
-if [ ! -f ".env" ]; then
+if [[ ! -f ".env" ]]; then
     print_warning "Arquivo .env não encontrado!"
     echo "   Criando a partir do env.example..."
     cp env.example .env

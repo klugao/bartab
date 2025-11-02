@@ -38,7 +38,7 @@ else
 fi
 
 # Verificar se o arquivo .env existe no backend
-if [ ! -f "backend/.env" ]; then
+if [[ ! -f "backend/.env" ]]; then
     echo -e "${YELLOW}📄 Criando arquivo .env...${NC}"
     cp backend/env.example backend/.env
 fi
@@ -47,7 +47,7 @@ echo -e "${BLUE}🚀 Iniciando Backend...${NC}"
 cd backend
 
 # Instalar dependências se necessário
-if [ ! -d "node_modules" ]; then
+if [[ ! -d "node_modules" ]]; then
     echo -e "${YELLOW}📦 Instalando dependências do backend...${NC}"
     npm install
 fi
@@ -72,7 +72,7 @@ echo -e "${BLUE}🌐 Iniciando Frontend...${NC}"
 cd ../frontend
 
 # Instalar dependências se necessário
-if [ ! -d "node_modules" ]; then
+if [[ ! -d "node_modules" ]]; then
     echo -e "${YELLOW}📦 Instalando dependências do frontend...${NC}"
     npm install
 fi
