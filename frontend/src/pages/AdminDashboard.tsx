@@ -10,7 +10,6 @@ import {
   Clock, 
   Building2, 
   Users, 
-  TrendingUp,
   Mail,
   Calendar,
   AlertCircle,
