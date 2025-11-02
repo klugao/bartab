@@ -115,6 +115,10 @@ export const tabsApi = {
     console.log('tabsApi.getConsumptionReport - Buscando relatório:', { year, month });
     return api.get(`/tabs/reports/consumption?year=${year}&month=${month}`).then(res => res.data);
   },
+  getAvailableMonths: () => {
+    console.log('tabsApi.getAvailableMonths - Buscando meses disponíveis');
+    return api.get<Array<{ year: number; month: number; value: string }>>('/tabs/reports/available-months').then(res => res.data);
+  },
 };
 
 // Expenses API
