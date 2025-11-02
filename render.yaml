@@ -1,0 +1,66 @@
+databases:
+  - name: bartab-db
+    databaseName: pdv_dev
+    user: pdv
+    plan: free # ou "starter" para $7/mês
+
+services:
+  # Backend API
+  - type: web
+    name: bartab-backend
+    runtime: node
+    region: oregon # mude para sua região preferida (frankfurt, singapore, etc)
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm run start:prod
+    healthCheckPath: /api
+    plan: free # ou "starter" para $7/mês
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bartab-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PORT
+        value: 10000
+      - key: CORS_ORIGIN
+        value: https://bartab-frontend.onrender.com # Atualize com sua URL do frontend
+      - key: FRONTEND_URL
+        value: https://bartab-frontend.onrender.com # Atualize com sua URL do frontend
+      - key: GOOGLE_CLIENT_ID
+        sync: false # Configure manualmente no dashboard
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false # Configure manualmente no dashboard
+      - key: GOOGLE_CALLBACK_URL
+        value: https://bartab-backend.onrender.com/api/auth/google/callback # Atualize com sua URL do backend
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USER
+        sync: false # Configure manualmente no dashboard
+      - key: SMTP_PASS
+        sync: false # Configure manualmente no dashboard
+      - key: SMTP_FROM
+        value: noreply@bartab.com
+
+  # Frontend
+  - type: web
+    name: bartab-frontend
+    runtime: static
+    region: oregon # mude para sua região preferida
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    plan: free
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://bartab-backend.onrender.com/api # Atualize com sua URL do backend
+      - key: VITE_APP_TITLE
+        value: BarTab
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
