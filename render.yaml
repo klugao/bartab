@@ -50,7 +50,6 @@ services:
   - type: web
     name: bartab-frontend
     runtime: static
-    region: oregon # mude para sua região preferida
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: ./frontend/dist
     plan: free
