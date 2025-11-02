@@ -38,13 +38,12 @@ const Reports = () => {
   const [report, setReport] = useState<ConsumptionReport | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<string>('');
   const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [availableMonths, setAvailableMonths] = useState<Array<{ year: number; month: number; value: string }>>([]);
   const { toast } = useToast();
 
-  // Inicializar com o mês atual
+  // Carregar meses disponíveis ao montar o componente
   useEffect(() => {
-    const now = new Date();
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    setSelectedMonth(currentMonth);
+    loadAvailableMonths();
   }, []);
 
   // Carregar relatório quando o mês mudar
@@ -53,6 +52,25 @@ const Reports = () => {
       loadReport();
     }
   }, [selectedMonth]);
+
+  const loadAvailableMonths = async () => {
+    try {
+      const months = await tabsApi.getAvailableMonths();
+      setAvailableMonths(months);
+      
+      // Selecionar o mês mais recente automaticamente
+      if (months.length > 0) {
+        setSelectedMonth(months[0].value);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar meses disponíveis:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Erro ao carregar meses disponíveis. Tente novamente.",
+      });
+    }
+  };
 
   const loadReport = async () => {
     if (!selectedMonth) return;
@@ -74,31 +92,15 @@ const Reports = () => {
     }
   };
 
-  // Gerar opções de meses (últimos 12 meses + 6 meses futuros)
-  const generateMonthOptions = () => {
-    const options = [];
-    const now = new Date();
-    
-    // Últimos 12 meses
-    for (let i = 11; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      const label = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-      options.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) });
-    }
-    
-    // Próximos 6 meses
-    for (let i = 1; i <= 6; i++) {
-      const date = new Date(now.getFullYear(), now.getMonth() + i, 1);
-      const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      const label = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-      options.push({ value, label: label.charAt(0).toUpperCase() + label.slice(1) });
-    }
-    
-    return options;
-  };
-
-  const monthOptions = generateMonthOptions();
+  // Gerar opções de meses a partir dos meses disponíveis
+  const monthOptions = availableMonths.map(({ year, month, value }) => {
+    const date = new Date(year, month - 1, 1);
+    const label = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    return {
+      value,
+      label: label.charAt(0).toUpperCase() + label.slice(1),
+    };
+  });
 
   const handleAddExpense = async (description: string, amount: string) => {
     if (!selectedMonth) return;
@@ -119,7 +121,8 @@ const Reports = () => {
         description: "Despesa adicionada com sucesso!",
       });
       
-      // Recarregar relatório
+      // Recarregar meses disponíveis e relatório
+      await loadAvailableMonths();
       await loadReport();
     } catch (error) {
       console.error('Erro ao adicionar despesa:', error);
@@ -139,7 +142,8 @@ const Reports = () => {
         description: "Despesa excluída com sucesso!",
       });
       
-      // Recarregar relatório
+      // Recarregar meses disponíveis e relatório
+      await loadAvailableMonths();
       await loadReport();
     } catch (error) {
       console.error('Erro ao excluir despesa:', error);
@@ -176,13 +180,20 @@ const Reports = () => {
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
                 className="w-full h-12 px-4 py-3 text-lg rounded-2xl border border-input bg-background focus:outline-none focus:ring-2 focus:ring-ring"
+                disabled={availableMonths.length === 0}
               >
-                <option value="">Selecione um mês</option>
-                {monthOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
+                {availableMonths.length === 0 ? (
+                  <option value="">Nenhum mês com registros</option>
+                ) : (
+                  <>
+                    <option value="">Selecione um mês</option>
+                    {monthOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </>
+                )}
               </select>
             </div>
           </div>
