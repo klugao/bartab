@@ -1,17 +1,9 @@
-import { ReactElement } from 'react';
-import { render, RenderOptions } from '@testing-library/react';
+import type { ReactElement } from 'react';
+import { render, type RenderOptions } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '../contexts/AuthContext';
 
-// Mock do AuthContext para testes
-interface MockAuthContextProps {
-  user?: any;
-  login?: () => Promise<void>;
-  logout?: () => void;
-  loading?: boolean;
-}
-
-const AllTheProviders = ({ children, authValue }: { children: React.ReactNode; authValue?: MockAuthContextProps }) => {
+const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
   return (
     <BrowserRouter>
       <AuthProvider>
@@ -21,21 +13,15 @@ const AllTheProviders = ({ children, authValue }: { children: React.ReactNode; a
   );
 };
 
-interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
-  authValue?: MockAuthContextProps;
-}
-
 const customRender = (
   ui: ReactElement,
-  options?: CustomRenderOptions,
+  options?: Omit<RenderOptions, 'wrapper'>,
 ) => {
-  const { authValue, ...renderOptions } = options || {};
-  
   return render(ui, {
     wrapper: ({ children }) => (
-      <AllTheProviders authValue={authValue}>{children}</AllTheProviders>
+      <AllTheProviders>{children}</AllTheProviders>
     ),
-    ...renderOptions,
+    ...options,
   });
 };
 

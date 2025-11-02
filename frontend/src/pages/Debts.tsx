@@ -25,7 +25,7 @@ const Debts = () => {
   const loadCustomersWithDebts = async () => {
     try {
       setLoading(true);
-      const response = await customersApi.getCustomersWithDebts();
+      const response = await customersApi.getCustomersWithDebts() as DebtCustomer[];
       console.log('📥 Resposta da API:', response);
       console.log('📋 Número de clientes:', response.length);
       response.forEach((customer, index) => {
