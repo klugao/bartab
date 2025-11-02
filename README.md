@@ -90,7 +90,7 @@ yarn dev
 
 ## 🌐 **URLs de Acesso**
 
-- **Frontend**: http://localhost:5173
+- **Frontend**: http://localhost:5175
 - **Backend API**: http://localhost:3000/api
 - **Adminer (DB)**: http://localhost:8080
 

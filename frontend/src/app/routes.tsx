@@ -11,6 +11,8 @@ import Debts from '../pages/Debts';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import AuthCallback from '../pages/AuthCallback';
+import PendingApproval from '../pages/PendingApproval';
+import AdminDashboard from '../pages/AdminDashboard';
 
 // Wrapper para incluir o AuthProvider em todas as rotas
 const AuthWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -39,6 +41,16 @@ export const router = createBrowserRouter([
     element: (
       <AuthWrapper>
         <AuthCallback />
+      </AuthWrapper>
+    ),
+  },
+  {
+    path: '/pending-approval',
+    element: (
+      <AuthWrapper>
+        <ProtectedRoute>
+          <PendingApproval />
+        </ProtectedRoute>
       </AuthWrapper>
     ),
   },
@@ -75,6 +87,10 @@ export const router = createBrowserRouter([
       {
         path: 'debts',
         element: <Debts />,
+      },
+      {
+        path: 'admin',
+        element: <AdminDashboard />,
       },
     ],
   },
