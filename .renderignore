@@ -1,0 +1,26 @@
+# Arquivos que o Render não precisa
+*.md
+!README.md
+.git
+.vscode
+.idea
+*.log
+coverage/
+.env
+.env.local
+.env.*.local
+node_modules/
+dist/
+build/
+*.test.ts
+*.spec.ts
+test/
+tests/
+__tests__/
+docs/
+*.skip
+Aula*.ipynb
+RFC.pdf
+Assinaturas.jpg
+sonar-issues/
+
