@@ -1,7 +1,7 @@
 // Endpoint temporário para corrigir o admin
 // Cole este código no auth.controller.ts temporariamente
 
-import { Controller, Post, Get } from '@nestjs/common';
+import { Controller, Post } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './modules/auth/entities/user.entity';
