@@ -60,7 +60,7 @@ analyze_backend() {
     echo -e "${YELLOW}→ Executando testes com cobertura...${NC}"
     npm run test:cov
     
-    if [ ! -f "coverage/lcov.info" ]; then
+    if [[ ! -f "coverage/lcov.info" ]]; then
         echo -e "${RED}✗ Arquivo coverage/lcov.info não encontrado${NC}"
         cd ..
         return 1
@@ -76,6 +76,7 @@ analyze_backend() {
     echo -e "${GREEN}  Acesse: $SONAR_HOST_URL/dashboard?id=bartab-backend${NC}"
     
     cd ..
+    return 0
 }
 
 # Função para executar análise do frontend
@@ -93,7 +94,7 @@ analyze_frontend() {
     echo -e "${YELLOW}→ Executando testes com cobertura...${NC}"
     npm run test:coverage
     
-    if [ ! -f "coverage/lcov.info" ]; then
+    if [[ ! -f "coverage/lcov.info" ]]; then
         echo -e "${RED}✗ Arquivo coverage/lcov.info não encontrado${NC}"
         cd ..
         return 1
@@ -109,6 +110,7 @@ analyze_frontend() {
     echo -e "${GREEN}  Acesse: $SONAR_HOST_URL/dashboard?id=bartab-frontend${NC}"
     
     cd ..
+    return 0
 }
 
 # Main
@@ -148,6 +150,7 @@ main() {
     echo -e "  2. Verifique os dashboards dos projetos"
     echo -e "  3. Configure os secrets no GitHub para CI/CD"
     echo ""
+    return 0
 }
 
 # Executar

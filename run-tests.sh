@@ -14,19 +14,25 @@ NC='\033[0m' # No Color
 
 # Função para imprimir cabeçalhos
 print_header() {
+    local message="$1"
     echo -e "\n${BLUE}========================================${NC}"
-    echo -e "${BLUE}$1${NC}"
+    echo -e "${BLUE}${message}${NC}"
     echo -e "${BLUE}========================================${NC}\n"
+    return 0
 }
 
 # Função para imprimir sucesso
 print_success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    local message="$1"
+    echo -e "${GREEN}✅ ${message}${NC}"
+    return 0
 }
 
 # Função para imprimir erro
 print_error() {
-    echo -e "${RED}❌ $1${NC}"
+    local message="$1"
+    echo -e "${RED}❌ ${message}${NC}"
+    return 0
 }
 
 # Função para executar testes do backend
@@ -61,13 +67,13 @@ run_frontend_tests() {
 
 # Função principal
 main() {
-    local mode=${1:-all}
+    local mode="${1:-all}"
     local backend_result=0
     local frontend_result=0
     
     print_header "🧪 Sistema de Testes BarTab"
     
-    case $mode in
+    case "$mode" in
         backend)
             run_backend_tests
             backend_result=$?
@@ -92,7 +98,7 @@ main() {
     # Resumo final
     print_header "📊 Resumo dos Testes"
     
-    if [ $backend_result -eq 0 ] && [ $frontend_result -eq 0 ]; then
+    if [[ "$backend_result" -eq 0 && "$frontend_result" -eq 0 ]]; then
         print_success "Todos os testes passaram! 🎉"
         echo -e "\n${GREEN}Backend: ✅ (51 testes)${NC}"
         echo -e "${GREEN}Frontend: ✅ (75 testes)${NC}"
@@ -100,8 +106,8 @@ main() {
         exit 0
     else
         print_error "Alguns testes falharam"
-        [ $backend_result -ne 0 ] && echo -e "${RED}Backend: ❌${NC}"
-        [ $frontend_result -ne 0 ] && echo -e "${RED}Frontend: ❌${NC}"
+        [ "$backend_result" -ne 0 ] && echo -e "${RED}Backend: ❌${NC}"
+        [ "$frontend_result" -ne 0 ] && echo -e "${RED}Frontend: ❌${NC}"
         exit 1
     fi
 }
