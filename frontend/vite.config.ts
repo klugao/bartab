@@ -13,4 +13,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  // Copia o arquivo _redirects para o dist durante o build
+  // Isso garante que o Render redirecione todas as rotas para o index.html
+  publicDir: 'public',
 })
