@@ -101,17 +101,33 @@ export function OfflineIndicator({ onSyncRequest }: OfflineIndicatorProps) {
         {/* Detalhes expandidos */}
         {showDetails && stats && (
           <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
-            <div className="text-xs text-gray-600">
-              <div className="font-semibold mb-1">Lançamentos:</div>
-              <div className="pl-2 space-y-0.5">
-                <div>Total: {stats.expenses.total}</div>
-                <div>Pendentes: {stats.expenses.pending}</div>
-                <div>Sincronizados: {stats.expenses.synced}</div>
-                {stats.expenses.errors > 0 && (
-                  <div className="text-red-600">Com erro: {stats.expenses.errors}</div>
-                )}
+            {stats.tabs && stats.tabs.total > 0 && (
+              <div className="text-xs text-gray-600">
+                <div className="font-semibold mb-1">Contas:</div>
+                <div className="pl-2 space-y-0.5">
+                  <div>Total: {stats.tabs.total}</div>
+                  <div>Pendentes: {stats.tabs.pending}</div>
+                  <div>Sincronizadas: {stats.tabs.synced}</div>
+                  {stats.tabs.errors > 0 && (
+                    <div className="text-red-600">Com erro: {stats.tabs.errors}</div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
+            
+            {stats.expenses.total > 0 && (
+              <div className="text-xs text-gray-600">
+                <div className="font-semibold mb-1">Lançamentos:</div>
+                <div className="pl-2 space-y-0.5">
+                  <div>Total: {stats.expenses.total}</div>
+                  <div>Pendentes: {stats.expenses.pending}</div>
+                  <div>Sincronizados: {stats.expenses.synced}</div>
+                  {stats.expenses.errors > 0 && (
+                    <div className="text-red-600">Com erro: {stats.expenses.errors}</div>
+                  )}
+                </div>
+              </div>
+            )}
             
             {stats.payments.total > 0 && (
               <div className="text-xs text-gray-600">
