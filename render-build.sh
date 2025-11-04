@@ -1,25 +1,25 @@
 #!/bin/bash
 
-# Script de build para Render - Força instalação limpa
-# Resolve problema com dependências opcionais do Rollup
+# Script de build para Render
+# Configurado para funcionar com ou sem dependências opcionais
 
 set -e  # Para em caso de erro
 
-echo "🧹 Limpando cache e node_modules..."
+echo "🚀 Iniciando build do frontend..."
 cd frontend
-rm -rf node_modules
-rm -rf .cache
+
+echo "🧹 Limpando arquivos antigos..."
 rm -rf dist
+rm -rf .cache
 
 echo "📦 Instalando dependências..."
-# Força Rollup a NÃO usar binários nativos
-export ROLLUP_USE_NATIVE=false
+# Usar npm install normal que lida melhor com dependências opcionais
 npm install --include=dev --no-audit
 
 echo "🏗️ Executando build..."
-# Garante que Rollup use JavaScript puro
-export ROLLUP_USE_NATIVE=false
+# ROLLUP_USE_NATIVE=false já está no script package.json
 npm run build
 
-echo "✅ Build concluído!"
+echo "✅ Build concluído com sucesso!"
+ls -lh dist/
 
