@@ -30,6 +30,12 @@ export class TabsController {
     return this.tabsService.removeItem(data.tabId, data.tabItemId, req.user.establishmentId);
   }
 
+  @Post('update-item-quantity')
+  updateItemQuantity(@Body() data: { tabId: string; tabItemId: string; qty: number }, @Req() req: any) {
+    console.log('TabsController.updateItemQuantity - Dados recebidos:', data);
+    return this.tabsService.updateItemQuantity(data.tabId, data.tabItemId, data.qty, req.user.establishmentId);
+  }
+
   @Get()
   findOpen(@Req() req: any) {
     return this.tabsService.findOpen(req.user.establishmentId);

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { PlusIcon, TrashIcon, CreditCardIcon, PencilIcon, MagnifyingGlassIcon, WifiIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, CreditCardIcon, PencilIcon, MagnifyingGlassIcon, WifiIcon, MinusIcon } from '@heroicons/react/24/outline';
 import { tabsApi, itemsApi } from '../services/api';
 import type { Tab, Item, AddPaymentDto } from '../types';
 import PaymentModal from '../components/PaymentModal';
@@ -90,6 +90,35 @@ const TabDetail = () => {
 
   const handleRemoveItem = async (tabItemId: string) => {
     await tabOperations.removeItem(tabItemId);
+  };
+
+  const handleUpdateQuantity = async (tabItemId: string, currentQty: number, increment: boolean) => {
+    const newQty = increment ? currentQty + 1 : currentQty - 1;
+    
+    if (newQty < 1) {
+      toast({
+        title: "❌ Erro",
+        description: "A quantidade não pode ser menor que 1",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await tabsApi.updateItemQuantity(id!, tabItemId, newQty);
+      toast({
+        title: "✅ Sucesso",
+        description: "Quantidade atualizada com sucesso",
+      });
+      loadTab();
+    } catch (error) {
+      console.error('Erro ao atualizar quantidade:', error);
+      toast({
+        title: "❌ Erro",
+        description: "Não foi possível atualizar a quantidade",
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePayment = async (paymentData: AddPaymentDto) => {
@@ -269,13 +298,33 @@ const TabDetail = () => {
                 <div className="flex items-center space-x-3">
                   <span className="font-semibold">TOTAL: {formatCurrency(tabItem.total)}</span>
                   {tab.status === 'OPEN' && (
-                    <button
-                      onClick={() => handleRemoveItem(tabItem.id)}
-                      className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors"
-                      title="Remover item da conta"
-                    >Excluir item
-                      <TrashIcon className="h-3.5 w-3.5" />
-                    </button>
+                    <>
+                      <div className="flex items-center space-x-2 bg-white rounded-lg border border-gray-300 p-1">
+                        <button
+                          onClick={() => handleUpdateQuantity(tabItem.id, tabItem.qty, false)}
+                          className="p-1.5 text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Diminuir quantidade"
+                          disabled={tabItem.qty <= 1}
+                        >
+                          <MinusIcon className="h-4 w-4" />
+                        </button>
+                        <span className="font-semibold text-lg px-2">{tabItem.qty}</span>
+                        <button
+                          onClick={() => handleUpdateQuantity(tabItem.id, tabItem.qty, true)}
+                          className="p-1.5 text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded transition-colors"
+                          title="Aumentar quantidade"
+                        >
+                          <PlusIcon className="h-4 w-4" />
+                        </button>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveItem(tabItem.id)}
+                        className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors"
+                        title="Remover item da conta"
+                      >
+                        <TrashIcon className="h-3.5 w-3.5" />
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

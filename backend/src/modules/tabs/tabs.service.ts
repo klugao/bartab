@@ -133,6 +133,30 @@ export class TabsService {
     await this.tabItemsRepository.remove(tabItem);
   }
 
+  async updateItemQuantity(tabId: string, tabItemId: string, newQuantity: number, establishmentId: string): Promise<TabItem> {
+    // Primeiro verifica se a tab pertence ao estabelecimento
+    const tab = await this.findOne(tabId, establishmentId);
+    
+    if (tab.status !== TabStatus.OPEN) {
+      throw new BadRequestException('Não é possível atualizar itens em uma conta fechada');
+    }
+    
+    const tabItem = await this.tabItemsRepository.findOne({
+      where: { id: tabItemId, tab: { id: tabId } },
+      relations: ['item']
+    });
+    
+    if (!tabItem) {
+      throw new NotFoundException('Item não encontrado na conta');
+    }
+
+    // Atualizar quantidade e total
+    tabItem.qty = newQuantity;
+    tabItem.total = (parseFloat(tabItem.unit_price) * newQuantity).toString();
+
+    return await this.tabItemsRepository.save(tabItem);
+  }
+
   async calculateTotal(tabId: string): Promise<string> {
     const tabItems = await this.tabItemsRepository.find({
       where: { tab: { id: tabId } }
