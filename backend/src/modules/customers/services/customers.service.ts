@@ -5,12 +5,15 @@ import { Customer } from '../entities/customer.entity';
 import { CreateCustomerDto } from '../dto/create-customer.dto';
 import { UpdateCustomerDto } from '../dto/update-customer.dto';
 import { TabStatus } from '../../tabs/entities/tab.entity';
+import { Payment, PaymentMethod } from '../../payments/entities/payment.entity';
 
 @Injectable()
 export class CustomersService {
   constructor(
     @InjectRepository(Customer)
     private customersRepository: Repository<Customer>,
+    @InjectRepository(Payment)
+    private paymentsRepository: Repository<Payment>,
   ) {}
 
   async create(createCustomerDto: CreateCustomerDto, establishmentId: string): Promise<Customer> {
@@ -134,8 +137,16 @@ export class CustomersService {
     return customersWithDebts;
   }
 
-  async payDebt(id: string, amount: string, establishmentId: string): Promise<Customer> {
-    const customer = await this.findOne(id, establishmentId);
+  async payDebt(id: string, amount: string, method: string, establishmentId: string, note?: string): Promise<Customer> {
+    const customer = await this.customersRepository.findOne({
+      where: { id, establishment_id: establishmentId },
+      relations: ['tabs', 'tabs.tabItems', 'tabs.payments']
+    });
+    
+    if (!customer) {
+      throw new NotFoundException(`Cliente com ID ${id} não encontrado`);
+    }
+    
     const currentBalance = parseFloat(customer.balance_due || '0');
     const paymentAmount = parseFloat(amount);
     
@@ -143,11 +154,72 @@ export class CustomersService {
       throw new Error('O valor do pagamento deve ser maior que zero');
     }
     
+    console.log('💳 PAGAMENTO DE DÍVIDA:');
+    console.log('  Cliente:', customer.name);
+    console.log('  Saldo devedor atual:', currentBalance);
+    console.log('  Valor do pagamento:', paymentAmount);
+    console.log('  Método:', method);
+    
     // Se o pagamento for maior que a dívida, pagar apenas o valor da dívida
     const actualPayment = Math.min(paymentAmount, Math.abs(currentBalance));
-    const newBalance = currentBalance + actualPayment;
     
+    // Buscar contas fechadas com dívida (ordenadas pela mais antiga)
+    const closedTabsWithDebt = customer.tabs
+      ?.filter(tab => tab.status === TabStatus.CLOSED)
+      .map(tab => {
+        const total = tab.tabItems?.reduce((sum, item) => sum + parseFloat(item.total), 0) || 0;
+        const paid = tab.payments?.reduce((sum, payment) => {
+          if (payment.method === PaymentMethod.LATER) {
+            return sum; // Não conta pagamentos LATER como efetivamente pagos
+          }
+          return sum + parseFloat(payment.amount);
+        }, 0) || 0;
+        const remaining = total - paid;
+        
+        return {
+          tab,
+          total,
+          paid,
+          remaining,
+          hasDebt: remaining > 0.01
+        };
+      })
+      .filter(item => item.hasDebt)
+      .sort((a, b) => new Date(a.tab.closed_at || a.tab.opened_at).getTime() - new Date(b.tab.closed_at || b.tab.opened_at).getTime()) || [];
+    
+    console.log(`  📋 Encontradas ${closedTabsWithDebt.length} conta(s) com dívida`);
+    
+    // Distribuir o pagamento entre as contas com dívida (começando pelas mais antigas)
+    let remainingPayment = actualPayment;
+    
+    for (const tabInfo of closedTabsWithDebt) {
+      if (remainingPayment <= 0.01) break;
+      
+      const paymentForThisTab = Math.min(remainingPayment, tabInfo.remaining);
+      
+      console.log(`  💰 Aplicando R$ ${paymentForThisTab.toFixed(2)} na conta ${tabInfo.tab.id}`);
+      
+      // Criar registro de pagamento nesta conta
+      const payment = this.paymentsRepository.create({
+        tab: { id: tabInfo.tab.id },
+        method: method as PaymentMethod,
+        amount: paymentForThisTab.toString(),
+        note: note || 'Pagamento de dívida registrado',
+      });
+      
+      await this.paymentsRepository.save(payment);
+      console.log(`  ✅ Pagamento registrado na conta ${tabInfo.tab.id}`);
+      
+      remainingPayment -= paymentForThisTab;
+    }
+    
+    // Atualizar saldo devedor do cliente
+    const newBalance = currentBalance + actualPayment;
     customer.balance_due = newBalance.toString();
-    return await this.customersRepository.save(customer);
+    await this.customersRepository.save(customer);
+    
+    console.log(`  ✅ Novo saldo devedor: ${newBalance.toFixed(2)}`);
+    
+    return customer;
   }
 }
