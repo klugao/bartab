@@ -13,8 +13,9 @@ rm -rf dist
 rm -rf .cache
 
 echo "📦 Instalando dependências..."
-# Usar npm install normal que lida melhor com dependências opcionais
-npm install --include=dev --no-audit
+# Instala todas as dependências incluindo opcionais
+# O npm automaticamente instala apenas as compatíveis com a plataforma
+npm install --include=optional --include=dev --no-audit
 
 echo "🏗️ Executando build..."
 # ROLLUP_USE_NATIVE=false já está no script package.json
