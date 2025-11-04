@@ -306,3 +306,4 @@ CORS_ORIGIN=https://bartab-frontend-[seu-id].onrender.com
 **✅ Configuração completa! Bom uso do BarTab!** 🚀
 
 
+

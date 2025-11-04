@@ -41,6 +41,19 @@ export class CustomersController {
     }
   }
 
+  @Get('debts/list')
+  async findCustomersWithDebts(@Req() req: any) {
+    try {
+      console.log('Buscando clientes com dívidas...');
+      const customers = await this.customersService.findCustomersWithDebts(req.user.establishmentId);
+      console.log('Encontrados:', customers.length, 'clientes com dívidas');
+      return customers;
+    } catch (error) {
+      console.error('Erro ao buscar clientes com dívidas:', error.message);
+      throw error;
+    }
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string, @Req() req: any) {
     return this.customersService.findOne(id, req.user.establishmentId);
@@ -56,24 +69,11 @@ export class CustomersController {
     return this.customersService.remove(id, req.user.establishmentId);
   }
 
-  @Get('debts/list')
-  async findCustomersWithDebts(@Req() req: any) {
-    try {
-      console.log('Buscando clientes com dívidas...');
-      const customers = await this.customersService.findCustomersWithDebts(req.user.establishmentId);
-      console.log('Encontrados:', customers.length, 'clientes com dívidas');
-      return customers;
-    } catch (error) {
-      console.error('Erro ao buscar clientes com dívidas:', error.message);
-      throw error;
-    }
-  }
-
   @Post(':id/pay-debt')
   async payDebt(@Param('id') id: string, @Body() data: { amount: string; method: string; note?: string }, @Req() req: any) {
     try {
-      console.log('Processando pagamento de dívida para cliente:', id, 'valor:', data.amount);
-      const customer = await this.customersService.payDebt(id, data.amount, req.user.establishmentId);
+      console.log('Processando pagamento de dívida para cliente:', id, 'valor:', data.amount, 'método:', data.method);
+      const customer = await this.customersService.payDebt(id, data.amount, data.method, req.user.establishmentId, data.note);
       console.log('Pagamento processado com sucesso. Novo saldo:', customer.balance_due);
       return customer;
     } catch (error) {
