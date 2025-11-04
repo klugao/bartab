@@ -5,6 +5,7 @@ import { tabsApi } from '@/services/api';
 import type { OfflineTab, OfflineExpense, OfflinePayment } from '@/services/offlineStorage';
 import { Button } from './ui/button';
 import { RefreshCw, X, CheckCircle, AlertTriangle } from 'lucide-react';
+import { formatTimeOnly } from '@/utils/formatters';
 
 export function SyncManager() {
   const { toast } = useToast();
@@ -126,7 +127,7 @@ export function SyncManager() {
             <div className="flex items-center gap-2 text-xs text-green-600 mt-2">
               <CheckCircle className="w-4 h-4" />
               <span>
-                Última sincronização: {lastSyncTime.toLocaleTimeString('pt-BR')}
+                Última sincronização: {formatTimeOnly(lastSyncTime)}
               </span>
             </div>
           )}

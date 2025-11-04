@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import api from '@/services/api';
+import { formatDateOnly } from '@/utils/formatters';
 
 interface Establishment {
   id: string;
@@ -330,7 +331,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4" />
-                          Cadastrado em {new Date(est.created_at).toLocaleDateString('pt-BR')}
+                          Cadastrado em {formatDateOnly(est.created_at)}
                         </div>
                       </CardDescription>
                     </div>
@@ -393,7 +394,7 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
-                        {new Date(est.created_at).toLocaleDateString('pt-BR')}
+                        {formatDateOnly(est.created_at)}
                       </div>
                     </CardDescription>
                   </div>
