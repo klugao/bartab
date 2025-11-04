@@ -1,15 +1,18 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { PlusIcon, TrashIcon, CreditCardIcon, PencilIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, TrashIcon, CreditCardIcon, PencilIcon, MagnifyingGlassIcon, WifiIcon } from '@heroicons/react/24/outline';
 import { tabsApi, itemsApi } from '../services/api';
 import type { Tab, Item, AddPaymentDto } from '../types';
 import PaymentModal from '../components/PaymentModal';
 import EditCustomerModal from '../components/EditCustomerModal';
 import { formatCurrency } from '../utils/formatters';
+import { useTabOperations } from '../hooks/useTabOperations';
+import { useToast } from '../hooks/use-toast';
 
 const TabDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [tab, setTab] = useState<Tab | null>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,6 +22,15 @@ const TabDetail = () => {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [fromCache, setFromCache] = useState(false);
+
+  // Hook para operações offline
+  const tabOperations = useTabOperations({
+    tabId: id || '',
+    onSuccess: () => {
+      loadTab();
+    }
+  });
 
   useEffect(() => {
     if (id) {
@@ -30,10 +42,18 @@ const TabDetail = () => {
   const loadTab = async () => {
     try {
       setLoading(true);
-      const tabData = await tabsApi.getById(id!);
-      setTab(tabData);
+      const result = await tabOperations.loadTabWithCache();
+      if (result.data) {
+        setTab(result.data);
+        setFromCache(result.fromCache);
+      }
     } catch (error) {
       console.error('Erro ao carregar conta:', error);
+      toast({
+        title: "❌ Erro",
+        description: "Não foi possível carregar os dados da comanda",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -59,43 +79,40 @@ const TabDetail = () => {
   }, [items, searchTerm]);
 
   const handleAddItem = async (itemId: string, qty: number) => {
-    try {
-      await tabsApi.addItem(id!, { itemId, qty });
+    const result = await tabOperations.addItem(itemId, qty);
+    if (result.success) {
       setShowAddItemModal(false);
       setSearchTerm('');
       setSelectedItem(null);
       setQuantity(1);
-      loadTab(); // Recarregar dados da conta
-    } catch (error) {
-      console.error('Erro ao adicionar item:', error);
     }
   };
 
   const handleRemoveItem = async (tabItemId: string) => {
-    try {
-      await tabsApi.removeItem(id!, tabItemId);
-      loadTab(); // Recarregar dados da conta
-    } catch (error) {
-      console.error('Erro ao remover item:', error);
-    }
+    await tabOperations.removeItem(tabItemId);
   };
 
   const handlePayment = async (paymentData: AddPaymentDto) => {
-    try {
-      await tabsApi.addPayment(id!, paymentData);
+    const result = await tabOperations.addPayment(paymentData);
+    if (result.success) {
       setShowPaymentModal(false);
       
-      // Recarregar dados da conta para verificar se foi fechada
-      const updatedTab = await tabsApi.getById(id!);
-      
-      // Se a conta foi fechada, voltar para home
-      if (updatedTab.status === 'CLOSED') {
-        navigate('/');
+      if (!result.offline) {
+        // Se processou online, verifica se a conta foi fechada
+        try {
+          const updatedTab = await tabsApi.getById(id!);
+          if (updatedTab.status === 'CLOSED') {
+            navigate('/');
+          } else {
+            loadTab();
+          }
+        } catch (error) {
+          loadTab();
+        }
       } else {
-        loadTab(); // Recarregar dados se ainda estiver aberta
+        // Se salvou offline, apenas atualiza
+        loadTab();
       }
-    } catch (error) {
-      console.error('Erro ao processar pagamento:', error);
     }
   };
 
@@ -143,6 +160,16 @@ const TabDetail = () => {
 
   return (
     <div>
+      {/* Banner de dados do cache */}
+      {fromCache && (
+        <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-md flex items-center gap-2">
+          <WifiIcon className="w-5 h-5 text-orange-600" />
+          <p className="text-sm text-orange-900">
+            📱 Exibindo dados salvos localmente (modo offline)
+          </p>
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Detalhes da Conta</h1>

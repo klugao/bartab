@@ -173,3 +173,4 @@ Deploy automático! ✨
 **📖 Guia completo**: [DEPLOY_RENDER_SUPABASE.md](./DEPLOY_RENDER_SUPABASE.md)
 
 
+
