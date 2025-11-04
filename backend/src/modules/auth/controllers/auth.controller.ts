@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards, Req, Res, HttpStatus, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Get, Body, UseGuards, Req, Res, HttpStatus, UnauthorizedException, Patch } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from '../services/auth.service';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
@@ -7,6 +7,7 @@ import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { Establishment } from '../entities/establishment.entity';
 import { UserRole, ApprovalStatus } from '../../../common/enums';
+import { UpdateEstablishmentDto } from '../dto/update-establishment.dto';
 import type { Request, Response } from 'express';
 
 @Controller('auth')
@@ -96,6 +97,28 @@ export class AuthController {
     } catch (error) {
       throw new UnauthorizedException('Erro ao fazer login');
     }
+  }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  async getEstablishmentProfile(@Req() req: any) {
+    const establishmentId = req.user.establishmentId;
+    const establishment = await this.authService.getEstablishmentProfile(establishmentId);
+    return establishment;
+  }
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  async updateEstablishmentProfile(
+    @Req() req: any,
+    @Body() updateData: UpdateEstablishmentDto,
+  ) {
+    const establishmentId = req.user.establishmentId;
+    const establishment = await this.authService.updateEstablishmentProfile(
+      establishmentId,
+      updateData,
+    );
+    return establishment;
   }
 
   // Endpoint temporário para corrigir o admin

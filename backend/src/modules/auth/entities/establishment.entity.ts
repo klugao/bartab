@@ -23,6 +23,9 @@ export class Establishment {
   @Column({ nullable: true })
   email?: string;
 
+  @Column({ type: 'text', nullable: true })
+  pix_qr_code?: string;
+
   @Column({ default: true })
   active: boolean;
 

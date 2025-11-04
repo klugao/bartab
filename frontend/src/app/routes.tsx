@@ -9,6 +9,7 @@ import Items from '../pages/Items';
 import Reports from '../pages/Reports';
 import Debts from '../pages/Debts';
 import OfflineData from '../pages/OfflineData';
+import Settings from '../pages/Settings';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import AuthCallback from '../pages/AuthCallback';
@@ -92,6 +93,10 @@ export const router = createBrowserRouter([
       {
         path: 'offline-data',
         element: <OfflineData />,
+      },
+      {
+        path: 'settings',
+        element: <Settings />,
       },
       {
         path: 'admin',

@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { HomeIcon, UsersIcon, CubeIcon, ChartBarIcon, BanknotesIcon, Bars3Icon, XMarkIcon, ArrowRightOnRectangleIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, UsersIcon, CubeIcon, ChartBarIcon, BanknotesIcon, Bars3Icon, XMarkIcon, ShieldCheckIcon, CogIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
-import { Button } from './ui/button';
 import { SyncManager } from './SyncManager';
 
 const Layout = () => {
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   const navigation = [
     { name: 'Contas', href: '/', icon: HomeIcon },
@@ -15,6 +14,7 @@ const Layout = () => {
     { name: 'Produtos', href: '/items', icon: CubeIcon },
     { name: 'Dívidas', href: '/debts', icon: BanknotesIcon },
     { name: 'Relatórios', href: '/reports', icon: ChartBarIcon },
+    { name: 'Configurações', href: '/settings', icon: CogIcon },
   ];
 
   // Adiciona link de admin se for administrador
@@ -83,15 +83,6 @@ const Layout = () => {
                   className="w-8 h-8 rounded-full"
                 />
               )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={logout}
-                className="flex items-center gap-1"
-              >
-                <ArrowRightOnRectangleIcon className="w-4 h-4" />
-                <span className="hidden md:inline">Sair</span>
-              </Button>
             </div>
           </div>
         </div>
@@ -153,16 +144,6 @@ const Layout = () => {
                   </Link>
                 );
               })}
-              <button
-                onClick={() => {
-                  closeDrawer();
-                  logout();
-                }}
-                className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50 w-full mt-2"
-              >
-                <ArrowRightOnRectangleIcon className="h-5 w-5" />
-                Sair
-              </button>
             </nav>
           </div>
         </div>

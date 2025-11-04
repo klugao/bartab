@@ -10,7 +10,9 @@ import type {
   CreateTabDto,
   UpdateTabDto,
   AddItemDto,
-  AddPaymentDto
+  AddPaymentDto,
+  Establishment,
+  UpdateEstablishmentDto
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
@@ -143,6 +145,12 @@ export const expensesApi = {
     console.log('expensesApi.delete - Deletando despesa:', id);
     return api.delete(`/expenses/${id}`);
   },
+};
+
+// Profile API
+export const profileApi = {
+  get: () => api.get<Establishment>('/auth/profile').then(res => res.data),
+  update: (data: UpdateEstablishmentDto) => api.patch<Establishment>('/auth/profile', data).then(res => res.data),
 };
 
 export default api;
