@@ -26,7 +26,7 @@ export class Customer {
   @Column()
   establishment_id: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
   @OneToMany(() => Tab, tab => tab.customer)

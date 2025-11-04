@@ -2,6 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
+// Configura o timezone do processo Node.js para São Paulo
+process.env.TZ = 'America/Sao_Paulo';
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
@@ -64,5 +67,6 @@ async function bootstrap() {
   
   console.log(`🚀 Backend rodando na porta ${port}`);
   console.log(`📊 API disponível em: http://localhost:${port}/api`);
+  console.log(`🕐 Timezone: ${process.env.TZ} (${new Date().toString()})`);
 }
 bootstrap();
