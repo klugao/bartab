@@ -11,6 +11,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { useToast } from '../hooks/use-toast';
+import { addOfflineTab, isOnline } from '../services/offlineStorage';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState<'open' | 'closed'>('open');
@@ -128,22 +129,44 @@ const Home = () => {
 
   const handleNewTab = async (customerId?: string) => {
     try {
-      const data = customerId ? { customerId } : {};
-      await tabsApi.open(data);
-      await loadOpenTabs();
-      setShowNewTabModal(false);
-      toast({
-        variant: "default",
-        title: "Sucesso",
-        description: "Nova conta aberta com sucesso!",
-      });
+      if (isOnline()) {
+        // Online: cria diretamente no servidor
+        try {
+          const data = customerId ? { customerId } : {};
+          await tabsApi.open(data);
+          await loadOpenTabs();
+          setShowNewTabModal(false);
+          toast({
+            variant: "default",
+            title: "✅ Sucesso",
+            description: "Nova conta aberta com sucesso!",
+          });
+        } catch (error) {
+          // Se falhar online, tenta salvar offline
+          console.error('Erro ao criar conta online, salvando offline:', error);
+          await addOfflineTab(customerId);
+          setShowNewTabModal(false);
+          toast({
+            title: "⚠️ Erro de conexão",
+            description: "Conta salva offline e será criada quando voltar online",
+          });
+        }
+      } else {
+        // Offline: salva localmente
+        await addOfflineTab(customerId);
+        setShowNewTabModal(false);
+        toast({
+          title: "💾 Conta salva offline",
+          description: "Será criada no servidor quando voltar online",
+        });
+      }
     } catch (error) {
       console.error('Erro ao abrir nova conta:', error);
       const errorMessage = 'Erro ao abrir nova conta. Tente novamente.';
       setError(errorMessage);
       toast({
         variant: "destructive",
-        title: "Erro",
+        title: "❌ Erro",
         description: errorMessage,
       });
     }

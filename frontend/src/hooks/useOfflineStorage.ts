@@ -4,13 +4,19 @@ import {
   getOfflineStats,
   isOnline,
   addNetworkListener,
+  getUnsyncedTabs,
   getUnsyncedExpenses,
   getUnsyncedPayments,
+  markTabAsSynced,
   markExpenseAsSynced,
   markPaymentAsSynced,
+  markTabAsError,
   markExpenseAsError,
+  clearSyncedTabs,
   clearSyncedExpenses,
   clearSyncedPayments,
+  updateOfflineItemsTabId,
+  type OfflineTab,
   type OfflineExpense,
   type OfflinePayment,
 } from '@/services/offlineStorage';
@@ -64,6 +70,7 @@ export function useOfflineStorage() {
 
   // Função para sincronizar dados offline com o servidor
   const syncOfflineData = useCallback(async (
+    syncTabsFn: (tab: OfflineTab) => Promise<string>, // Retorna o ID da tab criada no servidor
     syncExpensesFn: (expense: OfflineExpense) => Promise<void>,
     syncPaymentsFn: (payment: OfflinePayment) => Promise<void>
   ) => {
@@ -77,7 +84,25 @@ export function useOfflineStorage() {
     let errorCount = 0;
 
     try {
-      // Sincronizar lançamentos
+      // 1. Primeiro sincronizar comandas criadas offline
+      const tabs = await getUnsyncedTabs();
+      console.log(`📤 Sincronizando ${tabs.length} comandas...`);
+      
+      for (const tab of tabs) {
+        try {
+          const serverTabId = await syncTabsFn(tab);
+          await markTabAsSynced(tab.id, serverTabId);
+          // Atualizar IDs de itens/pagamentos associados a esta tab
+          await updateOfflineItemsTabId(tab.id, serverTabId);
+          successCount++;
+        } catch (error) {
+          console.error('Erro ao sincronizar comanda:', error);
+          await markTabAsError(tab.id, error instanceof Error ? error.message : 'Erro desconhecido');
+          errorCount++;
+        }
+      }
+
+      // 2. Sincronizar lançamentos (agora com IDs corretos das tabs)
       const expenses = await getUnsyncedExpenses();
       console.log(`📤 Sincronizando ${expenses.length} lançamentos...`);
       
@@ -93,7 +118,7 @@ export function useOfflineStorage() {
         }
       }
 
-      // Sincronizar pagamentos
+      // 3. Sincronizar pagamentos
       const payments = await getUnsyncedPayments();
       console.log(`📤 Sincronizando ${payments.length} pagamentos...`);
       
@@ -109,6 +134,7 @@ export function useOfflineStorage() {
       }
 
       // Limpar dados sincronizados
+      await clearSyncedTabs();
       await clearSyncedExpenses();
       await clearSyncedPayments();
 

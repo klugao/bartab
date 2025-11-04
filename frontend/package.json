@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "cross-env ROLLUP_USE_NATIVE=false vite",
     "build": "cross-env ROLLUP_USE_NATIVE=false tsc -b && vite build",
     "build:render": "npm ci --omit=optional && npm run build",
     "lint": "eslint .",
@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
-    "@rollup/rollup-linux-x64-gnu": "^4.46.2",
+    "@rollup/rollup-darwin-arm64": "^4.27.4",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
     "@testing-library/user-event": "^14.5.1",

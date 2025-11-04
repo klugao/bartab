@@ -38,8 +38,10 @@ export function useTabOperations({ tabId, onSuccess }: UseTabOperationsProps) {
         } catch (error) {
           // Se falhar online, tenta salvar offline como fallback
           console.error('Erro ao adicionar item online, salvando offline:', error);
+          // Suporta tanto IDs numéricos quanto strings (tabs offline)
+          const tabIdValue = tabId.startsWith('tab_offline_') ? tabId : parseInt(tabId);
           await addOfflineExpense({
-            tabId: parseInt(tabId),
+            tabId: tabIdValue,
             itemId: parseInt(itemId),
             quantity,
           });
@@ -52,8 +54,10 @@ export function useTabOperations({ tabId, onSuccess }: UseTabOperationsProps) {
         }
       } else {
         // Offline: salva diretamente
+        // Suporta tanto IDs numéricos quanto strings (tabs offline)
+        const tabIdValue = tabId.startsWith('tab_offline_') ? tabId : parseInt(tabId);
         await addOfflineExpense({
-          tabId: parseInt(tabId),
+          tabId: tabIdValue,
           itemId: parseInt(itemId),
           quantity,
         });
@@ -131,8 +135,10 @@ export function useTabOperations({ tabId, onSuccess }: UseTabOperationsProps) {
         } catch (error) {
           // Se falhar online, tenta salvar offline como fallback
           console.error('Erro ao processar pagamento online, salvando offline:', error);
+          // Suporta tanto IDs numéricos quanto strings (tabs offline)
+          const tabIdValue = tabId.startsWith('tab_offline_') ? tabId : parseInt(tabId);
           await addOfflinePayment({
-            tabId: parseInt(tabId),
+            tabId: tabIdValue,
             amount: parseFloat(paymentData.amount),
             paymentMethod: paymentData.method,
           });
@@ -145,8 +151,10 @@ export function useTabOperations({ tabId, onSuccess }: UseTabOperationsProps) {
         }
       } else {
         // Offline: salva diretamente
+        // Suporta tanto IDs numéricos quanto strings (tabs offline)
+        const tabIdValue = tabId.startsWith('tab_offline_') ? tabId : parseInt(tabId);
         await addOfflinePayment({
-          tabId: parseInt(tabId),
+          tabId: tabIdValue,
           amount: parseFloat(paymentData.amount),
           paymentMethod: paymentData.method,
         });

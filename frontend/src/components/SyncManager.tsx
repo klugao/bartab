@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useOfflineStorage } from '@/hooks/useOfflineStorage';
 import { useToast } from '@/hooks/use-toast';
 import { tabsApi } from '@/services/api';
-import type { OfflineExpense, OfflinePayment } from '@/services/offlineStorage';
+import type { OfflineTab, OfflineExpense, OfflinePayment } from '@/services/offlineStorage';
 import { Button } from './ui/button';
 import { RefreshCw, X, CheckCircle, AlertTriangle } from 'lucide-react';
 
@@ -34,6 +34,13 @@ export function SyncManager() {
 
   async function handleSync() {
     const result = await syncOfflineData(
+      // Função para sincronizar comandas criadas offline
+      async (tab: OfflineTab): Promise<string> => {
+        const response = await tabsApi.open(
+          tab.customerId ? { customerId: tab.customerId } : {}
+        );
+        return response.id; // Retorna o ID da tab criada no servidor
+      },
       // Função para sincronizar lançamentos
       async (expense: OfflineExpense) => {
         await tabsApi.addItem(expense.tabId.toString(), {
@@ -58,6 +65,8 @@ export function SyncManager() {
       });
       // Recarrega estatísticas
       checkPendingData();
+      // Recarrega a página para atualizar as contas exibidas
+      window.location.reload();
     } else {
       toast({
         title: "❌ Erro na Sincronização",
@@ -72,7 +81,7 @@ export function SyncManager() {
     return null;
   }
 
-  const totalPending = (stats?.expenses.pending || 0) + (stats?.payments.pending || 0);
+  const totalPending = (stats?.tabs?.pending || 0) + (stats?.expenses.pending || 0) + (stats?.payments.pending || 0);
 
   return (
     <div className="fixed bottom-4 right-4 z-30 max-w-sm">
@@ -126,6 +135,40 @@ export function SyncManager() {
         {/* Detalhes expandidos */}
         {showDetails && stats && (
           <div className="p-4 border-b border-gray-200 space-y-3 bg-gray-50">
+            {/* Contas */}
+            {stats.tabs && stats.tabs.total > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-gray-700">
+                    Contas
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {stats.tabs.pending} pendentes
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <div className="bg-white p-2 rounded text-center">
+                    <div className="text-gray-500">Total</div>
+                    <div className="font-semibold">{stats.tabs.total}</div>
+                  </div>
+                  <div className="bg-green-50 p-2 rounded text-center">
+                    <div className="text-green-700">Sync</div>
+                    <div className="font-semibold text-green-600">
+                      {stats.tabs.synced}
+                    </div>
+                  </div>
+                  {stats.tabs.errors > 0 && (
+                    <div className="bg-red-50 p-2 rounded text-center">
+                      <div className="text-red-700">Erros</div>
+                      <div className="font-semibold text-red-600">
+                        {stats.tabs.errors}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Lançamentos */}
             {stats.expenses.total > 0 && (
               <div>

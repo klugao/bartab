@@ -19,10 +19,25 @@ const cachedDataStore = localforage.createInstance({
   description: 'Cache de dados para uso offline',
 });
 
+const offlineTabsStore = localforage.createInstance({
+  name: 'bartab',
+  storeName: 'offline_tabs',
+  description: 'Armazena comandas criadas offline para sincronização posterior',
+});
+
 // Tipos
+export interface OfflineTab {
+  id: string;
+  customerId?: string;
+  timestamp: number;
+  synced: boolean;
+  error?: string;
+  serverTabId?: string; // ID da tab no servidor após sincronização
+}
+
 export interface OfflineExpense {
   id: string;
-  tabId: number;
+  tabId: number | string; // Pode ser ID do servidor ou ID offline temporário
   itemId: number;
   quantity: number;
   notes?: string;
@@ -33,7 +48,7 @@ export interface OfflineExpense {
 
 export interface OfflinePayment {
   id: string;
-  tabId: number;
+  tabId: number | string; // Pode ser ID do servidor ou ID offline temporário
   amount: number;
   paymentMethod: string;
   timestamp: number;
@@ -204,6 +219,116 @@ export async function clearSyncedPayments(): Promise<void> {
   console.log(`🗑️ ${syncedPayments.length} pagamentos sincronizados removidos`);
 }
 
+// ============= OFFLINE TABS =============
+
+/**
+ * Cria uma nova comanda offline para sincronização posterior
+ */
+export async function addOfflineTab(customerId?: string): Promise<string> {
+  const id = `tab_offline_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const offlineTab: OfflineTab = {
+    id,
+    customerId,
+    timestamp: Date.now(),
+    synced: false,
+  };
+  
+  await offlineTabsStore.setItem(id, offlineTab);
+  console.log('✅ Comanda criada offline:', offlineTab);
+  return id;
+}
+
+/**
+ * Obtém todas as comandas offline
+ */
+export async function getOfflineTabs(): Promise<OfflineTab[]> {
+  const tabs: OfflineTab[] = [];
+  await offlineTabsStore.iterate((value: OfflineTab) => {
+    tabs.push(value);
+  });
+  return tabs.sort((a, b) => a.timestamp - b.timestamp);
+}
+
+/**
+ * Obtém comandas offline não sincronizadas
+ */
+export async function getUnsyncedTabs(): Promise<OfflineTab[]> {
+  const tabs = await getOfflineTabs();
+  return tabs.filter(t => !t.synced);
+}
+
+/**
+ * Marca uma comanda como sincronizada e armazena o ID do servidor
+ */
+export async function markTabAsSynced(id: string, serverTabId: string): Promise<void> {
+  const tab = await offlineTabsStore.getItem<OfflineTab>(id);
+  if (tab) {
+    tab.synced = true;
+    tab.serverTabId = serverTabId;
+    await offlineTabsStore.setItem(id, tab);
+    console.log('✅ Comanda sincronizada:', id, '→', serverTabId);
+  }
+}
+
+/**
+ * Marca uma comanda com erro
+ */
+export async function markTabAsError(id: string, error: string): Promise<void> {
+  const tab = await offlineTabsStore.getItem<OfflineTab>(id);
+  if (tab) {
+    tab.error = error;
+    await offlineTabsStore.setItem(id, tab);
+    console.error('❌ Erro na comanda:', id, error);
+  }
+}
+
+/**
+ * Remove uma comanda offline
+ */
+export async function removeOfflineTab(id: string): Promise<void> {
+  await offlineTabsStore.removeItem(id);
+  console.log('🗑️ Comanda offline removida:', id);
+}
+
+/**
+ * Limpa todas as comandas sincronizadas
+ */
+export async function clearSyncedTabs(): Promise<void> {
+  const tabs = await getOfflineTabs();
+  const syncedTabs = tabs.filter(t => t.synced);
+  
+  for (const tab of syncedTabs) {
+    await removeOfflineTab(tab.id);
+  }
+  
+  console.log(`🗑️ ${syncedTabs.length} comandas sincronizadas removidas`);
+}
+
+/**
+ * Atualiza IDs de itens/pagamentos quando uma tab offline é sincronizada
+ */
+export async function updateOfflineItemsTabId(offlineTabId: string, serverTabId: string): Promise<void> {
+  // Atualizar expenses
+  const expenses = await getOfflineExpenses();
+  for (const expense of expenses) {
+    if (expense.tabId === offlineTabId) {
+      expense.tabId = parseInt(serverTabId);
+      await offlineExpensesStore.setItem(expense.id, expense);
+    }
+  }
+  
+  // Atualizar payments
+  const payments = await getOfflinePayments();
+  for (const payment of payments) {
+    if (payment.tabId === offlineTabId) {
+      payment.tabId = parseInt(serverTabId);
+      await offlinePaymentsStore.setItem(payment.id, payment);
+    }
+  }
+  
+  console.log(`🔄 IDs atualizados de ${offlineTabId} para ${serverTabId}`);
+}
+
 // ============= CACHED DATA =============
 
 /**
@@ -263,19 +388,27 @@ export async function clearAllCache(): Promise<void> {
  * Verifica se há dados offline pendentes
  */
 export async function hasOfflineData(): Promise<boolean> {
+  const tabs = await getUnsyncedTabs();
   const expenses = await getUnsyncedExpenses();
   const payments = await getUnsyncedPayments();
-  return expenses.length > 0 || payments.length > 0;
+  return tabs.length > 0 || expenses.length > 0 || payments.length > 0;
 }
 
 /**
  * Obtém estatísticas dos dados offline
  */
 export async function getOfflineStats() {
+  const tabs = await getOfflineTabs();
   const expenses = await getOfflineExpenses();
   const payments = await getOfflinePayments();
   
   return {
+    tabs: {
+      total: tabs.length,
+      synced: tabs.filter(t => t.synced).length,
+      pending: tabs.filter(t => !t.synced).length,
+      errors: tabs.filter(t => t.error).length,
+    },
     expenses: {
       total: expenses.length,
       synced: expenses.filter(e => e.synced).length,
@@ -295,6 +428,7 @@ export async function getOfflineStats() {
  * Limpa todos os dados offline (use com cuidado!)
  */
 export async function clearAllOfflineData(): Promise<void> {
+  await offlineTabsStore.clear();
   await offlineExpensesStore.clear();
   await offlinePaymentsStore.clear();
   await clearAllCache();
