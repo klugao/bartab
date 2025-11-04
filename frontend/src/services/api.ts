@@ -106,6 +106,10 @@ export const tabsApi = {
     console.log('tabsApi.removeItem - Usando endpoint que funciona:', { tabId, tabItemId });
     return api.post('/tabs/remove-item', { tabId, tabItemId });
   },
+  updateItemQuantity: (tabId: string, tabItemId: string, qty: number) => {
+    console.log('tabsApi.updateItemQuantity - Atualizando quantidade:', { tabId, tabItemId, qty });
+    return api.post<TabItem>('/tabs/update-item-quantity', { tabId, tabItemId, qty }).then(res => res.data);
+  },
   addPayment: (tabId: string, data: AddPaymentDto) => {
     console.log('tabsApi.addPayment - Enviando pagamento:', { tabId, ...data });
     return api.post<Payment>('/tabs/add-payment', { tabId, ...data }).then(res => res.data);
