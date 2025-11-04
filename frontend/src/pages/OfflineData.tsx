@@ -12,7 +12,7 @@ import {
 import { Trash2, AlertCircle, CheckCircle, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { formatCurrency } from '@/utils/formatters';
+import { formatCurrency, formatFullDate } from '@/utils/formatters';
 
 export default function OfflineData() {
   const { toast } = useToast();
@@ -249,7 +249,7 @@ export default function OfflineData() {
                         </p>
                       )}
                       <p className="text-xs text-gray-500">
-                        {new Date(expense.timestamp).toLocaleString('pt-BR')}
+                        {formatFullDate(expense.timestamp)}
                       </p>
                       {expense.error && (
                         <p className="text-xs text-red-600 mt-2 bg-red-50 p-2 rounded">
@@ -341,7 +341,7 @@ export default function OfflineData() {
                         <span className="font-medium">Método:</span> {payment.paymentMethod}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {new Date(payment.timestamp).toLocaleString('pt-BR')}
+                        {formatFullDate(payment.timestamp)}
                       </p>
                       {payment.error && (
                         <p className="text-xs text-red-600 mt-2 bg-red-50 p-2 rounded">

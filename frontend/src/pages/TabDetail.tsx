@@ -5,7 +5,7 @@ import { tabsApi, itemsApi } from '../services/api';
 import type { Tab, Item, AddPaymentDto } from '../types';
 import PaymentModal from '../components/PaymentModal';
 import EditCustomerModal from '../components/EditCustomerModal';
-import { formatCurrency } from '../utils/formatters';
+import { formatCurrency, formatFullDate } from '../utils/formatters';
 import { useTabOperations } from '../hooks/useTabOperations';
 import { useToast } from '../hooks/use-toast';
 
@@ -223,12 +223,12 @@ const TabDetail = () => {
             }`}>
             </span>
             <span className="ml-4 text-sm text-gray-500">
-              Aberta em: {new Date(tab.opened_at).toLocaleString('pt-BR')}
+              Aberta em: {formatFullDate(tab.opened_at)}
             </span>
           </div>
           {tab.status === 'CLOSED' && (
             <div className="text-sm text-gray-500">
-              Finalizada em: {tab.closed_at ? new Date(tab.closed_at).toLocaleString('pt-BR') : 'Data não disponível'}
+              Finalizada em: {tab.closed_at ? formatFullDate(tab.closed_at) : 'Data não disponível'}
             </div>
           )}
         </div>
@@ -250,13 +250,23 @@ const TabDetail = () => {
           <div className="space-y-3">
             {tab.tabItems.map((tabItem) => (
               <div key={tabItem.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <span className="font-medium">{tabItem.item.name} </span>
-                  <span className="text-gray-500 ml-2">
-                    - {tabItem.qty} UN  - {formatCurrency(tabItem.unit_price)}
-                  </span>
+                <div className="flex-1">
+                  <div>
+                    <span className="font-medium">{tabItem.item.name} </span>
+                    <span className="text-gray-500 ml-2">
+                      - {tabItem.qty} UN  - {formatCurrency(tabItem.unit_price)}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    Adicionado em: {formatFullDate(tabItem.created_at)}
+                    {tabItem.updated_at && tabItem.created_at !== tabItem.updated_at && (
+                      <span className="ml-2">
+                        | Atualizado em: {formatFullDate(tabItem.updated_at)}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center space-x-3"><br/>
+                <div className="flex items-center space-x-3">
                   <span className="font-semibold">TOTAL: {formatCurrency(tabItem.total)}</span>
                   {tab.status === 'OPEN' && (
                     <button

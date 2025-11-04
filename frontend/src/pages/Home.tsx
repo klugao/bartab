@@ -12,6 +12,7 @@ import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { useToast } from '../hooks/use-toast';
 import { addOfflineTab, isOnline } from '../services/offlineStorage';
+import { formatDateOnly } from '../utils/formatters';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState<'open' | 'closed'>('open');
@@ -324,7 +325,7 @@ const Home = () => {
                     {showAllClosed 
                       ? '📅 Exibindo últimos 90 dias' 
                       : closeDateFilter 
-                        ? `📅 ${new Date(closeDateFilter).toLocaleDateString('pt-BR')}` 
+                        ? `📅 ${formatDateOnly(closeDateFilter)}` 
                         : '📅 Hoje'}
                   </div>
                 </div>

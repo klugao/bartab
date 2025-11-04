@@ -82,3 +82,39 @@ export const formatFullDate = (dateString: string): string => {
     minute: '2-digit'
   });
 };
+
+/**
+ * Formata apenas a data sem horário
+ * @param dateString - String da data ISO
+ * @returns String formatada (ex: "27/09/2025")
+ */
+export const formatDateOnly = (dateString: string): string => {
+  return formatDate(dateString, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
+
+/**
+ * Formata apenas o horário
+ * @param date - Date object ou string da data ISO
+ * @returns String formatada (ex: "19:22:30")
+ */
+export const formatTimeOnly = (date: Date | string): string => {
+  try {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    if (isNaN(dateObj.getTime())) return 'Horário inválido';
+    
+    return dateObj.toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      timeZone: 'America/Sao_Paulo'
+    });
+  } catch (error) {
+    console.error('Erro ao formatar horário:', error);
+    return 'Horário não disponível';
+  }
+};
