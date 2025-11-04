@@ -15,4 +15,8 @@ export default new DataSource({
   migrations: ['src/migrations/*.ts'],
   synchronize: configService.get('NODE_ENV') !== 'production', // Sincronização apenas em desenvolvimento
   logging: configService.get('NODE_ENV') === 'development',
+  extra: {
+    // Define o fuso horário de São Paulo
+    timezone: 'America/Sao_Paulo',
+  },
 });

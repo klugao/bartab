@@ -1,6 +1,8 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './modules/auth/auth.module';
@@ -31,6 +33,8 @@ import { NotificationModule } from './modules/notification/notification.module';
         statement_timeout: 10000,
         idle_in_transaction_session_timeout: 10000,
       },
+      poolSize: 10,
+      maxQueryExecutionTime: 1000,
     }),
     AuthModule,
     CustomersModule,
@@ -43,4 +47,12 @@ import { NotificationModule } from './modules/notification/notification.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+  constructor(@InjectDataSource() private dataSource: DataSource) {}
+
+  async onModuleInit() {
+    // Configura o timezone para o fuso horário de São Paulo
+    await this.dataSource.query("SET TIME ZONE 'America/Sao_Paulo'");
+    console.log('✅ Timezone configurado para America/Sao_Paulo');
+  }
+}

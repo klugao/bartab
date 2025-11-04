@@ -24,7 +24,7 @@ export class Payment {
   @Column({ type: 'numeric' })
   amount: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   paid_at: Date;
 
   @Column({ type: 'text', nullable: true })

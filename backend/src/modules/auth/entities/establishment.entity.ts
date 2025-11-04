@@ -33,10 +33,10 @@ export class Establishment {
   })
   statusAprovacao: ApprovalStatus;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
   updated_at: Date;
 
   @OneToMany(() => User, user => user.establishment)

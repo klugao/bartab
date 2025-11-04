@@ -28,10 +28,10 @@ export class Tab {
   @Column()
   establishment_id: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   opened_at: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   closed_at?: Date;
 
   @OneToMany(() => TabItem, tabItem => tabItem.tab)

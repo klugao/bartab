@@ -25,7 +25,7 @@ export class Expense {
   @Column()
   establishment_id: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 }
 
