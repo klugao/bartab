@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PlusIcon, TrashIcon, CreditCardIcon, PencilIcon, MagnifyingGlassIcon, WifiIcon, MinusIcon } from '@heroicons/react/24/outline';
-import { tabsApi, itemsApi } from '../services/api';
-import type { Tab, Item, AddPaymentDto } from '../types';
+import { tabsApi, itemsApi, profileApi } from '../services/api';
+import type { Tab, Item, AddPaymentDto, Establishment } from '../types';
+import { PaymentMethod } from '../types';
 import PaymentModal from '../components/PaymentModal';
+import PixPaymentModal from '../components/PixPaymentModal';
 import EditCustomerModal from '../components/EditCustomerModal';
 import { formatCurrency, formatFullDate } from '../utils/formatters';
 import { useTabOperations } from '../hooks/useTabOperations';
@@ -15,14 +17,17 @@ const TabDetail = () => {
   const { toast } = useToast();
   const [tab, setTab] = useState<Tab | null>(null);
   const [items, setItems] = useState<Item[]>([]);
+  const [establishment, setEstablishment] = useState<Establishment | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAddItemModal, setShowAddItemModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showPixPaymentModal, setShowPixPaymentModal] = useState(false);
   const [showEditCustomerModal, setShowEditCustomerModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [fromCache, setFromCache] = useState(false);
+  const [pixPaymentAmount, setPixPaymentAmount] = useState('0');
 
   // Hook para operações offline
   const tabOperations = useTabOperations({
@@ -36,6 +41,7 @@ const TabDetail = () => {
     if (id) {
       loadTab();
       loadItems();
+      loadEstablishment();
     }
   }, [id]);
 
@@ -65,6 +71,15 @@ const TabDetail = () => {
       setItems(activeItems);
     } catch (error) {
       console.error('Erro ao carregar itens:', error);
+    }
+  };
+
+  const loadEstablishment = async () => {
+    try {
+      const data = await profileApi.get();
+      setEstablishment(data);
+    } catch (error) {
+      console.error('Erro ao carregar estabelecimento:', error);
     }
   };
 
@@ -118,6 +133,41 @@ const TabDetail = () => {
         description: "Não foi possível atualizar a quantidade",
         variant: "destructive",
       });
+    }
+  };
+
+  const handlePixSelected = (amount: string) => {
+    setPixPaymentAmount(amount);
+    setShowPaymentModal(false);
+    setShowPixPaymentModal(true);
+  };
+
+  const handleConfirmPixPayment = async () => {
+    const paymentData: AddPaymentDto = {
+      method: PaymentMethod.PIX,
+      amount: pixPaymentAmount,
+    };
+    
+    const result = await tabOperations.addPayment(paymentData);
+    if (result.success) {
+      setShowPixPaymentModal(false);
+      
+      if (!result.offline) {
+        // Se processou online, verifica se a conta foi fechada
+        try {
+          const updatedTab = await tabsApi.getById(id!);
+          if (updatedTab.status === 'CLOSED') {
+            navigate('/');
+          } else {
+            loadTab();
+          }
+        } catch (error) {
+          loadTab();
+        }
+      } else {
+        // Se salvou offline, apenas atualiza
+        loadTab();
+      }
     }
   };
 
@@ -445,7 +495,17 @@ const TabDetail = () => {
         isOpen={showPaymentModal && tab.status === 'OPEN'}
         onClose={() => setShowPaymentModal(false)}
         onConfirm={handlePayment}
+        onPixSelected={handlePixSelected}
         total={total}
+      />
+
+      {/* Modal de pagamento PIX */}
+      <PixPaymentModal
+        isOpen={showPixPaymentModal}
+        onClose={() => setShowPixPaymentModal(false)}
+        onConfirm={handleConfirmPixPayment}
+        qrCode={establishment?.pix_qr_code}
+        amount={parseFloat(pixPaymentAmount)}
       />
 
       {/* Modal de edição de cliente */}

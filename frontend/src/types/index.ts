@@ -87,3 +87,24 @@ export interface AddPaymentDto {
   amount: string;
   note?: string;
 }
+
+export interface Establishment {
+  id: string;
+  name: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  pix_qr_code?: string;
+  active: boolean;
+  statusAprovacao: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UpdateEstablishmentDto {
+  name?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  pix_qr_code?: string;
+}

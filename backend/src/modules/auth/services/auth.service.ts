@@ -143,5 +143,29 @@ export class AuthService {
 
     return user;
   }
+
+  async getEstablishmentProfile(establishmentId: string): Promise<Establishment> {
+    const establishment = await this.establishmentRepository.findOne({
+      where: { id: establishmentId },
+    });
+
+    if (!establishment) {
+      throw new BadRequestException('Estabelecimento não encontrado');
+    }
+
+    return establishment;
+  }
+
+  async updateEstablishmentProfile(
+    establishmentId: string,
+    updateData: Partial<Establishment>,
+  ): Promise<Establishment> {
+    const establishment = await this.getEstablishmentProfile(establishmentId);
+
+    // Atualiza apenas os campos fornecidos
+    Object.assign(establishment, updateData);
+
+    return await this.establishmentRepository.save(establishment);
+  }
 }
 

@@ -8,10 +8,11 @@ interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (paymentData: AddPaymentDto) => void;
+  onPixSelected?: (amount: string) => void;
   total: number;
 }
 
-const PaymentModal = ({ isOpen, onClose, onConfirm, total }: PaymentModalProps) => {
+const PaymentModal = ({ isOpen, onClose, onConfirm, onPixSelected, total }: PaymentModalProps) => {
   const [method, setMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
   const [amount, setAmount] = useState(total.toFixed(2).replace('.', ','));
 
@@ -24,6 +25,13 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, total }: PaymentModalProps) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Se for PIX, chama callback especial ao invés de confirmar diretamente
+    if (method === PaymentMethod.PIX && onPixSelected) {
+      onPixSelected(amount.replace(',', '.'));
+      return;
+    }
+    
     onConfirm({
       method,
       amount: amount.replace(',', '.'), // Converter para formato numérico
