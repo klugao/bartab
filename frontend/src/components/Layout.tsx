@@ -3,6 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { HomeIcon, UsersIcon, CubeIcon, ChartBarIcon, BanknotesIcon, Bars3Icon, XMarkIcon, ArrowRightOnRectangleIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/button';
+import { SyncManager } from './SyncManager';
 
 const Layout = () => {
   const location = useLocation();
@@ -102,6 +103,9 @@ const Layout = () => {
           <Outlet />
         </div>
       </main>
+
+      {/* Gerenciador de sincronização offline */}
+      <SyncManager />
 
       {/* Drawer lateral mobile */}
       {mobileOpen && (

@@ -8,6 +8,7 @@ import Customers from '../pages/Customers';
 import Items from '../pages/Items';
 import Reports from '../pages/Reports';
 import Debts from '../pages/Debts';
+import OfflineData from '../pages/OfflineData';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import AuthCallback from '../pages/AuthCallback';
@@ -87,6 +88,10 @@ export const router = createBrowserRouter([
       {
         path: 'debts',
         element: <Debts />,
+      },
+      {
+        path: 'offline-data',
+        element: <OfflineData />,
       },
       {
         path: 'admin',
