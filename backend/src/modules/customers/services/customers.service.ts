@@ -18,18 +18,17 @@ export class CustomersService {
 
   async create(createCustomerDto: CreateCustomerDto, establishmentId: string): Promise<Customer> {
     try {
-      console.log('CustomersService.create - DTO recebido:', createCustomerDto);
       const customer = this.customersRepository.create({
         ...createCustomerDto,
         balance_due: '0', // Garantir que balance_due seja inicializado
         establishment_id: establishmentId,
       });
-      console.log('CustomersService.create - Entidade criada:', customer);
       const savedCustomer = await this.customersRepository.save(customer);
-      console.log('CustomersService.create - Cliente salvo:', savedCustomer);
+      // Log sem dados pessoais (LGPD)
+      console.log('Cliente criado com sucesso', { customerId: savedCustomer.id });
       return savedCustomer;
     } catch (error) {
-      console.error('CustomersService.create - Erro:', error);
+      console.error('Erro ao criar cliente:', error.message);
       throw error;
     }
   }
