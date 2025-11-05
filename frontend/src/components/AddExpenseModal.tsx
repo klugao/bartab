@@ -99,7 +99,7 @@ const AddExpenseModal = ({ isOpen, onClose, onConfirm, year, month }: AddExpense
               min="0.01"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
+              placeholder="0,00"
               disabled={loading}
             />
           </div>
