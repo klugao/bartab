@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { customersApi } from '../services/api';
 import type { Customer } from '../types';
+import CreateCustomerModal from './CreateCustomerModal';
 
 interface NewTabModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ const NewTabModal = ({ isOpen, onClose, onConfirm }: NewTabModalProps) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -28,6 +30,22 @@ const NewTabModal = ({ isOpen, onClose, onConfirm }: NewTabModalProps) => {
     } catch (error) {
       console.error('Erro ao carregar clientes:', error);
     }
+  };
+
+  const handleSelectChange = (value: string) => {
+    if (value === '__create_new__') {
+      setShowCreateModal(true);
+    } else {
+      setSelectedCustomerId(value);
+    }
+  };
+
+  const handleCustomerCreated = async (newCustomer: Customer) => {
+    // Atualizar lista de clientes
+    await loadCustomers();
+    // Selecionar o novo cliente
+    setSelectedCustomerId(newCustomer.id);
+    setShowCreateModal(false);
   };
 
   const handleConfirm = () => {
@@ -73,10 +91,14 @@ const NewTabModal = ({ isOpen, onClose, onConfirm }: NewTabModalProps) => {
             </label>
             <select
               value={selectedCustomerId}
-              onChange={(e) => setSelectedCustomerId(e.target.value)}
+              onChange={(e) => handleSelectChange(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
               <option value="">Sem cliente (mesa)</option>
+              <option value="__create_new__" className="font-semibold text-primary-600">
+                + Criar Novo Cliente
+              </option>
+              <option disabled>──────────</option>
               {customers.map((customer) => (
                 <option key={customer.id} value={customer.id}>
                   {customer.name}
@@ -103,6 +125,13 @@ const NewTabModal = ({ isOpen, onClose, onConfirm }: NewTabModalProps) => {
           </div>
         </div>
       </div>
+
+      {/* Modal de criação de cliente */}
+      <CreateCustomerModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={handleCustomerCreated}
+      />
     </div>
   );
 };
