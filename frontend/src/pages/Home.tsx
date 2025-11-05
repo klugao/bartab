@@ -178,6 +178,35 @@ const Home = () => {
     setShowDeleteModal(true);
   };
 
+  const handleUpdateQuantity = async (tabId: string, tabItemId: string, currentQty: number, increment: boolean) => {
+    const newQty = increment ? currentQty + 1 : currentQty - 1;
+    
+    if (newQty < 1) {
+      toast({
+        title: "❌ Erro",
+        description: "A quantidade não pode ser menor que 1. Use o botão de excluir para remover o item.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await tabsApi.updateItemQuantity(tabId, tabItemId, newQty);
+      await loadOpenTabs();
+      toast({
+        title: "✅ Sucesso",
+        description: "Quantidade atualizada com sucesso",
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar quantidade:', error);
+      toast({
+        title: "❌ Erro",
+        description: "Não foi possível atualizar a quantidade",
+        variant: "destructive",
+      });
+    }
+  };
+
   const confirmDelete = async () => {
     if (!tabToDelete) return;
     
@@ -433,6 +462,7 @@ const Home = () => {
                   onUpdate={loadOpenTabs}
                   onDelete={activeTab === 'open' ? handleDeleteTab : undefined}
                   onAddItem={activeTab === 'open' ? handleQuickAddItem : undefined}
+                  onUpdateQuantity={activeTab === 'open' ? handleUpdateQuantity : undefined}
                 />
               ))}
             </div>
