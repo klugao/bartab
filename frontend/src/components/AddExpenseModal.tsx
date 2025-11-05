@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
@@ -63,16 +62,8 @@ const AddExpenseModal = ({ isOpen, onClose, onConfirm, year, month }: AddExpense
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Adicionar Despesa</span>
-            <button
-              onClick={handleClose}
-              disabled={loading}
-              className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
-            >
-              <XMarkIcon className="h-4 w-4" />
-              <span className="sr-only">Fechar</span>
-            </button>
+          <DialogTitle>
+            Adicionar Despesa
           </DialogTitle>
         </DialogHeader>
 
