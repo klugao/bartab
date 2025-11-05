@@ -139,3 +139,4 @@ Para verificar se a organização está correta:
 - [GitHub Actions Secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets)
 - [SonarCloud GitHub Action](https://github.com/SonarSource/sonarcloud-github-action)
 
+

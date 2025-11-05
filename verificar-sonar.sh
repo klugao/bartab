@@ -153,3 +153,4 @@ echo "Para mais informações, consulte:"
 echo "  - CORRECAO_RAPIDA_SONAR.md (guia rápido)"
 echo "  - SONARCLOUD_SETUP.md (guia completo)"
 
+

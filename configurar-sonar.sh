@@ -125,3 +125,4 @@ echo "Para verificar a configuração:"
 echo "   ./verificar-sonar.sh"
 echo ""
 
+
