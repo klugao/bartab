@@ -3,6 +3,7 @@ import { PlusIcon, PencilIcon, TrashIcon, EyeSlashIcon } from '@heroicons/react/
 import { itemsApi } from '../services/api';
 import type { Item, CreateItemDto } from '../types';
 import { useToast } from '../hooks/use-toast';
+import { useCurrencyInput } from '../hooks/use-currency-input';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
 const Items = () => {
@@ -17,6 +18,7 @@ const Items = () => {
     name: '',
     price: 0,
   });
+  const priceInput = useCurrencyInput(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
@@ -47,15 +49,31 @@ const Items = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar que o preço não está vazio
+    if (priceInput.isEmpty || priceInput.numericValue <= 0) {
+      toast({
+        title: 'Erro',
+        description: 'Por favor, informe um preço válido',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     try {
+      const itemData = {
+        ...formData,
+        price: priceInput.numericValue,
+      };
+      
       if (editingItem) {
-        await itemsApi.update(editingItem.id, formData);
+        await itemsApi.update(editingItem.id, itemData);
         toast({
           title: 'Sucesso!',
           description: 'Produto atualizado com sucesso!',
         });
       } else {
-        await itemsApi.create(formData);
+        await itemsApi.create(itemData);
         toast({
           title: 'Sucesso!',
           description: 'Produto criado com sucesso!',
@@ -82,6 +100,7 @@ const Items = () => {
       name: item.name,
       price: parseFloat(item.price),
     });
+    priceInput.setValue(parseFloat(item.price));
     setShowForm(true);
   };
 
@@ -145,6 +164,7 @@ const Items = () => {
 
   const resetForm = () => {
     setFormData({ name: '', price: 0 });
+    priceInput.reset();
   };
 
   const openNewForm = () => {
@@ -298,15 +318,19 @@ const Items = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Preço *
                 </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  required
-                  value={Number.isNaN(formData.price) ? '' : formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value === '' ? (NaN as unknown as number) : parseFloat(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-gray-600">R$</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    required
+                    value={priceInput.displayValue}
+                    onChange={priceInput.handleChange}
+                    onKeyDown={priceInput.handleKeyDown}
+                    className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    placeholder="0,00"
+                  />
+                </div>
               </div>
               <div className="flex space-x-3">
                 <button

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { customersApi } from '../services/api';
 import { formatCurrency } from '../utils/formatters';
+import { useCurrencyInput } from '../hooks/use-currency-input';
 import type { Customer } from '../types';
 
 interface PayDebtModalProps {
@@ -12,29 +13,19 @@ interface PayDebtModalProps {
 
 const PayDebtModal = ({ customer, onClose, onSuccess }: PayDebtModalProps) => {
   const debtAmount = Math.abs(parseFloat(customer.balance_due));
-  const [amount, setAmount] = useState(debtAmount.toFixed(2).replace('.', ','));
+  const amountInput = useCurrencyInput(debtAmount);
   const [method, setMethod] = useState<string>('CASH');
   const [note, setNote] = useState('');
-  const [isPartial, setIsPartial] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    // Permitir apenas números e vírgula
-    const cleanValue = value.replace(/[^\d,]/g, '');
-    setAmount(cleanValue);
-    // Converter para float substituindo vírgula por ponto
-    const numValue = parseFloat(cleanValue.replace(',', '.'));
-    setIsPartial(!isNaN(numValue) && numValue < debtAmount);
-  };
+  const isPartial = amountInput.numericValue > 0 && amountInput.numericValue < debtAmount;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Converter vírgula para ponto antes de parsear
-    const paymentAmount = parseFloat(amount.replace(',', '.'));
+    const paymentAmount = amountInput.numericValue;
     
-    if (isNaN(paymentAmount) || paymentAmount <= 0) {
+    if (amountInput.isEmpty || paymentAmount <= 0) {
       alert('Por favor, insira um valor válido');
       return;
     }
@@ -91,20 +82,23 @@ const PayDebtModal = ({ customer, onClose, onSuccess }: PayDebtModalProps) => {
               Valor do Pagamento *
             </label>
             <div className="flex items-center space-x-2">
-              <span className="text-gray-600">R$</span>
-              <input
-                type="text"
-                required
-                value={amount}
-                onChange={handleAmountChange}
-                placeholder="0,00"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              />
+              <div className="relative flex-1">
+                <span className="absolute left-3 top-2.5 text-gray-600">R$</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  required
+                  value={amountInput.displayValue}
+                  onChange={amountInput.handleChange}
+                  onKeyDown={amountInput.handleKeyDown}
+                  placeholder="0,00"
+                  className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+              </div>
               <button
                 type="button"
                 onClick={() => {
-                  setAmount(debtAmount.toFixed(2).replace('.', ','));
-                  setIsPartial(false);
+                  amountInput.setValue(debtAmount);
                 }}
                 className="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
               >
@@ -113,7 +107,7 @@ const PayDebtModal = ({ customer, onClose, onSuccess }: PayDebtModalProps) => {
             </div>
             {isPartial && (
               <p className="mt-1 text-sm text-amber-600">
-                ⚠️ Pagamento parcial - Restará {formatCurrency(debtAmount - parseFloat(amount.replace(',', '.') || '0'))}
+                ⚠️ Pagamento parcial - Restará {formatCurrency(debtAmount - amountInput.numericValue)}
               </p>
             )}
           </div>
@@ -159,17 +153,17 @@ const PayDebtModal = ({ customer, onClose, onSuccess }: PayDebtModalProps) => {
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Pagamento:</span>
               <span className="font-semibold text-green-600">
-                -{formatCurrency(parseFloat(amount.replace(',', '.') || '0'))}
+                -{formatCurrency(amountInput.numericValue)}
               </span>
             </div>
             <div className="flex justify-between text-sm pt-2 border-t border-gray-300">
               <span className="font-semibold text-gray-900">Saldo Final:</span>
               <span className={`font-bold ${
-                debtAmount - parseFloat(amount.replace(',', '.') || '0') <= 0.01 
+                debtAmount - amountInput.numericValue <= 0.01 
                   ? 'text-green-600' 
                   : 'text-red-600'
               }`}>
-                {formatCurrency(Math.max(0, debtAmount - parseFloat(amount.replace(',', '.') || '0')))}
+                {formatCurrency(Math.max(0, debtAmount - amountInput.numericValue))}
               </span>
             </div>
           </div>
