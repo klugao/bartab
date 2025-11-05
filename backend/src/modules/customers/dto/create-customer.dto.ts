@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEmail, MinLength, IsNotEmpty } from 'class-validator';
+import { IsString, IsOptional, MinLength, IsNotEmpty } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class CreateCustomerDto {
@@ -11,9 +11,4 @@ export class CreateCustomerDto {
   @IsString()
   @Transform(({ value }) => value === '' ? undefined : value)
   phone?: string;
-
-  @IsOptional()
-  @IsEmail()
-  @Transform(({ value }) => value === '' ? undefined : value)
-  email?: string;
 }

@@ -34,36 +34,73 @@ export class CustomersService {
     }
   }
 
-  async findAll(establishmentId: string): Promise<Customer[]> {
-    return await this.customersRepository.find({
+  async findAll(establishmentId: string): Promise<any[]> {
+    const customers = await this.customersRepository.find({
       where: { establishment_id: establishmentId },
       order: { name: 'ASC' }
     });
+    
+    // Adicionar campo calculado days_in_negative_balance
+    return customers.map(customer => this.addDaysInNegativeBalance(customer));
   }
 
-  async findOne(id: string, establishmentId: string): Promise<Customer> {
+  private addDaysInNegativeBalance(customer: Customer): any {
+    let days_in_negative_balance: number | null = null;
+    
+    if (customer.negative_balance_since) {
+      const now = new Date();
+      const diffTime = Math.abs(now.getTime() - customer.negative_balance_since.getTime());
+      days_in_negative_balance = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    }
+    
+    return {
+      ...customer,
+      days_in_negative_balance
+    };
+  }
+
+  async findOne(id: string, establishmentId: string): Promise<any> {
     const customer = await this.customersRepository.findOne({ 
       where: { id, establishment_id: establishmentId } 
     });
     if (!customer) {
       throw new NotFoundException(`Cliente com ID ${id} não encontrado`);
     }
-    return customer;
+    return this.addDaysInNegativeBalance(customer);
   }
 
-  async update(id: string, updateCustomerDto: UpdateCustomerDto, establishmentId: string): Promise<Customer> {
-    const customer = await this.findOne(id, establishmentId);
+  async update(id: string, updateCustomerDto: UpdateCustomerDto, establishmentId: string): Promise<any> {
+    const customerData = await this.findOne(id, establishmentId);
+    // findOne já retorna com days_in_negative_balance, então precisamos pegar a entidade real
+    const customer = await this.customersRepository.findOne({ 
+      where: { id, establishment_id: establishmentId } 
+    });
+    if (!customer) {
+      throw new NotFoundException(`Cliente com ID ${id} não encontrado`);
+    }
     Object.assign(customer, updateCustomerDto);
-    return await this.customersRepository.save(customer);
+    const updated = await this.customersRepository.save(customer);
+    return this.addDaysInNegativeBalance(updated);
   }
 
   async remove(id: string, establishmentId: string): Promise<void> {
-    const customer = await this.findOne(id, establishmentId);
+    const customer = await this.customersRepository.findOne({ 
+      where: { id, establishment_id: establishmentId } 
+    });
+    if (!customer) {
+      throw new NotFoundException(`Cliente com ID ${id} não encontrado`);
+    }
     await this.customersRepository.remove(customer);
   }
 
   async updateBalanceDue(id: string, amount: string, establishmentId: string): Promise<void> {
-    const customer = await this.findOne(id, establishmentId);
+    const customer = await this.customersRepository.findOne({ 
+      where: { id, establishment_id: establishmentId } 
+    });
+    if (!customer) {
+      throw new NotFoundException(`Cliente com ID ${id} não encontrado`);
+    }
+    
     const currentBalance = parseFloat(customer.balance_due || '0');
     const amountToAdd = parseFloat(amount);
     const newBalance = currentBalance + amountToAdd;
@@ -73,6 +110,20 @@ export class CustomersService {
     console.log('  Saldo atual:', currentBalance);
     console.log('  Valor a adicionar:', amountToAdd);
     console.log('  Novo saldo:', newBalance);
+    
+    // Gerenciar negative_balance_since
+    const wasNegative = currentBalance < 0;
+    const isNowNegative = newBalance < 0;
+    
+    if (!wasNegative && isNowNegative) {
+      // Ficou negativo agora - registrar a data
+      customer.negative_balance_since = new Date();
+      console.log('🔴 Cliente entrou em saldo negativo:', customer.negative_balance_since);
+    } else if (wasNegative && !isNowNegative) {
+      // Voltou a zero ou positivo - resetar
+      customer.negative_balance_since = null;
+      console.log('✅ Cliente saiu do saldo negativo');
+    }
     
     customer.balance_due = newBalance.toString();
     await this.customersRepository.save(customer);
@@ -137,7 +188,7 @@ export class CustomersService {
     return customersWithDebts;
   }
 
-  async payDebt(id: string, amount: string, method: string, establishmentId: string, note?: string): Promise<Customer> {
+  async payDebt(id: string, amount: string, method: string, establishmentId: string, note?: string): Promise<any> {
     const customer = await this.customersRepository.findOne({
       where: { id, establishment_id: establishmentId },
       relations: ['tabs', 'tabs.tabItems', 'tabs.payments']
@@ -213,13 +264,22 @@ export class CustomersService {
       remainingPayment -= paymentForThisTab;
     }
     
-    // Atualizar saldo devedor do cliente
+    // Atualizar saldo devedor do cliente e gerenciar negative_balance_since
     const newBalance = currentBalance + actualPayment;
+    const wasNegative = currentBalance < 0;
+    const isNowNegative = newBalance < 0;
+    
+    if (wasNegative && !isNowNegative) {
+      // Voltou a zero ou positivo - resetar
+      customer.negative_balance_since = null;
+      console.log('✅ Cliente saiu do saldo negativo');
+    }
+    
     customer.balance_due = newBalance.toString();
-    await this.customersRepository.save(customer);
+    const updated = await this.customersRepository.save(customer);
     
     console.log(`  ✅ Novo saldo devedor: ${newBalance.toFixed(2)}`);
     
-    return customer;
+    return this.addDaysInNegativeBalance(updated);
   }
 }
