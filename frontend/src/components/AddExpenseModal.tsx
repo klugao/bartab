@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { useCurrencyInput } from '../hooks/use-currency-input';
 
 interface AddExpenseModalProps {
   isOpen: boolean;
@@ -13,7 +13,7 @@ interface AddExpenseModalProps {
 
 const AddExpenseModal = ({ isOpen, onClose, onConfirm, year, month }: AddExpenseModalProps) => {
   const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
+  const amountInput = useCurrencyInput(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -27,17 +27,17 @@ const AddExpenseModal = ({ isOpen, onClose, onConfirm, year, month }: AddExpense
       return;
     }
 
-    if (!amount || parseFloat(amount) <= 0) {
+    if (amountInput.isEmpty || amountInput.numericValue <= 0) {
       setError('Por favor, informe um valor válido');
       return;
     }
 
     setLoading(true);
     try {
-      await onConfirm(description, amount);
+      await onConfirm(description, amountInput.numericValue.toString());
       // Limpar campos após sucesso
       setDescription('');
-      setAmount('');
+      amountInput.reset();
       onClose();
     } catch (error) {
       console.error('Erro ao adicionar despesa:', error);
@@ -50,7 +50,7 @@ const AddExpenseModal = ({ isOpen, onClose, onConfirm, year, month }: AddExpense
   const handleClose = () => {
     if (!loading) {
       setDescription('');
-      setAmount('');
+      amountInput.reset();
       setError('');
       onClose();
     }
@@ -78,13 +78,14 @@ const AddExpenseModal = ({ isOpen, onClose, onConfirm, year, month }: AddExpense
             <label htmlFor="description" className="block text-sm font-medium mb-2">
               Descrição da Despesa *
             </label>
-            <Input
+            <input
               id="description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDescription(e.target.value)}
               placeholder="Ex: Aluguel, Energia, Fornecedor..."
               disabled={loading}
               autoFocus
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -92,16 +93,20 @@ const AddExpenseModal = ({ isOpen, onClose, onConfirm, year, month }: AddExpense
             <label htmlFor="amount" className="block text-sm font-medium mb-2">
               Valor (R$) *
             </label>
-            <Input
-              id="amount"
-              type="number"
-              step="0.01"
-              min="0.01"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0,00"
-              disabled={loading}
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-gray-600 text-sm">R$</span>
+              <input
+                id="amount"
+                type="text"
+                inputMode="numeric"
+                value={amountInput.displayValue}
+                onChange={amountInput.handleChange}
+                onKeyDown={amountInput.handleKeyDown}
+                placeholder="0,00"
+                disabled={loading}
+                className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+              />
+            </div>
           </div>
 
           {error && (

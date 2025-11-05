@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import type { AddPaymentDto } from '../types';
 import { PaymentMethod } from '../types';
 import { formatCurrency } from '../utils/formatters';
+import { useCurrencyInput } from '../hooks/use-currency-input';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -14,27 +15,26 @@ interface PaymentModalProps {
 
 const PaymentModal = ({ isOpen, onClose, onConfirm, onPixSelected, total }: PaymentModalProps) => {
   const [method, setMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
-  const [amount, setAmount] = useState(total.toFixed(2).replace('.', ','));
+  const amountInput = useCurrencyInput(total);
 
   // Resetar amount quando total mudar
-  const [prevTotal, setPrevTotal] = useState(total);
-  if (total !== prevTotal) {
-    setAmount(total.toFixed(2).replace('.', ','));
-    setPrevTotal(total);
-  }
+  useEffect(() => {
+    amountInput.setValue(total);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Se for PIX, chama callback especial ao invés de confirmar diretamente
     if (method === PaymentMethod.PIX && onPixSelected) {
-      onPixSelected(amount.replace(',', '.'));
+      onPixSelected(amountInput.numericValue.toString());
       return;
     }
     
     onConfirm({
       method,
-      amount: amount.replace(',', '.'), // Converter para formato numérico
+      amount: amountInput.numericValue.toString(),
     });
   };
 
@@ -42,19 +42,19 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, onPixSelected, total }: Paym
     setMethod(newMethod);
     // Se mudar para LATER, sempre setar o valor total
     if (newMethod === PaymentMethod.LATER) {
-      setAmount(total.toFixed(2).replace('.', ','));
+      amountInput.setValue(total);
     }
   };
 
   const handleClose = () => {
     setMethod(PaymentMethod.CASH);
-    setAmount(total.toFixed(2).replace('.', ','));
+    amountInput.setValue(total);
     onClose();
   };
 
   if (!isOpen) return null;
 
-  const amountNum = parseFloat(amount.replace(',', '.') || '0');
+  const amountNum = amountInput.numericValue;
   const isPartialPayment = amountNum > 0 && amountNum < total;
   const remainingAmount = total - amountNum;
 
@@ -124,12 +124,11 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, onPixSelected, total }: Paym
                 <span className="absolute left-3 top-2.5 text-gray-600">R$</span>
                 <input
                   type="text"
+                  inputMode="numeric"
                   required
-                  value={amount}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/[^\d,]/g, '');
-                    setAmount(value);
-                  }}
+                  value={amountInput.displayValue}
+                  onChange={amountInput.handleChange}
+                  onKeyDown={amountInput.handleKeyDown}
                   disabled={method === PaymentMethod.LATER}
                   className={`w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
                     method === PaymentMethod.LATER ? 'bg-gray-100 cursor-not-allowed' : ''
