@@ -12,13 +12,10 @@ export class CustomersController {
   @Post()
   async create(@Body() createCustomerDto: CreateCustomerDto, @Req() req: any) {
     try {
-      console.log('Criando customer com dados:', createCustomerDto);
       const customer = await this.customersService.create(createCustomerDto, req.user.establishmentId);
-      console.log('Customer criado com sucesso:', customer);
       return customer;
     } catch (error) {
       console.error('Erro ao criar customer:', error.message);
-      console.error('Stack:', error.stack);
       throw error;
     }
   }
@@ -31,9 +28,9 @@ export class CustomersController {
   @Get()
   async findAll(@Req() req: any) {
     try {
-      console.log('Buscando customers...');
       const customers = await this.customersService.findAll(req.user.establishmentId);
-      console.log('Encontrados:', customers.length, 'customers');
+      // Log sem dados pessoais (LGPD)
+      console.log('Clientes listados', { count: customers.length, establishmentId: req.user.establishmentId.substring(0, 8) });
       return customers;
     } catch (error) {
       console.error('Erro ao buscar customers:', error.message);
@@ -44,9 +41,9 @@ export class CustomersController {
   @Get('debts/list')
   async findCustomersWithDebts(@Req() req: any) {
     try {
-      console.log('Buscando clientes com dívidas...');
       const customers = await this.customersService.findCustomersWithDebts(req.user.establishmentId);
-      console.log('Encontrados:', customers.length, 'clientes com dívidas');
+      // Log sem dados pessoais (LGPD)
+      console.log('Clientes com dívidas listados', { count: customers.length });
       return customers;
     } catch (error) {
       console.error('Erro ao buscar clientes com dívidas:', error.message);
@@ -72,9 +69,9 @@ export class CustomersController {
   @Post(':id/pay-debt')
   async payDebt(@Param('id') id: string, @Body() data: { amount: string; method: string; note?: string }, @Req() req: any) {
     try {
-      console.log('Processando pagamento de dívida para cliente:', id, 'valor:', data.amount, 'método:', data.method);
       const customer = await this.customersService.payDebt(id, data.amount, data.method, req.user.establishmentId, data.note);
-      console.log('Pagamento processado com sucesso. Novo saldo:', customer.balance_due);
+      // Log sem dados financeiros completos (LGPD)
+      console.log('Pagamento de dívida processado', { customerId: id.substring(0, 8), method: data.method });
       return customer;
     } catch (error) {
       console.error('Erro ao processar pagamento:', error.message);

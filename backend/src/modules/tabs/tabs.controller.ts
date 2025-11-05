@@ -14,25 +14,29 @@ export class TabsController {
 
   @Post()
   open(@Body() createTabDto: CreateTabDto, @Req() req: any) {
-    console.log('TabsController.open - Dados recebidos:', createTabDto);
+    // Log sem dados pessoais (LGPD)
+    console.log('Nova conta aberta', { hasCustomer: !!createTabDto.customerId });
     return this.tabsService.open(createTabDto, req.user.establishmentId);
   }
 
   @Post('add-item')
   addItemToTab(@Body() data: { tabId: string; itemId: string; qty: number }, @Req() req: any) {
-    console.log('TabsController.addItemToTab - Dados recebidos:', data);
+    // Log sem dados sensíveis (LGPD)
+    console.log('Item adicionado à conta', { tabId: data.tabId.substring(0, 8), qty: data.qty });
     return this.tabsService.addItem(data.tabId, { itemId: data.itemId, qty: data.qty }, req.user.establishmentId);
   }
 
   @Post('remove-item')
   removeItemFromTab(@Body() data: { tabId: string; tabItemId: string }, @Req() req: any) {
-    console.log('TabsController.removeItemFromTab - Dados recebidos:', data);
+    // Log sem dados sensíveis (LGPD)
+    console.log('Item removido da conta', { tabId: data.tabId.substring(0, 8) });
     return this.tabsService.removeItem(data.tabId, data.tabItemId, req.user.establishmentId);
   }
 
   @Post('update-item-quantity')
   updateItemQuantity(@Body() data: { tabId: string; tabItemId: string; qty: number }, @Req() req: any) {
-    console.log('TabsController.updateItemQuantity - Dados recebidos:', data);
+    // Log sem dados sensíveis (LGPD)
+    console.log('Quantidade atualizada', { tabId: data.tabId.substring(0, 8), newQty: data.qty });
     return this.tabsService.updateItemQuantity(data.tabId, data.tabItemId, data.qty, req.user.establishmentId);
   }
 

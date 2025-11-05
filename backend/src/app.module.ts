@@ -12,6 +12,7 @@ import { TabsModule } from './modules/tabs/tabs.module';
 import { ExpensesModule } from './modules/expenses/expenses.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { NotificationModule } from './modules/notification/notification.module';
+import { PrivacyModule } from './modules/privacy/privacy.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { NotificationModule } from './modules/notification/notification.module';
     ExpensesModule,
     AdminModule,
     NotificationModule,
+    PrivacyModule,
   ],
   controllers: [AppController],
   providers: [AppService],

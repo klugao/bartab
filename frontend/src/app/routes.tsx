@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import { AuthProvider } from '../contexts/AuthContext';
 import Layout from '../components/Layout';
 import ProtectedRoute from '../components/ProtectedRoute';
+import ConsentModalWrapper from '../components/ConsentModalWrapper';
 import Home from '../pages/Home';
 import TabDetail from '../pages/TabDetail';
 import Customers from '../pages/Customers';
@@ -15,10 +16,16 @@ import Register from '../pages/Register';
 import AuthCallback from '../pages/AuthCallback';
 import PendingApproval from '../pages/PendingApproval';
 import AdminDashboard from '../pages/AdminDashboard';
+import PoliticaPrivacidade from '../pages/PoliticaPrivacidade';
+import TermosUso from '../pages/TermosUso';
+import PrivacySettings from '../pages/PrivacySettings';
 
 // Wrapper para incluir o AuthProvider em todas as rotas
 const AuthWrapper = ({ children }: { children: React.ReactNode }) => (
-  <AuthProvider>{children}</AuthProvider>
+  <AuthProvider>
+    <ConsentModalWrapper />
+    {children}
+  </AuthProvider>
 );
 
 export const router = createBrowserRouter([
@@ -102,6 +109,27 @@ export const router = createBrowserRouter([
         path: 'admin',
         element: <AdminDashboard />,
       },
+      {
+        path: 'privacy-settings',
+        element: <PrivacySettings />,
+      },
     ],
+  },
+  // Rotas públicas (sem autenticação) para documentos legais
+  {
+    path: '/politica-privacidade',
+    element: (
+      <AuthWrapper>
+        <PoliticaPrivacidade />
+      </AuthWrapper>
+    ),
+  },
+  {
+    path: '/termos-uso',
+    element: (
+      <AuthWrapper>
+        <TermosUso />
+      </AuthWrapper>
+    ),
   },
 ]);

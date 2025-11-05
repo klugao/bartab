@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import helmet from 'helmet';
 
 // Configura o timezone do processo Node.js para São Paulo
 process.env.TZ = 'America/Sao_Paulo';
@@ -10,6 +11,9 @@ async function bootstrap() {
     bodyParser: true,
     rawBody: false,
   });
+
+  // Helmet: Headers de segurança HTTP
+  app.use(helmet());
 
   // Aumentar limite de payload para aceitar imagens grandes em base64
   app.use(require('express').json({ limit: '10mb' }));
