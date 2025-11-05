@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { User, DollarSign, Trash2, Plus } from 'lucide-react';
+import { User, DollarSign, Trash2, Plus, Minus } from 'lucide-react';
 import type { Tab } from '../types';
 import { formatCurrency, formatShortDate, formatFullDate } from '../utils/formatters';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
@@ -11,9 +11,10 @@ interface CardTabProps {
   onUpdate?: () => void;
   onDelete?: (tabId: string) => void;
   onAddItem?: (tabId: string) => void;
+  onUpdateQuantity?: (tabId: string, tabItemId: string, currentQty: number, increment: boolean) => void;
 }
 
-const CardTab = ({ tab, onDelete, onAddItem }: CardTabProps) => {
+const CardTab = ({ tab, onDelete, onAddItem, onUpdateQuantity }: CardTabProps) => {
   const calculateTotal = () => {
     if (!tab.tabItems || !Array.isArray(tab.tabItems)) {
       return 0;
@@ -77,12 +78,41 @@ const CardTab = ({ tab, onDelete, onAddItem }: CardTabProps) => {
                 {tab.tabItems.slice(-3).map((tabItem) => (
                   <div 
                     key={tabItem.id} 
-                    className="flex justify-between items-center text-sm bg-muted/50 rounded-lg p-2"
+                    className="flex justify-between items-center text-sm bg-muted/50 rounded-lg p-2 gap-2"
                   >
-                    <span className="truncate">
+                    <span className="truncate flex-1">
                       {tabItem.qty}× {tabItem.item.name}
                     </span>
-                    <span className="font-medium text-primary shrink-0 ml-2">
+                    
+                    {/* Controles de quantidade (apenas para contas abertas) */}
+                    {tab.status === 'OPEN' && onUpdateQuantity && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onUpdateQuantity(tab.id, tabItem.id, tabItem.qty, false);
+                          }}
+                          className="h-6 w-6 flex items-center justify-center rounded bg-muted hover:bg-destructive/10 hover:text-destructive transition-colors"
+                          aria-label="Diminuir quantidade"
+                        >
+                          <Minus className="h-3 w-3" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onUpdateQuantity(tab.id, tabItem.id, tabItem.qty, true);
+                          }}
+                          className="h-6 w-6 flex items-center justify-center rounded bg-muted hover:bg-primary/10 hover:text-primary transition-colors"
+                          aria-label="Aumentar quantidade"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
+                    
+                    <span className="font-medium text-primary shrink-0 ml-1">
                       {formatCurrency(tabItem.total)}
                     </span>
                   </div>
