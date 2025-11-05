@@ -70,11 +70,12 @@ export const formatShortDate = (dateString: string): string => {
 
 /**
  * Formata uma data completa
- * @param dateString - String da data ISO
+ * @param dateString - String da data ISO ou timestamp em milissegundos
  * @returns String formatada (ex: "27/09/2025 19:22")
  */
-export const formatFullDate = (dateString: string): string => {
-  return formatDate(dateString, {
+export const formatFullDate = (dateString: string | number): string => {
+  const dateStr = typeof dateString === 'number' ? new Date(dateString).toISOString() : dateString;
+  return formatDate(dateStr, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',

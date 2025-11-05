@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { CogIcon, BuildingStorefrontIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { profileApi } from '../services/api';
-import type { Establishment, UpdateEstablishmentDto } from '../types';
+import type { UpdateEstablishmentDto } from '../types';
 import { useToast } from '../hooks/use-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -10,7 +10,6 @@ const Settings = () => {
   const { toast } = useToast();
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const [establishment, setEstablishment] = useState<Establishment | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<UpdateEstablishmentDto>({
@@ -29,7 +28,6 @@ const Settings = () => {
     try {
       setLoading(true);
       const data = await profileApi.get();
-      setEstablishment(data);
       setFormData({
         name: data.name || '',
         address: data.address || '',
@@ -53,8 +51,7 @@ const Settings = () => {
     e.preventDefault();
     try {
       setSaving(true);
-      const updated = await profileApi.update(formData);
-      setEstablishment(updated);
+      await profileApi.update(formData);
       toast({
         title: '✅ Sucesso',
         description: 'Configurações atualizadas com sucesso!',
