@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
 import { TabItem } from '../../tab-items/entities/tab-item.entity';
 import { Establishment } from '../../auth/entities/establishment.entity';
 
@@ -22,6 +22,12 @@ export class Item {
 
   @Column()
   establishment_id: string;
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  created_at: Date;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  updated_at?: Date;
 
   @OneToMany(() => TabItem, tabItem => tabItem.item)
   tabItems: TabItem[];
