@@ -120,7 +120,7 @@ export class CustomersService {
       console.log('🔴 Cliente entrou em saldo negativo:', customer.negative_balance_since);
     } else if (wasNegative && !isNowNegative) {
       // Voltou a zero ou positivo - resetar
-      customer.negative_balance_since = null;
+      customer.negative_balance_since = undefined;
       console.log('✅ Cliente saiu do saldo negativo');
     }
     
@@ -270,7 +270,7 @@ export class CustomersService {
     
     if (wasNegative && !isNowNegative) {
       // Voltou a zero ou positivo - resetar
-      customer.negative_balance_since = null;
+      customer.negative_balance_since = undefined;
       console.log('✅ Cliente saiu do saldo negativo');
     }
     

@@ -14,12 +14,18 @@ export class Tab {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ nullable: true })
+  name?: string;
+
   @ManyToOne(() => Customer, { nullable: true })
   @JoinColumn({ name: 'customer_id' })
   customer?: Customer | null;
 
   @Column({ type: 'enum', enum: TabStatus })
   status: TabStatus;
+
+  @Column({ type: 'numeric', nullable: true })
+  total?: string;
 
   @ManyToOne(() => Establishment, establishment => establishment.tabs, { nullable: false })
   @JoinColumn({ name: 'establishment_id' })
@@ -30,6 +36,9 @@ export class Tab {
 
   @CreateDateColumn({ type: 'timestamptz' })
   opened_at: Date;
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  created_at: Date;
 
   @Column({ type: 'timestamptz', nullable: true })
   closed_at?: Date;

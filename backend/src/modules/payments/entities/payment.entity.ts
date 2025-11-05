@@ -27,6 +27,9 @@ export class Payment {
   @CreateDateColumn({ type: 'timestamptz' })
   paid_at: Date;
 
+  @CreateDateColumn({ type: 'timestamptz' })
+  created_at: Date;
+
   @Column({ type: 'text', nullable: true })
   note?: string;
 }

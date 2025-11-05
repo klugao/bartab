@@ -29,6 +29,9 @@ export class Customer {
   @CreateDateColumn({ type: 'timestamptz' })
   created_at: Date;
 
+  @Column({ type: 'timestamptz', nullable: true })
+  updated_at?: Date;
+
   @OneToMany(() => Tab, tab => tab.customer)
   tabs: Tab[];
 }

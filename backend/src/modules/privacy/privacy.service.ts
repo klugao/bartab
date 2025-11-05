@@ -49,8 +49,8 @@ export class PrivacyService {
 
     const tabs = await this.tabRepository.find({
       where: { establishment_id: establishmentId },
-      relations: ['customer', 'tabItems', 'payments'],
-      order: { created_at: 'DESC' },
+      relations: ['customer', 'tabItems', 'tabItems.item', 'payments'],
+      order: { opened_at: 'DESC' },
     });
 
     const items = await this.itemRepository.find({
@@ -112,7 +112,7 @@ export class PrivacyService {
           phone: t.customer.phone,
         } : null,
         items: t.tabItems?.map(ti => ({
-          item_name: ti.name,
+          item_name: ti.item?.name || 'Item sem nome',
           quantity: ti.qty,
           unit_price: ti.unit_price,
           total: ti.total,
@@ -120,7 +120,7 @@ export class PrivacyService {
         payments: t.payments?.map(p => ({
           method: p.method,
           amount: p.amount,
-          created_at: p.created_at,
+          created_at: p.paid_at,
         })) || [],
         created_at: t.created_at,
         closed_at: t.closed_at,
@@ -195,7 +195,7 @@ export class PrivacyService {
 
     for (const customer of customers) {
       customer.name = `CLIENTE_ANONIMIZADO_${customer.id.substring(0, 8)}`;
-      customer.phone = null;
+      customer.phone = undefined;
       await this.customerRepository.save(customer);
     }
 
@@ -210,8 +210,8 @@ export class PrivacyService {
     if (establishment) {
       establishment.name = `ESTABELECIMENTO_EXCLUIDO_${establishmentId.substring(0, 8)}`;
       establishment.email = `excluido_${establishmentId.substring(0, 8)}@anonimizado.local`;
-      establishment.phone = null;
-      establishment.address = null;
+      establishment.phone = undefined;
+      establishment.address = undefined;
       await this.establishmentRepository.save(establishment);
     }
 
