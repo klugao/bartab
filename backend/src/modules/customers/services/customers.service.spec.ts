@@ -7,10 +7,12 @@ import { NotFoundException } from '@nestjs/common';
 import { CreateCustomerDto } from '../dto/create-customer.dto';
 import { UpdateCustomerDto } from '../dto/update-customer.dto';
 import { TabStatus } from '../../tabs/entities/tab.entity';
+import { Payment } from '../../payments/entities/payment.entity';
 
 describe('CustomersService', () => {
   let service: CustomersService;
   let repository: Repository<Customer>;
+  let paymentRepository: Repository<Payment>;
 
   const mockRepository = {
     create: jest.fn(),
@@ -21,6 +23,14 @@ describe('CustomersService', () => {
     createQueryBuilder: jest.fn(),
   };
 
+  const mockPaymentRepository = {
+    create: jest.fn(),
+    save: jest.fn(),
+    find: jest.fn(),
+    findOne: jest.fn(),
+    remove: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -29,11 +39,16 @@ describe('CustomersService', () => {
           provide: getRepositoryToken(Customer),
           useValue: mockRepository,
         },
+        {
+          provide: getRepositoryToken(Payment),
+          useValue: mockPaymentRepository,
+        },
       ],
     }).compile();
 
     service = module.get<CustomersService>(CustomersService);
     repository = module.get<Repository<Customer>>(getRepositoryToken(Customer));
+    paymentRepository = module.get<Repository<Payment>>(getRepositoryToken(Payment));
 
     jest.clearAllMocks();
   });
@@ -89,7 +104,11 @@ describe('CustomersService', () => {
         where: { establishment_id: establishmentId },
         order: { name: 'ASC' },
       });
-      expect(result).toEqual(customers);
+      // O serviço adiciona o campo days_in_negative_balance
+      expect(result).toEqual([
+        { ...customers[0], days_in_negative_balance: null },
+        { ...customers[1], days_in_negative_balance: null },
+      ]);
     });
   });
 
@@ -105,7 +124,11 @@ describe('CustomersService', () => {
 
       const result = await service.findOne('customer-1', 'est-1');
 
-      expect(result).toEqual(customer);
+      // O serviço adiciona o campo days_in_negative_balance
+      expect(result).toEqual({
+        ...customer,
+        days_in_negative_balance: null,
+      });
     });
 
     it('deve lançar NotFoundException se cliente não existir', async () => {
