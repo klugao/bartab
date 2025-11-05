@@ -13,11 +13,11 @@ export class Customer {
   @Column({ nullable: true })
   phone?: string;
 
-  @Column({ nullable: true })
-  email?: string;
-
   @Column({ type: 'numeric', precision: 10, scale: 2, default: 0, nullable: false })
   balance_due: string; // Usar string para numeric no TypeORM
+
+  @Column({ type: 'timestamptz', nullable: true })
+  negative_balance_since?: Date; // Data desde quando o saldo está negativo
 
   @ManyToOne(() => Establishment, establishment => establishment.customers, { nullable: false })
   @JoinColumn({ name: 'establishment_id' })

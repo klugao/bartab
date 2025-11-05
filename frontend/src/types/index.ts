@@ -2,8 +2,8 @@ export interface Customer {
   id: string;
   name: string;
   phone?: string;
-  email?: string;
   balance_due: string;
+  days_in_negative_balance: number | null;
   created_at: string;
 }
 
@@ -60,7 +60,6 @@ export interface Payment {
 export interface CreateCustomerDto {
   name: string;
   phone?: string;
-  email?: string;
 }
 
 export interface CreateItemDto {

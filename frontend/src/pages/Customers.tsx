@@ -16,7 +16,6 @@ const Customers = () => {
   const [formData, setFormData] = useState<CreateCustomerDto>({
     name: '',
     phone: '',
-    email: '',
   });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
@@ -28,7 +27,6 @@ const Customers = () => {
   useEffect(() => {
     const filtered = customers.filter(customer =>
       customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer.phone?.includes(searchTerm)
     );
     setFilteredCustomers(filtered);
@@ -86,7 +84,6 @@ const Customers = () => {
     setFormData({
       name: customer.name,
       phone: customer.phone || '',
-      email: customer.email || '',
     });
     setShowForm(true);
   };
@@ -120,7 +117,7 @@ const Customers = () => {
   };
 
   const resetForm = () => {
-    setFormData({ name: '', phone: '', email: '' });
+    setFormData({ name: '', phone: '' });
   };
 
   const openNewForm = () => {
@@ -154,7 +151,7 @@ const Customers = () => {
       <div className="mb-6">
         <input
           type="text"
-          placeholder="Buscar clientes por nome, email ou telefone..."
+          placeholder="Buscar clientes por nome ou telefone..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -186,7 +183,7 @@ const Customers = () => {
                     Telefone
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
+                    Dias em Débito
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Saldo
@@ -210,8 +207,16 @@ const Customers = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
-                        {customer.email || '-'}
+                      <div className={`text-sm font-medium ${
+                        customer.days_in_negative_balance !== null && customer.days_in_negative_balance > 0
+                          ? 'text-red-600' 
+                          : 'text-gray-500'
+                      }`}>
+                        {customer.days_in_negative_balance !== null && customer.days_in_negative_balance >= 0 ? (
+                          <span>{customer.days_in_negative_balance} {customer.days_in_negative_balance === 1 ? 'dia' : 'dias'}</span>
+                        ) : (
+                          <span>-</span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -281,17 +286,6 @@ const Customers = () => {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
