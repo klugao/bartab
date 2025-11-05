@@ -13,7 +13,6 @@ const CreateCustomerModal = ({ isOpen, onClose, onSuccess }: CreateCustomerModal
   const [formData, setFormData] = useState<CreateCustomerDto>({
     name: '',
     phone: '',
-    email: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +25,7 @@ const CreateCustomerModal = ({ isOpen, onClose, onSuccess }: CreateCustomerModal
     try {
       const newCustomer = await customersApi.create(formData);
       // Limpar formulário
-      setFormData({ name: '', phone: '', email: '' });
+      setFormData({ name: '', phone: '' });
       onSuccess(newCustomer);
       onClose();
     } catch (error: any) {
@@ -39,7 +38,7 @@ const CreateCustomerModal = ({ isOpen, onClose, onSuccess }: CreateCustomerModal
   };
 
   const handleClose = () => {
-    setFormData({ name: '', phone: '', email: '' });
+    setFormData({ name: '', phone: '' });
     setError(null);
     onClose();
   };
@@ -92,20 +91,6 @@ const CreateCustomerModal = ({ isOpen, onClose, onSuccess }: CreateCustomerModal
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="(00) 00000-0000"
-              disabled={loading}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-              placeholder="email@exemplo.com"
               disabled={loading}
             />
           </div>
