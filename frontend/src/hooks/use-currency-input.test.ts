@@ -1,4 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
+import { vi } from 'vitest';
 import { useCurrencyInput } from './use-currency-input';
 
 describe('useCurrencyInput', () => {
@@ -71,8 +72,8 @@ describe('useCurrencyInput', () => {
       } as React.ChangeEvent<HTMLInputElement>);
     });
     
-    // Deve pegar apenas os primeiros 10 dígitos
-    expect(result.current.numericValue).toBe(123456789.01);
+    // Deve pegar apenas os primeiros 10 dígitos (1234567890 centavos = 12345678.90 reais)
+    expect(result.current.numericValue).toBe(12345678.90);
   });
 
   it('deve resetar o valor', () => {
@@ -117,7 +118,7 @@ describe('useCurrencyInput', () => {
     act(() => {
       result.current.handleKeyDown({ 
         key: 'Backspace',
-        preventDefault: jest.fn()
+        preventDefault: vi.fn()
       } as any);
     });
     
@@ -132,7 +133,7 @@ describe('useCurrencyInput', () => {
     act(() => {
       result.current.handleKeyDown({ 
         key: 'Delete',
-        preventDefault: jest.fn()
+        preventDefault: vi.fn()
       } as any);
     });
     
@@ -146,7 +147,7 @@ describe('useCurrencyInput', () => {
     act(() => {
       result.current.handleKeyDown({ 
         key: 'Escape',
-        preventDefault: jest.fn()
+        preventDefault: vi.fn()
       } as any);
     });
     
