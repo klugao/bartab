@@ -124,3 +124,4 @@ Para mais detalhes, consulte:
 - `SONARCLOUD_SETUP.md` - Guia completo passo a passo
 - `CORRECAO_SONARCLOUD_TOKEN.md` - Guia detalhado de correção
 
+
