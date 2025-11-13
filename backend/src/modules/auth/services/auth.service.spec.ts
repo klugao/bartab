@@ -164,6 +164,9 @@ describe('AuthService', () => {
 
       const result = await service.registerUser(googleProfile, establishmentName);
 
+      // Aguarda a execução do setImmediate usado no envio do email
+      await new Promise(resolve => setImmediate(resolve));
+
       expect(mockEstablishmentRepository.create).toHaveBeenCalledWith({
         name: establishmentName,
         email: googleProfile.email,
