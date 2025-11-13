@@ -33,56 +33,7 @@ Formato: `postgresql://usuario:senha@host:porta/database`
 
 ## 🔧 Passo 2: Deploy do Backend (API NestJS)
 
-### 2.1 Preparar o Backend para Produção
-
-Primeiro, vamos criar um arquivo de configuração para o Render:
-
-**Crie o arquivo `render.yaml` na raiz do projeto:**
-
-```yaml
-services:
-  # Backend API
-  - type: web
-    name: bartab-backend
-    runtime: node
-    region: oregon # ou sua região preferida
-    buildCommand: cd backend && npm install && npm run build
-    startCommand: cd backend && npm run start:prod
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: PORT
-        value: 3000
-      - key: DATABASE_URL
-        sync: false # Você configurará manualmente no dashboard
-      - key: JWT_SECRET
-        generateValue: true # Gera automaticamente um valor seguro
-      - key: CORS_ORIGIN
-        sync: false
-      - key: FRONTEND_URL
-        sync: false
-      - key: GOOGLE_CLIENT_ID
-        sync: false
-      - key: GOOGLE_CLIENT_SECRET
-        sync: false
-      - key: GOOGLE_CALLBACK_URL
-        sync: false
-      - key: SMTP_HOST
-        value: smtp.gmail.com
-      - key: SMTP_PORT
-        value: 587
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASS
-        sync: false
-      - key: SMTP_FROM
-        value: noreply@bartab.com
-    healthCheckPath: /api
-```
-
-### 2.2 Criar o Web Service no Render (Alternativa Manual)
-
-Se preferir não usar o `render.yaml`, siga estes passos:
+### 2.1 Criar o Web Service no Render
 
 1. No Dashboard do Render, clique em **"New +"** → **"Web Service"**
 2. Conecte seu repositório Git
@@ -95,8 +46,9 @@ Se preferir não usar o `render.yaml`, siga estes passos:
    - **Build Command**: `npm install && npm run build`
    - **Start Command**: `npm run start:prod`
    - **Instance Type**: Free (para testes) ou Starter ($7/mês)
+   - **Auto-Deploy**: `Yes` (habilita deploy automático no push)
 
-### 2.3 Configurar Variáveis de Ambiente
+### 2.2 Configurar Variáveis de Ambiente
 
 No painel do seu serviço backend, vá em **"Environment"** e adicione:
 
@@ -123,7 +75,7 @@ SMTP_FROM=noreply@bartab.com
 - Use URLs HTTPS no `CORS_ORIGIN` e `FRONTEND_URL`
 - Para o Gmail, use uma [senha de aplicativo](https://support.google.com/accounts/answer/185833)
 
-### 2.4 Deploy e Migração
+### 2.3 Deploy e Migração
 
 1. Clique em **"Deploy"** para iniciar o deploy
 2. Aguarde a conclusão do build
@@ -172,8 +124,9 @@ export default defineConfig({
    - **Name**: `bartab-frontend`
    - **Branch**: `main`
    - **Root Directory**: `frontend`
-   - **Build Command**: `npm install && npm run build`
+   - **Build Command**: `bash build-render.sh`
    - **Publish Directory**: `dist`
+   - **Auto-Deploy**: `Yes` (habilita deploy automático no push)
 
 ### 3.3 Configurar Variáveis de Ambiente
 
@@ -240,8 +193,28 @@ Abra no navegador: `https://bartab-frontend.onrender.com`
 
 ## ⚙️ Configurações Adicionais
 
-### Deploy Automático
-O Render faz deploy automático quando você faz push para a branch configurada.
+### Habilitar/Verificar Auto Deploy
+
+Se você já criou os serviços e quer habilitar o auto deploy:
+
+#### Para o Backend:
+1. Acesse o dashboard do serviço `bartab-backend`
+2. Vá em **"Settings"**
+3. Procure por **"Auto-Deploy"** ou **"Build & Deploy"**
+4. Certifique-se que está em **"Yes"**
+5. Verifique que está monitorando a branch **"main"** (ou sua branch principal)
+6. Salve as alterações
+
+#### Para o Frontend:
+1. Acesse o dashboard do serviço `bartab-frontend`
+2. Vá em **"Settings"**
+3. Procure por **"Auto-Deploy"** ou **"Build & Deploy"**
+4. Certifique-se que está em **"Yes"**
+5. Verifique que está monitorando a branch **"main"** (ou sua branch principal)
+6. **Importante**: Confirme que o **Build Command** está configurado como: `bash build-render.sh`
+7. Salve as alterações
+
+Após habilitar, o Render fará deploy automático sempre que você fizer push para a branch configurada.
 
 ### Custom Domain (Opcional)
 1. No painel do serviço, vá em **"Settings"** → **"Custom Domain"**
