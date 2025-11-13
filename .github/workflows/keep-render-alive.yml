@@ -19,8 +19,8 @@ jobs:
           echo "🌐 Tentando fazer ping no backend do Render..."
           echo "📅 $(date)"
           
-          # Substitua pela URL do seu backend no Render
-          BACKEND_URL="https://bartab-backend.onrender.com"
+          # URL do backend no Render
+          BACKEND_URL="https://bartab-backend-n6nm.onrender.com"
           
           # Primeira tentativa
           echo "🔄 Primeira tentativa..."
