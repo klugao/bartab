@@ -75,11 +75,12 @@ const Register: React.FC = () => {
       }
     } catch (error) {
       console.error('❌ [FRONTEND] Erro ao registrar:', error);
-      console.error('❌ [FRONTEND] Detalhes do erro:', {
+      const errorDetails = error instanceof Error ? {
         name: error.name,
         message: error.message,
         stack: error.stack,
-      });
+      } : { error: String(error) };
+      console.error('❌ [FRONTEND] Detalhes do erro:', errorDetails);
       setError('Erro ao conectar com o servidor. Verifique sua conexão.');
     } finally {
       setIsLoading(false);
