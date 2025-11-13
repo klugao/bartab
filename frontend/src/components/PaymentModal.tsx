@@ -15,6 +15,7 @@ interface PaymentModalProps {
 
 const PaymentModal = ({ isOpen, onClose, onConfirm, onPixSelected, total }: PaymentModalProps) => {
   const [method, setMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
+  const [loading, setLoading] = useState(false);
   const amountInput = useCurrencyInput(total);
 
   // Resetar amount quando total mudar
@@ -23,19 +24,34 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, onPixSelected, total }: Paym
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [total]);
 
+  // Resetar loading quando modal abrir
+  useEffect(() => {
+    if (isOpen) {
+      setLoading(false);
+    }
+  }, [isOpen]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Se for PIX, chama callback especial ao invés de confirmar diretamente
-    if (method === PaymentMethod.PIX && onPixSelected) {
-      onPixSelected(amountInput.numericValue.toString());
-      return;
-    }
+    // Prevenir múltiplos submits
+    if (loading) return;
+    setLoading(true);
     
-    onConfirm({
-      method,
-      amount: amountInput.numericValue.toString(),
-    });
+    try {
+      // Se for PIX, chama callback especial ao invés de confirmar diretamente
+      if (method === PaymentMethod.PIX && onPixSelected) {
+        onPixSelected(amountInput.numericValue.toString());
+        return;
+      }
+      
+      onConfirm({
+        method,
+        amount: amountInput.numericValue.toString(),
+      });
+    } finally {
+      // Nota: o loading será resetado quando o modal fechar via useEffect
+    }
   };
 
   const handleMethodChange = (newMethod: PaymentMethod) => {
@@ -47,8 +63,11 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, onPixSelected, total }: Paym
   };
 
   const handleClose = () => {
+    // Só permite fechar se não estiver processando
+    if (loading) return;
     setMethod(PaymentMethod.CASH);
     amountInput.setValue(total);
+    setLoading(false);
     onClose();
   };
 
@@ -129,9 +148,9 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, onPixSelected, total }: Paym
                   value={amountInput.displayValue}
                   onChange={amountInput.handleChange}
                   onKeyDown={amountInput.handleKeyDown}
-                  disabled={method === PaymentMethod.LATER}
+                  disabled={method === PaymentMethod.LATER || loading}
                   className={`w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                    method === PaymentMethod.LATER ? 'bg-gray-100 cursor-not-allowed' : ''
+                    method === PaymentMethod.LATER || loading ? 'bg-gray-100 cursor-not-allowed' : ''
                   }`}
                   placeholder="0,00"
                 />
@@ -161,14 +180,16 @@ const PaymentModal = ({ isOpen, onClose, onConfirm, onPixSelected, total }: Paym
                 type="button"
                 onClick={handleClose}
                 className="btn-secondary flex-1"
+                disabled={loading}
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 className="btn-primary flex-1"
+                disabled={loading}
               >
-                Confirmar
+                {loading ? 'Processando...' : 'Confirmar'}
               </button>
             </div>
           </form>

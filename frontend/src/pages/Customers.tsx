@@ -13,6 +13,7 @@ const Customers = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<CreateCustomerDto>({
     name: '',
     phone: '',
@@ -46,6 +47,11 @@ const Customers = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevenir múltiplos submits
+    if (submitting) return;
+    setSubmitting(true);
+    
     try {
       console.log('Enviando dados do cliente:', formData);
       if (editingCustomer) {
@@ -76,6 +82,8 @@ const Customers = () => {
         description: `Erro ao salvar cliente: ${errorMessage}`,
         variant: 'destructive',
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -276,6 +284,7 @@ const Customers = () => {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  disabled={submitting}
                 />
               </div>
               <div>
@@ -287,6 +296,7 @@ const Customers = () => {
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  disabled={submitting}
                 />
               </div>
               <div className="flex space-x-3">
@@ -294,14 +304,16 @@ const Customers = () => {
                   type="button"
                   onClick={() => setShowForm(false)}
                   className="btn-secondary flex-1"
+                  disabled={submitting}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   className="btn-primary flex-1"
+                  disabled={submitting}
                 >
-                  {editingCustomer ? 'Atualizar' : 'Criar'}
+                  {submitting ? (editingCustomer ? 'Atualizando...' : 'Criando...') : (editingCustomer ? 'Atualizar' : 'Criar')}
                 </button>
               </div>
             </form>
