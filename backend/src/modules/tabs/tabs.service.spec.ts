@@ -54,6 +54,7 @@ describe('TabsService', () => {
 
   const mockExpensesService = {
     findByPeriod: jest.fn(),
+    findByEstablishment: jest.fn(),
   };
 
   const mockDataSource = {
@@ -468,6 +469,146 @@ describe('TabsService', () => {
       await expect(service.delete('tab-1', 'est-1')).rejects.toThrow(
         BadRequestException,
       );
+    });
+  });
+
+  describe('findClosed', () => {
+    it('deve retornar contas fechadas', async () => {
+      const tabs = [
+        {
+          id: 'tab-1',
+          status: TabStatus.CLOSED,
+          establishment_id: 'est-1',
+        },
+      ];
+
+      mockTabsRepository.find.mockResolvedValue(tabs);
+
+      const result = await service.findClosed('est-1');
+
+      expect(result).toEqual(tabs);
+      expect(mockTabsRepository.find).toHaveBeenCalled();
+    });
+
+    it('deve filtrar por período quando fornecido', async () => {
+      const tabs = [{ id: 'tab-1' }];
+      mockTabsRepository.find.mockResolvedValue(tabs);
+
+      const startDate = new Date('2024-01-01');
+      const endDate = new Date('2024-01-31');
+
+      await service.findClosed('est-1', startDate, endDate);
+
+      expect(mockTabsRepository.find).toHaveBeenCalled();
+    });
+  });
+
+  describe('update', () => {
+    it('deve atualizar uma conta', async () => {
+      const tab = {
+        id: 'tab-1',
+        name: 'Mesa 1',
+        establishment_id: 'est-1',
+      };
+
+      const updateDto = { name: 'Mesa 2' };
+      const updatedTab = { ...tab, ...updateDto };
+
+      mockTabsRepository.findOne.mockResolvedValue(tab);
+      mockTabsRepository.save.mockResolvedValue(updatedTab);
+
+      const result = await service.update('tab-1', updateDto, 'est-1');
+
+      expect(result.name).toBe('Mesa 2');
+      expect(mockTabsRepository.save).toHaveBeenCalled();
+    });
+  });
+
+  describe('updateItemQuantity', () => {
+    it('deve atualizar quantidade de item', async () => {
+      const tab = {
+        id: 'tab-1',
+        status: TabStatus.OPEN,
+        establishment_id: 'est-1',
+        tabItems: [],
+      };
+
+      const tabItem = {
+        id: 'item-1',
+        qty: 2,
+        unit_price: '10',
+        total: '20',
+      };
+
+      const updatedItem = { ...tabItem, qty: 3, total: '30' };
+
+      mockTabsRepository.findOne.mockResolvedValue(tab);
+      mockTabItemsRepository.findOne.mockResolvedValue(tabItem);
+      mockTabItemsRepository.save.mockResolvedValue(updatedItem);
+      mockTabsRepository.save.mockResolvedValue(tab);
+
+      await service.updateItemQuantity('tab-1', 'item-1', 3, 'est-1');
+
+      expect(mockTabItemsRepository.save).toHaveBeenCalled();
+    });
+  });
+
+  describe('getAvailableMonths', () => {
+    it('deve retornar meses disponíveis', async () => {
+      const tabs = [
+        {
+          closed_at: new Date('2024-01-15'),
+        },
+        {
+          closed_at: new Date('2024-02-20'),
+        },
+      ];
+
+      const expenses = [
+        { year: 2024, month: 1 },
+        { year: 2024, month: 2 },
+      ];
+
+      mockTabsRepository.find.mockResolvedValue(tabs);
+      mockExpensesService.findByEstablishment.mockResolvedValue(expenses);
+
+      const result = await service.getAvailableMonths('est-1');
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+    });
+  });
+
+  describe('getConsumptionReport', () => {
+    it('deve retornar relatório de consumo', async () => {
+      const tabs = [
+        {
+          id: 'tab-1',
+          total: '100',
+          tabItems: [
+            {
+              item: { name: 'Item 1' },
+              qty: 2,
+              total: '50',
+            },
+          ],
+          payments: [
+            {
+              method: PaymentMethod.CASH,
+              amount: '100',
+            },
+          ],
+        },
+      ];
+
+      const expenses = [];
+
+      mockTabsRepository.find.mockResolvedValue(tabs);
+      mockExpensesService.findByPeriod.mockResolvedValue(expenses);
+
+      const result = await service.getConsumptionReport(2024, 1, 'est-1');
+
+      expect(result).toBeDefined();
     });
   });
 });
