@@ -55,7 +55,7 @@ services:
     runtime: static
     branch: main # branch para deploy automático
     rootDirectory: frontend
-    buildCommand: npm install && npm run build
+    buildCommand: bash build-render.sh
     staticPublishPath: dist
     autoDeploy: true # habilita deploy automático
     envVars:
