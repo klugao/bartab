@@ -124,7 +124,7 @@ export default defineConfig({
    - **Name**: `bartab-frontend`
    - **Branch**: `main`
    - **Root Directory**: `frontend`
-   - **Build Command**: `bash build-render.sh`
+   - **Build Command**: `npm run build:render`
    - **Publish Directory**: `dist`
    - **Auto-Deploy**: `Yes` (habilita deploy automático no push)
 
@@ -211,7 +211,7 @@ Se você já criou os serviços e quer habilitar o auto deploy:
 3. Procure por **"Auto-Deploy"** ou **"Build & Deploy"**
 4. Certifique-se que está em **"Yes"**
 5. Verifique que está monitorando a branch **"main"** (ou sua branch principal)
-6. **Importante**: Confirme que o **Build Command** está configurado como: `bash build-render.sh`
+6. **Importante**: Confirme que o **Build Command** está configurado como: `npm run build:render`
 7. Salve as alterações
 
 Após habilitar, o Render fará deploy automático sempre que você fizer push para a branch configurada.
