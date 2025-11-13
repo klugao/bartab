@@ -30,35 +30,60 @@ const Register: React.FC = () => {
       return;
     }
 
+    console.log('🟢 [FRONTEND] Iniciando registro...');
+    console.log('🟢 [FRONTEND] Nome do estabelecimento:', establishmentName);
+
     setIsLoading(true);
     setError('');
 
     try {
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+      console.log('🟢 [FRONTEND] API URL:', `${API_BASE_URL}/auth/register`);
+      
+      const requestBody = {
+        googleData,
+        establishmentName: establishmentName.trim(),
+      };
+      console.log('🟢 [FRONTEND] Enviando requisição...');
+      
       const response = await fetch(`${API_BASE_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          googleData,
-          establishmentName: establishmentName.trim(),
-        }),
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log('🟢 [FRONTEND] Resposta recebida:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
       });
 
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ [FRONTEND] Registro bem-sucedido!');
+        console.log('✅ [FRONTEND] Token recebido:', data.access_token ? 'Sim' : 'Não');
+        
         await login(data.access_token);
+        console.log('✅ [FRONTEND] Login concluído, redirecionando...');
         navigate('/');
       } else {
         const errorData = await response.json();
+        console.error('❌ [FRONTEND] Erro na resposta:', errorData);
         setError(errorData.message || 'Erro ao criar conta');
       }
     } catch (error) {
-      console.error('Erro ao registrar:', error);
-      setError('Erro ao conectar com o servidor');
+      console.error('❌ [FRONTEND] Erro ao registrar:', error);
+      console.error('❌ [FRONTEND] Detalhes do erro:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+      });
+      setError('Erro ao conectar com o servidor. Verifique sua conexão.');
     } finally {
       setIsLoading(false);
+      console.log('🟢 [FRONTEND] Finalizou tentativa de registro');
     }
   };
 

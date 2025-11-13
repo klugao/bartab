@@ -45,12 +45,33 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() body: { googleData: string; establishmentName: string }) {
+    console.log('🔵 [REGISTER] Iniciando registro...');
+    console.log('🔵 [REGISTER] Nome do estabelecimento:', body.establishmentName);
+    
     try {
       const googleProfile = JSON.parse(Buffer.from(body.googleData, 'base64').toString());
+      console.log('🔵 [REGISTER] Google Profile:', {
+        email: googleProfile.email,
+        name: googleProfile.name,
+      });
+      
+      console.log('🔵 [REGISTER] Chamando registerUser...');
       const user = await this.authService.registerUser(googleProfile, body.establishmentName);
-      return this.authService.login(user);
+      console.log('✅ [REGISTER] Usuário registrado com sucesso!');
+      console.log('✅ [REGISTER] User ID:', user.id);
+      console.log('✅ [REGISTER] Establishment ID:', user.establishment?.id);
+      
+      console.log('🔵 [REGISTER] Gerando token de login...');
+      const loginData = await this.authService.login(user);
+      console.log('✅ [REGISTER] Token gerado com sucesso!');
+      
+      return loginData;
     } catch (error) {
-      throw new UnauthorizedException('Erro ao registrar usuário');
+      console.error('❌ [REGISTER] ERRO NO REGISTRO!');
+      console.error('❌ [REGISTER] Mensagem:', error.message);
+      console.error('❌ [REGISTER] Stack:', error.stack);
+      console.error('❌ [REGISTER] Detalhes completos:', error);
+      throw new UnauthorizedException(error.message || 'Erro ao registrar usuário');
     }
   }
 

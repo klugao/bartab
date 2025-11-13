@@ -40,7 +40,7 @@ export class NotificationService {
       this.logger.log(`   SMTP User: ${smtpUser}`);
     }
     
-    // Configuração do transporter de e-mail
+    // Configuração do transporter de e-mail com timeout
     this.transporter = nodemailer.createTransport({
       host: this.configService.get<string>('SMTP_HOST') || 'smtp.gmail.com',
       port: this.configService.get<number>('SMTP_PORT') || 587,
@@ -49,6 +49,9 @@ export class NotificationService {
         user: smtpUser,
         pass: smtpPass,
       },
+      connectionTimeout: 5000, // 5 segundos timeout para conexão
+      greetingTimeout: 5000, // 5 segundos timeout para greeting
+      socketTimeout: 10000, // 10 segundos timeout para socket
     });
   }
 
@@ -93,14 +96,19 @@ export class NotificationService {
     };
 
     try {
-      await this.transporter.sendMail(mailOptions);
+      // Adiciona timeout de 15 segundos para o envio
+      const sendMailPromise = this.transporter.sendMail(mailOptions);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Email timeout - levou mais de 15 segundos')), 15000)
+      );
+      
+      await Promise.race([sendMailPromise, timeoutPromise]);
       this.logger.log(`✅ Alerta de novo cadastro enviado com sucesso para ${adminEmail}`);
       this.logger.log(`   Estabelecimento: ${nomeEstabelecimento}`);
     } catch (error) {
       this.logger.error(`❌ Erro ao enviar alerta de novo cadastro: ${error.message}`);
       this.logger.error(`   Estabelecimento: ${nomeEstabelecimento}`);
       this.logger.error(`   Proprietário: ${emailProprietario}`);
-      this.logger.error(`   Stack: ${error.stack}`);
       // Não lançamos erro para não bloquear o fluxo de cadastro
     }
   }
