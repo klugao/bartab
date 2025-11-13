@@ -10,9 +10,9 @@ echo "🧹 Limpando cache..."
 rm -rf node_modules/.vite
 rm -rf node_modules/.cache
 
-# Reinstalar dependências com flags corretas para resolver dependências opcionais
+# Reinstalar dependências incluindo as opcionais (necessário para binários nativos do Rollup)
 echo "📦 Instalando dependências..."
-npm ci --omit=optional --prefer-offline --no-audit
+npm ci --prefer-offline --no-audit
 
 # Build
 echo "🏗️ Executando build..."
