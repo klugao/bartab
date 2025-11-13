@@ -6,16 +6,48 @@ import * as nodemailer from 'nodemailer';
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
   private transporter: nodemailer.Transporter;
+  private isConfigured: boolean = false;
 
   constructor(private configService: ConfigService) {
+    // Verifica se as credenciais SMTP estão configuradas
+    const smtpUser = this.configService.get<string>('SMTP_USER');
+    const smtpPass = this.configService.get<string>('SMTP_PASS');
+    
+    if (!smtpUser || !smtpPass) {
+      this.logger.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      this.logger.error('❌ CONFIGURAÇÃO DE EMAIL INCOMPLETA!');
+      this.logger.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      this.logger.error('');
+      this.logger.error('As seguintes variáveis de ambiente não estão configuradas:');
+      if (!smtpUser) this.logger.error('  - SMTP_USER');
+      if (!smtpPass) this.logger.error('  - SMTP_PASS');
+      this.logger.error('');
+      this.logger.error('SOLUÇÃO:');
+      this.logger.error('  1. Configure as variáveis no arquivo .env (desenvolvimento)');
+      this.logger.error('  2. Configure no Dashboard do Render (produção)');
+      this.logger.error('  3. Gere uma "Senha de App" no Gmail:');
+      this.logger.error('     https://myaccount.google.com/apppasswords');
+      this.logger.error('');
+      this.logger.error('⚠️  EMAILS NÃO SERÃO ENVIADOS até que isso seja corrigido!');
+      this.logger.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      this.logger.error('');
+      this.isConfigured = false;
+    } else {
+      this.isConfigured = true;
+      this.logger.log('✅ Configuração de email carregada com sucesso');
+      this.logger.log(`   SMTP Host: ${this.configService.get<string>('SMTP_HOST') || 'smtp.gmail.com'}`);
+      this.logger.log(`   SMTP Port: ${this.configService.get<number>('SMTP_PORT') || 587}`);
+      this.logger.log(`   SMTP User: ${smtpUser}`);
+    }
+    
     // Configuração do transporter de e-mail
     this.transporter = nodemailer.createTransport({
       host: this.configService.get<string>('SMTP_HOST') || 'smtp.gmail.com',
       port: this.configService.get<number>('SMTP_PORT') || 587,
       secure: false, // true para 465, false para outras portas
       auth: {
-        user: this.configService.get<string>('SMTP_USER'),
-        pass: this.configService.get<string>('SMTP_PASS'),
+        user: smtpUser,
+        pass: smtpPass,
       },
     });
   }
@@ -29,7 +61,16 @@ export class NotificationService {
     nomeEstabelecimento: string,
     emailProprietario: string,
   ): Promise<void> {
+    if (!this.isConfigured) {
+      this.logger.warn('⚠️  Email não enviado: SMTP não configurado');
+      return;
+    }
+
     const adminEmail = 'eduardo.klug7@gmail.com';
+    
+    this.logger.log(`📤 Enviando alerta de novo cadastro para ${adminEmail}...`);
+    this.logger.log(`   Estabelecimento: ${nomeEstabelecimento}`);
+    this.logger.log(`   Proprietário: ${emailProprietario}`);
     
     const mailOptions = {
       from: this.configService.get<string>('SMTP_FROM') || 'noreply@bartab.com',
@@ -53,9 +94,13 @@ export class NotificationService {
 
     try {
       await this.transporter.sendMail(mailOptions);
-      this.logger.log(`Alerta de novo cadastro enviado para ${adminEmail}: ${nomeEstabelecimento}`);
+      this.logger.log(`✅ Alerta de novo cadastro enviado com sucesso para ${adminEmail}`);
+      this.logger.log(`   Estabelecimento: ${nomeEstabelecimento}`);
     } catch (error) {
-      this.logger.error(`Erro ao enviar alerta de novo cadastro: ${error.message}`, error.stack);
+      this.logger.error(`❌ Erro ao enviar alerta de novo cadastro: ${error.message}`);
+      this.logger.error(`   Estabelecimento: ${nomeEstabelecimento}`);
+      this.logger.error(`   Proprietário: ${emailProprietario}`);
+      this.logger.error(`   Stack: ${error.stack}`);
       // Não lançamos erro para não bloquear o fluxo de cadastro
     }
   }
@@ -69,6 +114,14 @@ export class NotificationService {
     emailProprietario: string,
     nomeEstabelecimento: string,
   ): Promise<void> {
+    if (!this.isConfigured) {
+      this.logger.warn('⚠️  Email de aprovação não enviado: SMTP não configurado');
+      throw new Error('Configuração de email não disponível. Configure SMTP_USER e SMTP_PASS.');
+    }
+
+    this.logger.log(`📤 Enviando email de aprovação para ${emailProprietario}...`);
+    this.logger.log(`   Estabelecimento: ${nomeEstabelecimento}`);
+    
     const mailOptions = {
       from: this.configService.get<string>('SMTP_FROM') || 'noreply@bartab.com',
       to: emailProprietario,
@@ -105,9 +158,13 @@ export class NotificationService {
 
     try {
       await this.transporter.sendMail(mailOptions);
-      this.logger.log(`E-mail de aprovação enviado para ${emailProprietario}: ${nomeEstabelecimento}`);
+      this.logger.log(`✅ Email de aprovação enviado com sucesso para ${emailProprietario}`);
+      this.logger.log(`   Estabelecimento: ${nomeEstabelecimento}`);
     } catch (error) {
-      this.logger.error(`Erro ao enviar e-mail de aprovação: ${error.message}`, error.stack);
+      this.logger.error(`❌ Erro ao enviar email de aprovação: ${error.message}`);
+      this.logger.error(`   Destinatário: ${emailProprietario}`);
+      this.logger.error(`   Estabelecimento: ${nomeEstabelecimento}`);
+      this.logger.error(`   Stack: ${error.stack}`);
       throw error; // Lançamos erro pois é importante o proprietário saber que foi aprovado
     }
   }
@@ -123,6 +180,15 @@ export class NotificationService {
     nomeEstabelecimento: string,
     motivo?: string,
   ): Promise<void> {
+    if (!this.isConfigured) {
+      this.logger.warn('⚠️  Email de rejeição não enviado: SMTP não configurado');
+      throw new Error('Configuração de email não disponível. Configure SMTP_USER e SMTP_PASS.');
+    }
+
+    this.logger.log(`📤 Enviando email de rejeição para ${emailProprietario}...`);
+    this.logger.log(`   Estabelecimento: ${nomeEstabelecimento}`);
+    if (motivo) this.logger.log(`   Motivo: ${motivo}`);
+    
     const mailOptions = {
       from: this.configService.get<string>('SMTP_FROM') || 'noreply@bartab.com',
       to: emailProprietario,
@@ -148,9 +214,13 @@ export class NotificationService {
 
     try {
       await this.transporter.sendMail(mailOptions);
-      this.logger.log(`E-mail de rejeição enviado para ${emailProprietario}: ${nomeEstabelecimento}`);
+      this.logger.log(`✅ Email de rejeição enviado com sucesso para ${emailProprietario}`);
+      this.logger.log(`   Estabelecimento: ${nomeEstabelecimento}`);
     } catch (error) {
-      this.logger.error(`Erro ao enviar e-mail de rejeição: ${error.message}`, error.stack);
+      this.logger.error(`❌ Erro ao enviar email de rejeição: ${error.message}`);
+      this.logger.error(`   Destinatário: ${emailProprietario}`);
+      this.logger.error(`   Estabelecimento: ${nomeEstabelecimento}`);
+      this.logger.error(`   Stack: ${error.stack}`);
       throw error;
     }
   }
