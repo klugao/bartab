@@ -328,54 +328,70 @@ const TabDetail = () => {
         ) : (
           <div className="space-y-3">
             {tab.tabItems.map((tabItem) => (
-              <div key={tabItem.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                <div className="flex-1">
-                  <div>
-                    <span className="font-medium">{tabItem.item.name} </span>
-                    <span className="text-gray-500 ml-2">
-                      - {tabItem.qty} UN  - {formatCurrency(tabItem.unit_price)}
-                    </span>
-                  </div>
-                  <div className="text-xs text-gray-400 mt-1">
-                    Adicionado em: {formatFullDate(tabItem.created_at)}
-                    {tabItem.updated_at && tabItem.created_at !== tabItem.updated_at && (
-                      <span className="ml-2">
-                        | Atualizado em: {formatFullDate(tabItem.updated_at)}
+              <div key={tabItem.id} className="relative p-3 bg-gray-50 rounded-lg">
+                {/* Layout mobile-friendly com grid */}
+                <div className="grid grid-cols-[1fr_auto] gap-2">
+                  {/* Coluna esquerda: Informações do produto */}
+                  <div className="pr-2">
+                    <div>
+                      <span className="font-medium">{tabItem.item.name} </span>
+                      <span className="text-gray-500 text-sm">
+                        - {tabItem.qty} UN - {formatCurrency(tabItem.unit_price)}
                       </span>
-                    )}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      Adicionado em: {formatFullDate(tabItem.created_at)}
+                      {tabItem.updated_at && tabItem.created_at !== tabItem.updated_at && (
+                        <span className="ml-2">
+                          | Atualizado em: {formatFullDate(tabItem.updated_at)}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className="font-semibold">TOTAL: {formatCurrency(tabItem.total)}</span>
-                  {tab.status === 'OPEN' && (
-                    <>
-                      <div className="flex items-center space-x-2 bg-white rounded-lg border border-gray-300 p-1">
+
+                  {/* Coluna direita: Controles */}
+                  <div className="flex flex-col items-end justify-between min-h-[80px]">
+                    {/* Topo direito: Botão de exclusão */}
+                    {tab.status === 'OPEN' && (
+                      <button
+                        onClick={() => handleRemoveItem(tabItem.id)}
+                        className="p-1.5 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors"
+                        title="Remover item da conta"
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                      </button>
+                    )}
+
+                    {/* Centro direito: Controles de quantidade */}
+                    {tab.status === 'OPEN' && (
+                      <div className="flex items-center space-x-1 bg-white rounded-lg border border-gray-300 p-1 my-auto">
                         <button
                           onClick={() => handleUpdateQuantity(tabItem.id, tabItem.qty, false)}
                           className="p-1.5 text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Diminuir quantidade"
                           disabled={tabItem.qty <= 1}
                         >
-                          <MinusIcon className="h-4 w-4" />
+                          <MinusIcon className="h-5 w-5" />
                         </button>
-                        <span className="font-semibold text-lg px-2">{tabItem.qty}</span>
+                        <span className="font-semibold text-xl px-2 min-w-[3rem] text-center">{tabItem.qty}</span>
                         <button
                           onClick={() => handleUpdateQuantity(tabItem.id, tabItem.qty, true)}
                           className="p-1.5 text-primary-600 hover:text-primary-900 hover:bg-primary-50 rounded transition-colors"
                           title="Aumentar quantidade"
                         >
-                          <PlusIcon className="h-4 w-4" />
+                          <PlusIcon className="h-5 w-5" />
                         </button>
                       </div>
-                      <button
-                        onClick={() => handleRemoveItem(tabItem.id)}
-                        className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors"
-                        title="Remover item da conta"
-                      >
-                        <TrashIcon className="h-3.5 w-3.5" />
-                      </button>
-                    </>
-                  )}
+                    )}
+
+                    {/* Inferior direito: Total */}
+                    <div className="text-right">
+                      <div className="text-xs text-gray-500 uppercase">Total:</div>
+                      <div className="font-bold text-lg text-primary-600">
+                        {formatCurrency(tabItem.total)}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
