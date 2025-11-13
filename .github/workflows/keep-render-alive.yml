@@ -2,8 +2,10 @@ name: Keep Render Backend Alive
 
 on:
   schedule:
-    # Executa a cada hora (0 minutos de cada hora)
-    - cron: '0 * * * *'
+    # Executa a cada 14 minutos para manter o Render sempre ativo
+    # Render hiberna após ~15 min de inatividade no plano gratuito
+    # 14 min garante que o backend nunca entre em sleep
+    - cron: '*/14 * * * *'
   # Permite execução manual do workflow
   workflow_dispatch:
 

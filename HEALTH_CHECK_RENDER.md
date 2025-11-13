@@ -93,28 +93,31 @@ Resposta esperada:
 
 ## 📊 Frequência do Ping
 
-O workflow está configurado para rodar **a cada hora** (`0 * * * *` em cron).
+O workflow está configurado para rodar **a cada 14 minutos** (`*/14 * * * *` em cron).
 
-### Por que não mais frequente?
+### Por que 14 minutos?
 
-- **Grátis do Render**: Tem limites de horas de uso
-- **GitHub Actions**: Tem limites de minutos mensais no plano gratuito
-- **1 hora é suficiente**: Mantém o backend "morno" sem desperdiçar recursos
+- **Render Free Tier**: Hiberna após ~15 minutos de inatividade
+- **14 minutos**: Garante que o backend nunca entre em sleep
+- **GitHub Actions**: Usa ~1.545 minutos/mês (77% do limite gratuito de 2.000 min)
+- **Resultado**: Backend sempre ativo, sem cold starts! 🚀
 
 ### Ajustar a Frequência
 
 Para mudar a frequência, edite o cron no arquivo `.github/workflows/keep-render-alive.yml`:
 
 ```yaml
-# A cada 30 minutos
-- cron: '*/30 * * * *'
+# A cada 10 minutos (mais agressivo, usa mais minutos do GitHub)
+- cron: '*/10 * * * *'
 
-# A cada 2 horas
-- cron: '0 */2 * * *'
+# A cada 20 minutos (mais econômico, mas pode hibernar)
+- cron: '*/20 * * * *'
 
-# Apenas durante horário comercial (8h-18h UTC)
-- cron: '0 8-18 * * *'
+# Apenas durante horário comercial UTC (economiza minutos)
+- cron: '*/14 8-22 * * *'
 ```
+
+📚 **Documentação completa**: Veja `FREQUENCIA_HEALTH_CHECK.md` para detalhes sobre limites e otimizações.
 
 **Referência de Cron**: https://crontab.guru/
 
