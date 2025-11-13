@@ -10,5 +10,17 @@ export class AppController {
     return this.appService.getHello();
   }
 
+  /**
+   * Health check endpoint para manter o backend do Render ativo
+   * Este endpoint não requer autenticação e retorna status OK
+   */
+  @Get('health')
+  healthCheck(): { status: string; timestamp: string } {
+    return {
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   // Endpoints mockados removidos - agora usando os controllers específicos
 }
