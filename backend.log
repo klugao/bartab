@@ -1,7 +1,0 @@
-Debugger listening on ws://127.0.0.1:61052/680686c9-f368-4b3a-a593-f51df7110461
-For help, see: https://nodejs.org/en/docs/inspector
-Debugger attached.
-yarn run v1.22.22
-error Couldn't find a package.json file in "/Users/eduardoklug/Documents/bartab"
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
-Waiting for the debugger to disconnect...
