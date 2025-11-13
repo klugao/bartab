@@ -93,10 +93,10 @@ const CardTab = ({ tab, onDelete, onAddItem, onUpdateQuantity }: CardTabProps) =
                             e.stopPropagation();
                             onUpdateQuantity(tab.id, tabItem.id, tabItem.qty, false);
                           }}
-                          className="h-6 w-6 flex items-center justify-center rounded bg-muted hover:bg-destructive/10 hover:text-destructive transition-colors"
+                          className="h-8 w-8 flex items-center justify-center rounded bg-muted hover:bg-destructive/10 hover:text-destructive transition-colors"
                           aria-label="Diminuir quantidade"
                         >
-                          <Minus className="h-3 w-3" />
+                          <Minus className="h-4 w-4" />
                         </button>
                         <button
                           onClick={(e) => {
@@ -104,10 +104,10 @@ const CardTab = ({ tab, onDelete, onAddItem, onUpdateQuantity }: CardTabProps) =
                             e.stopPropagation();
                             onUpdateQuantity(tab.id, tabItem.id, tabItem.qty, true);
                           }}
-                          className="h-6 w-6 flex items-center justify-center rounded bg-muted hover:bg-primary/10 hover:text-primary transition-colors"
+                          className="h-8 w-8 flex items-center justify-center rounded bg-muted hover:bg-primary/10 hover:text-primary transition-colors"
                           aria-label="Aumentar quantidade"
                         >
-                          <Plus className="h-3 w-3" />
+                          <Plus className="h-4 w-4" />
                         </button>
                       </div>
                     )}
