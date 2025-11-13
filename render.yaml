@@ -10,11 +10,13 @@ services:
     name: bartab-backend
     runtime: node
     region: oregon # mude para sua região preferida (frankfurt, singapore, etc)
+    branch: main # branch para deploy automático
     rootDirectory: backend
     buildCommand: npm install && npm run build
     startCommand: npm run start:prod
     healthCheckPath: /api
     plan: free # ou "starter" para $7/mês
+    autoDeploy: true # habilita deploy automático
     envVars:
       - key: NODE_ENV
         value: production
@@ -51,9 +53,11 @@ services:
   - type: web
     name: bartab-frontend
     runtime: static
+    branch: main # branch para deploy automático
     rootDirectory: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
+    autoDeploy: true # habilita deploy automático
     envVars:
       - key: VITE_API_BASE_URL
         value: https://bartab-backend.onrender.com/api # Atualize com sua URL do backend
