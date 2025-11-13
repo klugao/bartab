@@ -6,7 +6,7 @@ import type { Item } from '../types';
 interface QuickAddItemModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (itemId: string, quantity: number) => void;
+  onConfirm: (itemId: string, quantity: number) => Promise<void>;
   tabId?: string;
   customerName?: string;
 }
@@ -31,6 +31,7 @@ const QuickAddItemModal = ({
       setSelectedItemId('');
       setQuantity(1);
       setSearchTerm('');
+      setLoading(false); // Reset loading state
     }
   }, [isOpen]);
 
@@ -53,18 +54,27 @@ const QuickAddItemModal = ({
     );
   }, [items, searchTerm]);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!selectedItemId) return;
     
+    // Prevenir múltiplos cliques
+    if (loading) return;
     setLoading(true);
-    onConfirm(selectedItemId, quantity);
-    setLoading(false);
+    
+    try {
+      await onConfirm(selectedItemId, quantity);
+    } catch (error) {
+      console.error('Erro ao adicionar item:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClose = () => {
+    // Só permite fechar se não estiver carregando
+    if (loading) return;
     setSelectedItemId('');
     setQuantity(1);
-    setLoading(false);
     onClose();
   };
 

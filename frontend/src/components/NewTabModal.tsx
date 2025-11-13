@@ -20,6 +20,7 @@ const NewTabModal = ({ isOpen, onClose, onConfirm }: NewTabModalProps) => {
     if (isOpen) {
       loadCustomers();
       setSelectedCustomerId(''); // Reset selection when opening
+      setLoading(false); // Reset loading state when opening
     }
   }, [isOpen]);
 
@@ -49,6 +50,9 @@ const NewTabModal = ({ isOpen, onClose, onConfirm }: NewTabModalProps) => {
   };
 
   const handleConfirm = () => {
+    // Prevenir múltiplos cliques
+    if (loading) return;
+    
     console.log('NewTabModal.handleConfirm - selectedCustomerId:', selectedCustomerId);
     console.log('NewTabModal.handleConfirm - selectedCustomerId type:', typeof selectedCustomerId);
     console.log('NewTabModal.handleConfirm - selectedCustomerId length:', selectedCustomerId?.length);
@@ -56,14 +60,13 @@ const NewTabModal = ({ isOpen, onClose, onConfirm }: NewTabModalProps) => {
     const customerId = selectedCustomerId && selectedCustomerId.trim() !== '' ? selectedCustomerId : undefined;
     console.log('NewTabModal.handleConfirm - customerId final:', customerId);
     onConfirm(customerId);
-    setLoading(false);
-    // Reset after confirm
-    setSelectedCustomerId('');
+    // Nota: setLoading(false) e reset são chamados pelo componente pai via onClose
   };
 
   const handleClose = () => {
+    // Só permite fechar se não estiver carregando
+    if (loading) return;
     setSelectedCustomerId('');
-    setLoading(false);
     onClose();
   };
 

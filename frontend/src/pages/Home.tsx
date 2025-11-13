@@ -165,6 +165,7 @@ const Home = () => {
       console.error('Erro ao abrir nova conta:', error);
       const errorMessage = 'Erro ao abrir nova conta. Tente novamente.';
       setError(errorMessage);
+      setShowNewTabModal(false); // Fechar modal mesmo em caso de erro
       toast({
         variant: "destructive",
         title: "❌ Erro",

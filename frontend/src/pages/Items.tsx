@@ -14,6 +14,7 @@ const Items = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState<CreateItemDto>({
     name: '',
     price: 0,
@@ -60,6 +61,10 @@ const Items = () => {
       return;
     }
     
+    // Prevenir múltiplos submits
+    if (submitting) return;
+    setSubmitting(true);
+    
     try {
       const itemData = {
         ...formData,
@@ -91,6 +96,8 @@ const Items = () => {
         description: errorMessage,
         variant: 'destructive',
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -312,6 +319,7 @@ const Items = () => {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  disabled={submitting}
                 />
               </div>
               <div>
@@ -329,6 +337,7 @@ const Items = () => {
                     onKeyDown={priceInput.handleKeyDown}
                     className="w-full pl-10 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                     placeholder="0,00"
+                    disabled={submitting}
                   />
                 </div>
               </div>
@@ -337,14 +346,16 @@ const Items = () => {
                   type="button"
                   onClick={() => setShowForm(false)}
                   className="btn-secondary flex-1"
+                  disabled={submitting}
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   className="btn-primary flex-1"
+                  disabled={submitting}
                 >
-                  {editingItem ? 'Atualizar' : 'Criar'}
+                  {submitting ? (editingItem ? 'Atualizando...' : 'Criando...') : (editingItem ? 'Atualizar' : 'Criar')}
                 </button>
               </div>
             </form>
