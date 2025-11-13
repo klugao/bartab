@@ -165,6 +165,7 @@ const Settings = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Ex: Bar do João"
                 required
+                maxLength={255}
               />
             </div>
 
@@ -178,6 +179,7 @@ const Settings = () => {
                 onChange={(e) => handleChange('address', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Ex: Rua Principal, 123"
+                maxLength={500}
               />
             </div>
 
@@ -192,6 +194,7 @@ const Settings = () => {
                   onChange={(e) => handleChange('phone', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Ex: (11) 98765-4321"
+                  maxLength={20}
                 />
               </div>
 
@@ -205,6 +208,7 @@ const Settings = () => {
                   onChange={(e) => handleChange('email', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Ex: contato@bar.com"
+                  maxLength={255}
                 />
               </div>
             </div>

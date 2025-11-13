@@ -285,6 +285,7 @@ const Customers = () => {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   disabled={submitting}
+                  maxLength={255}
                 />
               </div>
               <div>
@@ -297,6 +298,8 @@ const Customers = () => {
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                   disabled={submitting}
+                  maxLength={20}
+                  placeholder="(00) 00000-0000"
                 />
               </div>
               <div className="flex space-x-3">
