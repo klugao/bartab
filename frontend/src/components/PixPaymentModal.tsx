@@ -39,7 +39,7 @@ const PixPaymentModal = ({ isOpen, onClose, onConfirm, qrCode, amount }: PixPaym
               <img
                 src={qrCode}
                 alt="QR Code PIX"
-                className="w-80 h-80 object-contain"
+                className="w-full max-w-80 h-auto object-contain mx-auto"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
