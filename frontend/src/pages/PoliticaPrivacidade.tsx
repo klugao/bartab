@@ -128,36 +128,38 @@ export default function PoliticaPrivacidade() {
 
           <h2>7. Prazo de Armazenamento</h2>
           
-          <table className="min-w-full border border-gray-300 text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="border border-gray-300 px-4 py-2 text-left">Tipo de Dado</th>
-                <th className="border border-gray-300 px-4 py-2 text-left">Prazo</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="border border-gray-300 px-4 py-2">Usuários ativos</td>
-                <td className="border border-gray-300 px-4 py-2">Enquanto conta ativa</td>
-              </tr>
-              <tr>
-                <td className="border border-gray-300 px-4 py-2">Clientes (PDV)</td>
-                <td className="border border-gray-300 px-4 py-2">Enquanto relacionamento ativo</td>
-              </tr>
-              <tr>
-                <td className="border border-gray-300 px-4 py-2">Histórico de vendas</td>
-                <td className="border border-gray-300 px-4 py-2">5 anos (obrigação legal)</td>
-              </tr>
-              <tr>
-                <td className="border border-gray-300 px-4 py-2">Logs de acesso</td>
-                <td className="border border-gray-300 px-4 py-2">6 meses</td>
-              </tr>
-              <tr>
-                <td className="border border-gray-300 px-4 py-2">Contas excluídas</td>
-                <td className="border border-gray-300 px-4 py-2">30 dias (backup)</td>
-              </tr>
-            </tbody>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-300 text-sm">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="border border-gray-300 px-4 py-2 text-left">Tipo de Dado</th>
+                  <th className="border border-gray-300 px-4 py-2 text-left">Prazo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className="border border-gray-300 px-4 py-2">Usuários ativos</td>
+                  <td className="border border-gray-300 px-4 py-2">Enquanto conta ativa</td>
+                </tr>
+                <tr>
+                  <td className="border border-gray-300 px-4 py-2">Clientes (PDV)</td>
+                  <td className="border border-gray-300 px-4 py-2">Enquanto relacionamento ativo</td>
+                </tr>
+                <tr>
+                  <td className="border border-gray-300 px-4 py-2">Histórico de vendas</td>
+                  <td className="border border-gray-300 px-4 py-2">5 anos (obrigação legal)</td>
+                </tr>
+                <tr>
+                  <td className="border border-gray-300 px-4 py-2">Logs de acesso</td>
+                  <td className="border border-gray-300 px-4 py-2">6 meses</td>
+                </tr>
+                <tr>
+                  <td className="border border-gray-300 px-4 py-2">Contas excluídas</td>
+                  <td className="border border-gray-300 px-4 py-2">30 dias (backup)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
           <h2>8. Seus Direitos (LGPD - Art. 18)</h2>
           
