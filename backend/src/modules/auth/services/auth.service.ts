@@ -91,18 +91,27 @@ export class AuthService {
     }
 
     // NOTIFICAÇÃO 1: Se for proprietário, envia alerta para o admin
+    // Envia de forma assíncrona (não aguarda) para não bloquear o registro
     if (userRole === UserRole.PROPRIETARIO) {
-      try {
-        await this.notificationService.sendAdminNewSignupAlert(
-          establishmentName,
-          email,
-        );
-      } catch (error) {
-        // Log do erro mas não bloqueia o cadastro
-        console.error('Erro ao enviar notificação para admin:', error);
-      }
+      console.log('📧 [REGISTER] Agendando envio de email para admin...');
+      // Usa setImmediate para enviar o email de forma não-bloqueante
+      setImmediate(async () => {
+        try {
+          console.log('📧 [REGISTER] Enviando email para admin...');
+          await this.notificationService.sendAdminNewSignupAlert(
+            establishmentName,
+            email,
+          );
+          console.log('✅ [REGISTER] Email enviado para admin com sucesso!');
+        } catch (error) {
+          // Log do erro mas não bloqueia o cadastro
+          console.error('❌ [REGISTER] Erro ao enviar notificação para admin:', error.message);
+        }
+      });
+      console.log('✅ [REGISTER] Email agendado para envio (não bloqueante)');
     }
 
+    console.log('✅ [REGISTER] Retornando usuário criado...');
     return savedUser;
   }
 
