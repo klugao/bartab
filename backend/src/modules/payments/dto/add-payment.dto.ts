@@ -1,4 +1,4 @@
-import { IsEnum, IsNumberString, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNumberString, IsOptional, IsString, MaxLength } from 'class-validator';
 import { PaymentMethod } from '../entities/payment.entity';
 
 export class AddPaymentDto {
@@ -10,5 +10,6 @@ export class AddPaymentDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(500)
   note?: string;
 }

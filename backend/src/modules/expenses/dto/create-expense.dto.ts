@@ -1,7 +1,8 @@
-import { IsString, IsNumberString, IsNumber } from 'class-validator';
+import { IsString, IsNumberString, IsNumber, MaxLength } from 'class-validator';
 
 export class CreateExpenseDto {
   @IsString()
+  @MaxLength(500)
   description: string;
 
   @IsNumberString()

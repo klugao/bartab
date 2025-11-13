@@ -10,8 +10,8 @@ export const customerSchema = z.object({
   phone: z
     .string()
     .optional()
-    .refine((phone) => !phone || phone.length >= 10, {
-      message: "Telefone deve ter pelo menos 10 dígitos",
+    .refine((phone) => !phone || (phone.length >= 10 && phone.length <= 20), {
+      message: "Telefone deve ter entre 10 e 20 caracteres",
     }),
   email: z
     .string()
