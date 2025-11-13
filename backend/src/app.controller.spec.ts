@@ -19,4 +19,25 @@ describe('AppController', () => {
       expect(appController.getHello()).toBe('Hello World!');
     });
   });
+
+  describe('health check', () => {
+    it('should return status OK and timestamp', () => {
+      const result = appController.healthCheck();
+      
+      expect(result).toHaveProperty('status');
+      expect(result.status).toBe('OK');
+      expect(result).toHaveProperty('timestamp');
+      expect(result.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    });
+
+    it('should return current timestamp', () => {
+      const beforeTime = new Date().getTime();
+      const result = appController.healthCheck();
+      const afterTime = new Date().getTime();
+      const resultTime = new Date(result.timestamp).getTime();
+      
+      expect(resultTime).toBeGreaterThanOrEqual(beforeTime);
+      expect(resultTime).toBeLessThanOrEqual(afterTime);
+    });
+  });
 });
