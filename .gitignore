@@ -65,3 +65,14 @@ sonar-issues/
 # Development files
 dev-dist/
 
+# Cursor AI Editor
+.cursor/
+.cursorrules
+.cursorignore
+*.cursor
+
+# AI Assistant configs
+.aider*
+.claude*
+.copilot*
+
