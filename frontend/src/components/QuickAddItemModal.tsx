@@ -155,6 +155,7 @@ const QuickAddItemModal = ({
               max="99"
               value={quantity}
               onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+              onFocus={(e) => e.target.select()}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               disabled={loading}
             />
