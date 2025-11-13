@@ -184,7 +184,8 @@ export class CustomersService {
       console.log(`  ✓ ${c.name}: ${c.tabs.length} conta(s) com saldo devedor`);
     });
     
-    return customersWithDebts;
+    // Adicionar campo calculado days_in_negative_balance
+    return customersWithDebts.map(customer => this.addDaysInNegativeBalance(customer));
   }
 
   async payDebt(id: string, amount: string, method: string, establishmentId: string, note?: string): Promise<any> {
