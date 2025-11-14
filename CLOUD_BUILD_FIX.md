@@ -11,3 +11,4 @@
 ✅ Permissão artifactregistry.writer adicionada
 
 ✅ Permissão iam.serviceAccountUser adicionada ao compute SA
+✅ Permissão secretmanager.secretAccessor adicionada ao compute SA
