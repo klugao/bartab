@@ -236,8 +236,27 @@ export class TabsService {
         console.log('⚠️ Conta sem cliente - não pode criar dívida. Conta permanece aberta.');
       }
     } 
-    // Se pagou tudo, apenas fechar
-    else if (remaining <= 0.01) {
+    // Se pagou a mais, creditar o excesso no saldo do cliente
+    else if (remaining < -0.01) {
+      console.log('💚 PAGAMENTO A MAIS DETECTADO');
+      
+      if (tab.customer) {
+        const creditAmount = Math.abs(remaining).toString();
+        console.log('💵 Creditando excesso no saldo do cliente:');
+        console.log('  Cliente ID:', tab.customer.id);
+        console.log('  Valor a creditar:', creditAmount);
+        
+        // Creditar o excesso no saldo do cliente (valor positivo)
+        await this.customersService.updateBalanceDue(tab.customer.id, creditAmount, establishmentId);
+        await this.close(tabId, establishmentId);
+        console.log('✅ Saldo creditado e conta fechada');
+      } else {
+        console.log('✅ PAGAMENTO COMPLETO - Fechando conta (sem cliente para creditar)');
+        await this.close(tabId, establishmentId);
+      }
+    }
+    // Se pagou o valor exato, apenas fechar
+    else {
       console.log('✅ PAGAMENTO COMPLETO - Fechando conta');
       await this.close(tabId, establishmentId);
     }
