@@ -266,8 +266,8 @@ Sua aplicação está rodando no GCP!
    - Configurar Cloud Load Balancer
    - Apontar DNS
 
-4. **Migrar dados** (se vindo do Supabase)
-   - Usar `./migrate-database.sh`
+4. **Importar dados** (se necessário)
+   - Usar ferramentas de import do Cloud SQL
 
 5. **Monitoramento**
    - Configurar alertas no Cloud Monitoring
@@ -317,7 +317,6 @@ gcloud secrets versions access latest --secret=bartab-database-url
 ## 📚 Documentação Completa
 
 - [README Principal](../README.md) - Visão geral completa
-- [Guia de Migração](./MIGRATION.md) - Migração do Render/Supabase
 - [Análise de Custos](./COSTS.md) - Detalhes sobre custos
 
 ---

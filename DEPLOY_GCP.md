@@ -1,6 +1,6 @@
 # 🚀 Deploy BarTab no Google Cloud Platform
 
-**Documentação completa para migrar o BarTab para o GCP mantendo o Render/Supabase funcionando.**
+**Documentação completa para deploy do BarTab no GCP.**
 
 ## 📁 Arquivos Criados
 
@@ -20,20 +20,18 @@ gcp/
 │   ├── setup-gcp.sh            # Setup inicial (EXECUTAR PRIMEIRO)
 │   ├── update-secrets.sh       # Configurar secrets
 │   ├── deploy.sh               # Deploy das aplicações
-│   ├── migrate-database.sh     # Migrar dados do Supabase
 │   ├── backup-database.sh      # Backup manual
 │   ├── rollback.sh             # Reverter deploy
 │   ├── logs.sh                 # Ver logs em tempo real
 │   └── status.sh               # Status da infraestrutura
 └── docs/                        # Documentação detalhada
-    ├── MIGRATION.md            # Guia passo a passo de migração
     ├── COSTS.md                # Análise completa de custos
     └── QUICK_START.md          # Deploy em 30 minutos
 ```
 
 ## ⚡ Início Rápido
 
-### Opção 1: Deploy em 30 minutos
+### Deploy em 30 minutos
 
 ```bash
 # Leia o guia rápido
@@ -45,19 +43,6 @@ cd gcp/scripts
 ./update-secrets.sh     # Configurar secrets
 cd ../terraform && terraform apply  # Criar infraestrutura
 cd ../scripts && ./deploy.sh        # Deploy completo
-```
-
-### Opção 2: Migração Completa do Render/Supabase
-
-```bash
-# Leia o guia de migração
-cat gcp/docs/MIGRATION.md
-
-# Principais comandos:
-cd gcp/scripts
-./setup-gcp.sh              # Setup
-./update-secrets.sh         # Secrets
-./migrate-database.sh       # Migrar dados
 ./deploy.sh                 # Deploy
 ```
 

@@ -339,31 +339,25 @@ ORDER BY total_cost DESC
 '
 ```
 
-## 💰 Comparativo Final: GCP vs Render/Supabase
+## 💰 Resumo de Custos no GCP
 
 ### Tráfego Baixo (MVP)
 
-| Plataforma | Custo Mensal |
+| Componente | Custo Mensal |
 |------------|--------------|
-| **GCP** | $17-25 |
-| **Render + Supabase** | $39-50 |
-| **Economia** | **~$20/mês (50%)** |
+| **GCP Total** | $17-25 |
 
 ### Tráfego Médio (Produção)
 
-| Plataforma | Custo Mensal |
+| Componente | Custo Mensal |
 |------------|--------------|
-| **GCP** | $50-75 |
-| **Render + Supabase** | $75-100 |
-| **Economia** | **~$25/mês (30%)** |
+| **GCP Total** | $50-75 |
 
 ### Tráfego Alto (Escala)
 
-| Plataforma | Custo Mensal |
+| Componente | Custo Mensal |
 |------------|--------------|
-| **GCP** | $150-200 |
-| **Render + Supabase** | $200-300+ |
-| **Economia** | **~$75/mês (35%)** |
+| **GCP Total** | $150-200 |
 
 ## ✅ Recomendações por Fase
 

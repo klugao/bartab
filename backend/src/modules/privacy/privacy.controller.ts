@@ -68,8 +68,8 @@ export class PrivacyController {
       },
       data_sharing: {
         google_oauth: 'Autenticação (Google LLC)',
-        hosting: 'Armazenamento de dados (Render/Railway)',
-        database: 'Banco de dados (Supabase/PostgreSQL)',
+        hosting: 'Armazenamento de dados (Google Cloud Platform)',
+        database: 'Banco de dados (Cloud SQL PostgreSQL)',
         authorities: 'Quando exigido por lei ou ordem judicial'
       },
       your_rights: [

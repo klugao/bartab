@@ -1,6 +1,6 @@
-# 🚀 Migração BarTab para Google Cloud Platform (GCP)
+# 🚀 BarTab no Google Cloud Platform (GCP)
 
-Guia completo para migrar o BarTab do Render/Supabase para o Google Cloud Platform.
+Guia completo para gerenciar o BarTab no Google Cloud Platform.
 
 ## 📋 Índice
 
@@ -17,7 +17,7 @@ Guia completo para migrar o BarTab do Render/Supabase para o Google Cloud Platfo
 
 ## 🎯 Visão Geral
 
-Esta migração move toda a infraestrutura do BarTab para o GCP, utilizando:
+O BarTab está hospedado no GCP, utilizando:
 
 - **Cloud Run**: Para backend (NestJS) e frontend (React)
 - **Cloud SQL**: PostgreSQL gerenciado
@@ -25,7 +25,7 @@ Esta migração move toda a infraestrutura do BarTab para o GCP, utilizando:
 - **Cloud Build**: CI/CD automatizado
 - **Container Registry**: Armazenamento de imagens Docker
 
-### Vantagens da Migração
+### Vantagens do GCP
 
 ✅ **Escalabilidade automática** - Cloud Run escala de 0 a N instâncias  
 ✅ **Pay-per-use** - Paga apenas pelo que usar  
@@ -370,9 +370,6 @@ frontend/
 ### Banco de Dados
 
 ```bash
-# Migrar dados do Supabase
-./scripts/migrate-database.sh
-
 # Backup manual
 ./scripts/backup-database.sh
 ```
@@ -432,11 +429,11 @@ cat docs/MONITORING.md
 - 180,000 vCPU-segundos e 360,000 GiB-segundos gratuitos por mês
 - Backups do Cloud SQL inclusos no preço
 
-### Comparação com Render/Supabase
+### Vantagens de Custos no GCP
 
-| Item | Render/Supabase | GCP |
-|------|----------------|-----|
-| Backend | $7-25/mês | $10-50/mês |
+| Item | Custo no GCP |
+|------|--------------|
+| Backend | $10-50/mês |
 | Frontend | $7-25/mês | $5-25/mês |
 | Database | $25+/mês | $7-25/mês |
 | **Total** | **$39-75+/mês** | **$22-100/mês** |

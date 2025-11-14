@@ -48,7 +48,6 @@ npm start  # Inicia tudo: PostgreSQL + Backend + Frontend!
 ### 🚀 **Deploy e Produção**
 | Tópico | Descrição |
 |--------|-----------|
-| [[Deploy]] | Deploy no Render/Vercel |
 | [[PWA]] | Progressive Web App |
 | [[Troubleshooting]] | Solução de problemas comuns |
 
@@ -83,8 +82,8 @@ npm start  # Inicia tudo: PostgreSQL + Backend + Frontend!
 - **Testes:** Vitest + RTL (75 testes)
 
 ### DevOps
-- **CI/CD:** GitHub Actions
-- **Deploy:** Render + Vercel
+- **CI/CD:** GitHub Actions + Cloud Build
+- **Deploy:** Google Cloud Platform (GCP)
 - **Quality:** SonarCloud
 - **Container:** Docker
 
@@ -124,8 +123,7 @@ Este projeto atende a todos os requisitos obrigatórios:
 
 ### 🔗 Links Úteis
 - [Repositório GitHub](https://github.com/seu-usuario/bartab)
-- [Deploy Frontend](https://bartab.vercel.app) _(se aplicável)_
-- [Deploy Backend](https://bartab.onrender.com) _(se aplicável)_
+- Documentação de Deploy: Ver `gcp/README.md`
 
 ---
 
@@ -179,7 +177,6 @@ Precisa de ajuda?
 - [[SonarQube]]
 
 ### Deploy
-- [[Deploy]]
 - [[PWA]]
 - [[Troubleshooting]]
 

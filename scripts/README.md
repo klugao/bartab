@@ -6,7 +6,6 @@ Esta pasta contém todos os scripts auxiliares do projeto, organizados por categ
 
 ### `/deploy`
 Scripts relacionados ao deployment e saúde da aplicação:
-- `render-build.sh` - Build para o Render
 - `prepare-deploy.sh` - Preparação para deploy
 - `DEPLOY_HEALTH_CHECK.sh` - Health check do deploy
 - `test-health-check.sh` - Testes de health check
@@ -42,7 +41,7 @@ npm test       # Executa testes
 Para executar scripts específicos diretamente:
 
 ```bash
-bash scripts/deploy/render-build.sh
+bash scripts/deploy/prepare-deploy.sh
 bash scripts/testing/run-tests.sh
 bash scripts/sonar/verificar-sonar.sh
 ```
