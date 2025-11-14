@@ -43,6 +43,8 @@ spec:
           value: 'production'
         - name: PORT
           value: '8080'
+        - name: GCP_PROJECT_ID
+          value: 'PROJECT_ID'
         - name: FRONTEND_URL
           value: 'https://bartab-frontend-XXXXXXX-uc.a.run.app'
         - name: CORS_ORIGIN

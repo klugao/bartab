@@ -3,6 +3,16 @@ import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
 
+// Cloud Trace para monitoramento gratuito no GCP
+// Deve ser importado antes de qualquer outro módulo
+if (process.env.NODE_ENV === 'production' && process.env.GCP_PROJECT_ID) {
+  require('@google-cloud/trace-agent').start({
+    samplingRate: 5, // 5 requisições por segundo
+    ignoreUrls: ['/api/health'], // Não rastrear health checks
+  });
+  console.log('☁️ Cloud Trace ativado');
+}
+
 // Configura o timezone do processo Node.js para São Paulo
 process.env.TZ = 'America/Sao_Paulo';
 
