@@ -60,7 +60,7 @@ timeout: '900s'
 
 # Substituições (variáveis)
 substitutions:
-  _API_URL: 'https://bartab-backend-XXXXXXX-uc.a.run.app'
+  _API_URL: 'https://bartab-backend-nvwtehomyq-uc.a.run.app'
 
 # Tags para organização
 tags:
