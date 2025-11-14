@@ -6,3 +6,4 @@
 
 **Teste:** Próximo push vai funcionar!
 
+🔧 Fix: permissões completas
