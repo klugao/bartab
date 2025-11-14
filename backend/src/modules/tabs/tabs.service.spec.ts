@@ -414,6 +414,50 @@ describe('TabsService', () => {
         'est-1',
       );
     });
+
+    it('deve creditar saldo quando cliente pagar a mais', async () => {
+      const tab = {
+        id: 'tab-1',
+        status: TabStatus.OPEN,
+        customer: { id: 'customer-1' },
+      };
+
+      const payment = {
+        id: 'payment-1',
+        method: PaymentMethod.CASH,
+        amount: '100',
+      };
+
+      mockTabsRepository.findOne.mockResolvedValue(tab);
+      mockPaymentsRepository.create.mockReturnValue(payment);
+      mockPaymentsRepository.save.mockResolvedValue(payment);
+      
+      // Total da conta é 50
+      mockTabItemsRepository.find.mockResolvedValue([{ total: '50' }]);
+      
+      // Cliente pagou 100 (a mais)
+      mockPaymentsRepository.find.mockResolvedValue([payment]);
+      
+      mockCustomersService.updateBalanceDue.mockResolvedValue(undefined);
+      mockTabsRepository.save.mockResolvedValue({
+        ...tab,
+        status: TabStatus.CLOSED,
+      });
+
+      const addPaymentDto: AddPaymentDto = {
+        method: PaymentMethod.CASH,
+        amount: '100',
+      };
+
+      await service.addPayment('tab-1', addPaymentDto, 'est-1');
+
+      // Deve creditar os 50 que sobraram (100 - 50 = 50)
+      expect(mockCustomersService.updateBalanceDue).toHaveBeenCalledWith(
+        'customer-1',
+        '50',
+        'est-1',
+      );
+    });
   });
 
   describe('close', () => {
@@ -507,19 +551,20 @@ describe('TabsService', () => {
     it('deve atualizar uma conta', async () => {
       const tab = {
         id: 'tab-1',
-        name: 'Mesa 1',
         establishment_id: 'est-1',
+        customer: null,
       };
 
-      const updateDto = { name: 'Mesa 2' };
-      const updatedTab = { ...tab, ...updateDto };
+      const updateDto = { customerId: 'customer-1' };
+      const updatedTab = { ...tab, customer: { id: 'customer-1' } };
 
       mockTabsRepository.findOne.mockResolvedValue(tab);
+      mockCustomersService.findOne.mockResolvedValue({ id: 'customer-1', name: 'Cliente Teste' });
       mockTabsRepository.save.mockResolvedValue(updatedTab);
 
       const result = await service.update('tab-1', updateDto, 'est-1');
 
-      expect(result.name).toBe('Mesa 2');
+      expect(result.customer).toBeDefined();
       expect(mockTabsRepository.save).toHaveBeenCalled();
     });
   });
