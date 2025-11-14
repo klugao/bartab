@@ -98,14 +98,14 @@ export default function PoliticaPrivacidade() {
                 </a>
               </span>
             </li>
-            <li><strong>Provedor de Hospedagem</strong> - Render/Railway (armazenamento em nuvem)</li>
+            <li><strong>Google Cloud Platform</strong> - Hospedagem e banco de dados (armazenamento em nuvem)</li>
             <li><strong>Autoridades Públicas</strong> - Quando exigido por lei ou ordem judicial</li>
           </ul>
 
           <h3>5.2 Transferência Internacional</h3>
           <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 my-4">
             <p className="mb-0">
-              ⚠️ Seus dados podem ser armazenados em servidores nos Estados Unidos (Google, Render). 
+              ⚠️ Seus dados podem ser armazenados em servidores nos Estados Unidos (Google Cloud Platform). 
               Estas transferências são realizadas com garantias de segurança adequadas e conformidade 
               com leis locais de proteção de dados.
             </p>

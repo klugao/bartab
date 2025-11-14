@@ -71,16 +71,12 @@ Seus dados podem ser compartilhados com:
    - Localização: Estados Unidos
    - Política de Privacidade: https://policies.google.com/privacy
 
-2. **Render/Railway** - Hospedagem do backend
+2. **Google Cloud Platform** - Hospedagem e banco de dados
    - Dados: Todos os dados armazenados no banco de dados
-   - Localização: Estados Unidos/Europa
-   - Política de Privacidade: [Inserir link do provedor]
+   - Localização: Configurável (us-central1 - Estados Unidos)
+   - Política de Privacidade: https://cloud.google.com/terms/cloud-privacy-notice
 
-3. **Supabase/PostgreSQL** - Banco de dados
-   - Dados: Todos os dados estruturados do sistema
-   - Localização: [Verificar localização dos servidores]
-
-4. **Autoridades Públicas** - Quando exigido por lei ou ordem judicial
+3. **Autoridades Públicas** - Quando exigido por lei ou ordem judicial
 
 ### 5.2 Transferência Internacional de Dados
 

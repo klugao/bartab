@@ -29,9 +29,6 @@
 - [[Cobertura]]
 
 ### 🚀 Deploy
-- [[Deploy]]
-- [[Render-Deploy]]
-- [[Checklist-Deploy]]
 - [[PWA]]
 
 ### 💡 Funcionalidades
@@ -43,7 +40,6 @@
 ### 🛠️ Ajuda
 - [[Troubleshooting]]
 - [[FAQ]]
-- [[Render-Tips]]
 
 ### 📄 Outros
 - [[Licencas]]

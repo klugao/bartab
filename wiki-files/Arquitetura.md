@@ -44,6 +44,6 @@
 - `/health` para health check por provedor.
 
 ## Deploy
-- Frontend: Vercel/Netlify.
-- Backend: Render/Railway (Docker opcional).
-- CI/CD: GitHub Actions.
+- Frontend: Google Cloud Run.
+- Backend: Google Cloud Run.
+- CI/CD: GitHub Actions + Cloud Build.
