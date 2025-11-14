@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  REGION: us-central1
+
 jobs:
   build-backend:
     name: Build Backend
@@ -197,3 +201,134 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Necessário para PR decoration
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # ============================================================================
+  # DEPLOY - Só roda se todos os testes passarem E estiver na branch main
+  # ============================================================================
+  
+  deploy-backend:
+    name: Deploy Backend to GCP
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend, sonarcloud_analysis]
+    # Só faz deploy se for push na main (não em PRs ou develop)
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker
+
+      - name: Build Backend Image
+        run: |
+          cd backend
+          docker build -t gcr.io/$PROJECT_ID/bartab-backend:$GITHUB_SHA \
+                       -t gcr.io/$PROJECT_ID/bartab-backend:latest .
+
+      - name: Push Backend Image
+        run: |
+          docker push gcr.io/$PROJECT_ID/bartab-backend:$GITHUB_SHA
+          docker push gcr.io/$PROJECT_ID/bartab-backend:latest
+
+      - name: Deploy Backend to Cloud Run
+        run: |
+          gcloud run deploy bartab-backend \
+            --image=gcr.io/$PROJECT_ID/bartab-backend:$GITHUB_SHA \
+            --platform=managed \
+            --region=$REGION \
+            --allow-unauthenticated \
+            --service-account=bartab-backend-sa@$PROJECT_ID.iam.gserviceaccount.com \
+            --set-env-vars="NODE_ENV=production" \
+            --set-secrets="DATABASE_URL=bartab-database-url:latest,JWT_SECRET=bartab-jwt-secret:latest,GOOGLE_CLIENT_ID=bartab-google-client-id:latest,GOOGLE_CLIENT_SECRET=bartab-google-client-secret:latest,SMTP_USER=bartab-smtp-user:latest,SMTP_PASS=bartab-smtp-pass:latest" \
+            --memory=512Mi \
+            --cpu=1 \
+            --timeout=300s
+
+      - name: Get Backend URL
+        id: backend-url
+        run: |
+          URL=$(gcloud run services describe bartab-backend --platform=managed --region=$REGION --format="value(status.url)")
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "✅ Backend deployed at: $URL"
+
+    outputs:
+      backend_url: ${{ steps.backend-url.outputs.url }}
+
+  deploy-frontend:
+    name: Deploy Frontend to GCP
+    runs-on: ubuntu-latest
+    needs: deploy-backend
+    # Herda a condição do deploy-backend
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker
+
+      - name: Build Frontend Image
+        run: |
+          cd frontend
+          docker build \
+            --build-arg VITE_API_BASE_URL=${{ needs.deploy-backend.outputs.backend_url }} \
+            -t gcr.io/$PROJECT_ID/bartab-frontend:$GITHUB_SHA \
+            -t gcr.io/$PROJECT_ID/bartab-frontend:latest .
+
+      - name: Push Frontend Image
+        run: |
+          docker push gcr.io/$PROJECT_ID/bartab-frontend:$GITHUB_SHA
+          docker push gcr.io/$PROJECT_ID/bartab-frontend:latest
+
+      - name: Deploy Frontend to Cloud Run
+        run: |
+          gcloud run deploy bartab-frontend \
+            --image=gcr.io/$PROJECT_ID/bartab-frontend:$GITHUB_SHA \
+            --platform=managed \
+            --region=$REGION \
+            --allow-unauthenticated \
+            --memory=256Mi \
+            --cpu=1 \
+            --timeout=60s
+
+      - name: Get Frontend URL
+        run: |
+          URL=$(gcloud run services describe bartab-frontend --platform=managed --region=$REGION --format="value(status.url)")
+          echo "✅ Frontend deployed at: $URL"
+
+  # ============================================================================
+  # NOTIFICAÇÃO - Resumo do deploy
+  # ============================================================================
+  
+  notify-success:
+    name: Deploy Success
+    runs-on: ubuntu-latest
+    needs: [deploy-backend, deploy-frontend]
+    if: success() && github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: Success Notification
+        run: |
+          echo "🎉 ============================================="
+          echo "🎉 DEPLOY COMPLETO COM SUCESSO!"
+          echo "🎉 ============================================="
+          echo "✅ Testes: PASSOU"
+          echo "✅ SonarCloud: PASSOU"
+          echo "✅ Backend: DEPLOYED"
+          echo "✅ Frontend: DEPLOYED"
+          echo "🚀 Backend URL: ${{ needs.deploy-backend.outputs.backend_url }}"
+          echo "🎉 ============================================="
