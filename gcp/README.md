@@ -6,6 +6,7 @@ Guia completo para migrar o BarTab do Render/Supabase para o Google Cloud Platfo
 
 - [Visão Geral](#visão-geral)
 - [Arquitetura no GCP](#arquitetura-no-gcp)
+- [Monitoramento](#monitoramento-gratuito) ⭐ **NOVO**
 - [Pré-requisitos](#pré-requisitos)
 - [Passo a Passo](#passo-a-passo)
 - [Estrutura de Arquivos](#estrutura-de-arquivos)
@@ -63,6 +64,73 @@ Esta migração move toda a infraestrutura do BarTab para o GCP, utilizando:
          │ PostgreSQL │  │ Manager  │  │    (CI/CD)   │
          └────────────┘  └──────────┘  └──────────────┘
 ```
+
+## 📊 Monitoramento (Gratuito)
+
+O BarTab inclui monitoramento completo **100% gratuito** usando ferramentas nativas do GCP:
+
+### 🚀 Setup em 3 Passos
+
+```bash
+# 1. Configurar monitoramento (uma vez)
+cd gcp/scripts
+./setup-monitoring.sh
+
+# 2. Instalar dependências
+cd ../../backend
+npm install
+
+# 3. Ver status
+cd ../gcp/scripts
+./monitor.sh all
+```
+
+### 📊 Ferramentas Incluídas
+
+| Ferramenta | O que faz | Custo |
+|------------|-----------|-------|
+| **Cloud Monitoring** | Métricas (CPU, memória, requisições) | Grátis (150MB/mês) |
+| **Cloud Trace** | APM - rastreamento de requisições | Grátis (250k/mês) |
+| **Cloud Logging** | Logs estruturados | Grátis (50GB/mês) |
+| **Error Reporting** | Agrupamento de erros | Grátis (ilimitado) |
+| **Uptime Checks** | Verifica disponibilidade | Grátis (100 checks) |
+
+### 🎯 Uso Diário
+
+```bash
+cd gcp/scripts
+
+# Ver tudo
+./monitor.sh all
+
+# Monitoramento contínuo (atualiza automaticamente)
+./monitor.sh watch
+
+# Ver apenas erros
+./monitor.sh errors
+
+# Ver logs
+./monitor.sh logs
+
+# Health check
+./monitor.sh health
+```
+
+### 📱 Console Web & Mobile
+
+- **Dashboards:** https://console.cloud.google.com/monitoring
+- **Logs:** https://console.cloud.google.com/logs
+- **Erros:** https://console.cloud.google.com/errors
+- **Traces:** https://console.cloud.google.com/traces
+- **App Mobile:** Baixe "Google Cloud" na App Store/Play Store
+
+### 📚 Documentação Completa
+
+- **Início Rápido (5 min):** [QUICK_START_MONITORING.md](QUICK_START_MONITORING.md)
+- **Guia Completo:** [docs/MONITORING.md](docs/MONITORING.md)
+- **Guia de Scripts:** [scripts/README.md](scripts/README.md)
+
+---
 
 ## 📦 Pré-requisitos
 
@@ -233,27 +301,31 @@ gcloud run deploy bartab-frontend \
 
 ```
 gcp/
-├── README.md                    # Este arquivo
-├── terraform/                   # Infraestrutura como código
-│   ├── main.tf                 # Configuração principal
-│   ├── variables.tf            # Variáveis
-│   └── terraform.tfvars.example # Exemplo de valores
-├── cloud-run/                   # Configurações Cloud Run
-│   ├── backend.yaml            # Config do backend
-│   └── frontend.yaml           # Config do frontend
-├── scripts/                     # Scripts úteis
-│   ├── setup-gcp.sh            # Setup inicial
-│   ├── update-secrets.sh       # Atualizar secrets
-│   ├── deploy.sh               # Deploy completo
-│   ├── migrate-database.sh     # Migrar dados
-│   ├── backup-database.sh      # Backup manual
-│   ├── rollback.sh             # Reverter deploy
-│   ├── logs.sh                 # Ver logs
-│   └── status.sh               # Status da infra
-└── docs/                        # Documentação adicional
-    ├── MIGRATION.md            # Guia de migração
-    ├── COSTS.md                # Análise de custos
-    └── MONITORING.md           # Monitoramento
+├── README.md                       # Este arquivo
+├── QUICK_START_MONITORING.md       # 🚀 Início rápido de monitoramento
+├── terraform/                      # Infraestrutura como código
+│   ├── main.tf                    # Configuração principal
+│   ├── variables.tf               # Variáveis
+│   └── terraform.tfvars.example   # Exemplo de valores
+├── cloud-run/                      # Configurações Cloud Run
+│   ├── backend.yaml               # Config do backend
+│   └── frontend.yaml              # Config do frontend
+├── scripts/                        # Scripts úteis
+│   ├── README.md                  # 📖 Guia de scripts
+│   ├── setup-gcp.sh               # Setup inicial
+│   ├── setup-monitoring.sh        # 📊 Setup de monitoramento
+│   ├── monitor.sh                 # 📊 Monitoramento interativo
+│   ├── update-secrets.sh          # Atualizar secrets
+│   ├── deploy.sh                  # Deploy completo
+│   ├── migrate-database.sh        # Migrar dados
+│   ├── backup-database.sh         # Backup manual
+│   ├── rollback.sh                # Reverter deploy
+│   ├── logs.sh                    # Ver logs
+│   └── status.sh                  # Status da infra
+└── docs/                           # Documentação adicional
+    ├── MIGRATION.md               # Guia de migração
+    ├── COSTS.md                   # Análise de custos
+    └── MONITORING.md              # 📊 Guia completo de monitoramento
 
 backend/
 ├── Dockerfile                   # Docker do backend
@@ -308,14 +380,26 @@ frontend/
 ### Monitoramento
 
 ```bash
+# Configurar monitoramento (uma vez)
+./scripts/setup-monitoring.sh
+
 # Ver status de todos os recursos
-./scripts/status.sh
+./scripts/monitor.sh status
 
 # Ver logs em tempo real
-./scripts/logs.sh
+./scripts/monitor.sh logs
 
-# Fazer rollback de um deploy
-./scripts/rollback.sh
+# Ver erros recentes
+./scripts/monitor.sh errors
+
+# Health check detalhado
+./scripts/monitor.sh health
+
+# Modo contínuo (atualiza automaticamente)
+./scripts/monitor.sh watch
+
+# Ver guia completo
+cat docs/MONITORING.md
 ```
 
 ## 💰 Custos Estimados
@@ -483,10 +567,10 @@ Após a migração bem-sucedida:
    - Configurar triggers no Cloud Build
    - Deploy automático no push para main
 
-3. **Monitoramento**
-   - Configurar Cloud Monitoring
-   - Criar dashboards customizados
-   - Configurar alertas
+3. **Monitoramento** ✅
+   - Usar ferramentas gratuitas (Cloud Monitoring, Trace, Logging)
+   - Ver guia completo: [docs/MONITORING.md](docs/MONITORING.md)
+   - Scripts prontos em `scripts/monitor.sh` e `scripts/setup-monitoring.sh`
 
 4. **CDN**
    - Ativar Cloud CDN para o frontend
