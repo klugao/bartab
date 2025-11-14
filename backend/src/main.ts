@@ -19,7 +19,7 @@ async function bootstrap() {
   app.use(require('express').json({ limit: '10mb' }));
   app.use(require('express').urlencoded({ limit: '10mb', extended: true }));
 
-  // CORS configurado - permite localhost e domínios do Render
+  // CORS configurado - permite localhost, Render e GCP
   app.enableCors({
     origin: (origin, callback) => {
       // Lista de origens permitidas
@@ -31,6 +31,7 @@ async function bootstrap() {
         'http://127.0.0.1:5174',
         'http://127.0.0.1:5175',
         'https://bartab-frontend.onrender.com',
+        'https://bartab-frontend-nvwtehomyq-uc.a.run.app',
       ];
 
       // Adicionar variáveis de ambiente se existirem
