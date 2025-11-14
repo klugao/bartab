@@ -76,3 +76,8 @@ dev-dist/
 .claude*
 .copilot*
 
+# Terraform (ignore only in root, keep gcp/terraform/)
+/terraform.tfvars
+/terraform.tfstate
+/terraform.tfstate.backup
+
