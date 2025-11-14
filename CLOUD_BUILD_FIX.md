@@ -7,3 +7,6 @@
 **Teste:** Próximo push vai funcionar!
 
 🔧 Fix: permissões completas
+
+✅ Permissão artifactregistry.writer adicionada
+
