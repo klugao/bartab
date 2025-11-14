@@ -1,0 +1,114 @@
+# Cloud Build - Deploy Completo (Backend + Frontend)
+# Este arquivo faz deploy de todo o projeto de uma vez
+steps:
+  # ====== BACKEND ======
+  # Build Backend
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-backend'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/bartab-backend:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/bartab-backend:latest'
+      - '-f'
+      - 'backend/Dockerfile'
+      - './backend'
+
+  # Push Backend
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-backend'
+    waitFor: ['build-backend']
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/bartab-backend:$COMMIT_SHA'
+
+  # Deploy Backend
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-backend'
+    waitFor: ['push-backend']
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'bartab-backend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/bartab-backend:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'NODE_ENV=production'
+      - '--set-secrets'
+      - 'DATABASE_URL=bartab-database-url:latest,JWT_SECRET=bartab-jwt-secret:latest,GOOGLE_CLIENT_ID=bartab-google-client-id:latest,GOOGLE_CLIENT_SECRET=bartab-google-client-secret:latest,SMTP_USER=bartab-smtp-user:latest,SMTP_PASS=bartab-smtp-pass:latest'
+      - '--memory'
+      - '512Mi'
+      - '--cpu'
+      - '1'
+
+  # ====== FRONTEND ======
+  # Build Frontend
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-frontend'
+    waitFor: ['deploy-backend']
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/bartab-frontend:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/bartab-frontend:latest'
+      - '--build-arg'
+      - 'VITE_API_BASE_URL=${_API_URL}'
+      - '-f'
+      - 'frontend/Dockerfile'
+      - './frontend'
+
+  # Push Frontend
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-frontend'
+    waitFor: ['build-frontend']
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/bartab-frontend:$COMMIT_SHA'
+
+  # Deploy Frontend
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-frontend'
+    waitFor: ['push-frontend']
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'bartab-frontend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/bartab-frontend:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '256Mi'
+      - '--cpu'
+      - '1'
+
+# Configurações
+options:
+  machineType: 'N1_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '1800s'
+
+# Substituições
+substitutions:
+  _API_URL: 'https://bartab-backend-XXXXXXX-uc.a.run.app'
+
+# Imagens
+images:
+  - 'gcr.io/$PROJECT_ID/bartab-backend:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/bartab-backend:latest'
+  - 'gcr.io/$PROJECT_ID/bartab-frontend:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/bartab-frontend:latest'
+

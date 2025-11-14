@@ -1,0 +1,26 @@
+# Exemplo de arquivo de variáveis do Terraform
+# Copie este arquivo para terraform.tfvars e preencha com seus valores reais
+
+project_id = "seu-projeto-gcp"
+region     = "us-central1"
+
+# Tier do banco de dados
+# db-f1-micro = ~$7/mês (compartilhado)
+# db-g1-small = ~$25/mês (dedicado)
+# db-n1-standard-1 = ~$50/mês (1 vCPU, 3.75 GB RAM)
+database_tier = "db-f1-micro"
+
+# Senha do banco de dados (mínimo 8 caracteres)
+db_password = "sua-senha-forte-aqui"
+
+# JWT Secret (use uma string aleatória longa e segura)
+jwt_secret = "seu-jwt-secret-super-secreto-aqui"
+
+# Google OAuth (obtenha em https://console.cloud.google.com/apis/credentials)
+google_client_id     = "seu-google-client-id.apps.googleusercontent.com"
+google_client_secret = "seu-google-client-secret"
+
+# SMTP (Gmail ou outro provedor)
+smtp_user = "seu-email@gmail.com"
+smtp_pass = "sua-senha-de-app-do-gmail"
+
