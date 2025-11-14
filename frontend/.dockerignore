@@ -15,6 +15,5 @@ yarn-error.log*
 .idea
 .eslintrc.js
 .prettierrc
-tsconfig.json
 vitest.config.ts
 
