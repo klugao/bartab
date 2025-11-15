@@ -217,6 +217,13 @@ resource "google_project_iam_member" "backend_cloudsql" {
   member  = "serviceAccount:${google_service_account.bartab_backend.email}"
 }
 
+# Permissão para a service account atuar como ela mesma (necessário para Cloud Run)
+resource "google_service_account_iam_member" "backend_act_as" {
+  service_account_id = google_service_account.bartab_backend.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.bartab_backend.email}"
+}
+
 # Outputs
 output "database_instance_name" {
   value       = google_sql_database_instance.bartab_db.name
