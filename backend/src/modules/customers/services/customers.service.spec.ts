@@ -61,7 +61,6 @@ describe('CustomersService', () => {
     it('deve criar um novo cliente com sucesso', async () => {
       const createDto: CreateCustomerDto = {
         name: 'João Silva',
-        cpf: '123.456.789-00',
         phone: '(11) 98765-4321',
       };
       const establishmentId = 'est-1';
@@ -282,7 +281,7 @@ describe('CustomersService', () => {
         balance_due: '-50',
       });
 
-      const result = await service.payDebt('customer-1', '50', 'est-1');
+      const result = await service.payDebt('customer-1', '50', 'pix', 'est-1');
 
       expect(result.balance_due).toBe('-50');
     });
@@ -301,7 +300,7 @@ describe('CustomersService', () => {
         balance_due: '0',
       });
 
-      const result = await service.payDebt('customer-1', '100', 'est-1');
+      const result = await service.payDebt('customer-1', '100', 'dinheiro', 'est-1');
 
       expect(result.balance_due).toBe('0');
     });
@@ -316,7 +315,7 @@ describe('CustomersService', () => {
 
       mockRepository.findOne.mockResolvedValue(customer);
 
-      await expect(service.payDebt('customer-1', '0', 'est-1')).rejects.toThrow(
+      await expect(service.payDebt('customer-1', '0', 'dinheiro', 'est-1')).rejects.toThrow(
         'O valor do pagamento deve ser maior que zero',
       );
     });
