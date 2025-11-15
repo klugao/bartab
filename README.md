@@ -60,7 +60,7 @@ Cliente (React) ⇄ API (NestJS) ⇄ PostgreSQL
 
 ### **1. Pré-requisitos**
 - Node.js 20+
-- Yarn
+- npm (incluído com Node.js)
 - Docker (para PostgreSQL)
 
 ### **2. Banco de Dados**
@@ -77,17 +77,17 @@ docker-compose ps
 cd backend
 
 # Instalar dependências
-yarn
+npm install
 
 # Configurar variáveis de ambiente
 cp env.example .env
 # Editar .env com suas configurações
 
 # Executar seed (dados iniciais)
-yarn seed
+npm run seed
 
 # Rodar em desenvolvimento
-yarn start:dev
+npm run start:dev
 ```
 
 ### **4. Frontend**
@@ -95,14 +95,14 @@ yarn start:dev
 cd frontend
 
 # Instalar dependências
-yarn
+npm install
 
 # Configurar variáveis de ambiente
 cp env.example .env
 # Editar .env com suas configurações
 
 # Rodar em desenvolvimento
-yarn dev
+npm run dev
 ```
 
 ## 🌐 **URLs de Acesso**
@@ -168,22 +168,22 @@ yarn dev
 ```bash
 # Backend
 cd backend
-yarn test
+npm test
 
 # Frontend
 cd frontend
-yarn test
+npm test
 ```
 
 ## 🚀 **Deploy**
 
 ### **Backend (Render/Railway)**
-- Build: `yarn build`
-- Start: `yarn start:prod`
+- Build: `npm run build`
+- Start: `npm run start:prod`
 - Variáveis: `DATABASE_URL`, `JWT_SECRET`, `NODE_ENV`
 
 ### **Frontend (Vercel/Netlify)**
-- Build: `yarn build`
+- Build: `npm run build`
 - Variáveis: `VITE_API_BASE_URL`
 
 ## 📚 **Documentação Adicional**
