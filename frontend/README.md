@@ -1,8 +1,8 @@
 # Frontend (React + Vite + TS)
 
 ## Scripts
-- `yarn dev` – desenvolvimento
-- `yarn build && yarn preview` – produção
+- `npm run dev` – desenvolvimento
+- `npm run build && npm run preview` – produção
 
 ## Env
 Crie `.env` a partir de `.env.example`:

@@ -1,9 +1,9 @@
 # Backend (NestJS)
 
 ## Scripts
-- `yarn start:dev` – desenvolvimento
-- `yarn build && yarn start` – produção
-- `yarn test` – testes
+- `npm run start:dev` – desenvolvimento
+- `npm run build && npm start` – produção
+- `npm test` – testes
 
 ## Env
 Crie `.env` a partir de `.env.example`:
