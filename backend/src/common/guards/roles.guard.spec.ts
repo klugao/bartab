@@ -105,7 +105,7 @@ describe('RolesGuard', () => {
     it('should throw ForbiddenException if user does not have any of multiple required roles', () => {
       jest
         .spyOn(reflector, 'getAllAndOverride')
-        .mockReturnValue([UserRole.ADMINISTRADOR_SISTEMA, UserRole.GERENTE]);
+        .mockReturnValue([UserRole.ADMINISTRADOR_SISTEMA]);
 
       const context = mockExecutionContext({
         id: 'user-1',

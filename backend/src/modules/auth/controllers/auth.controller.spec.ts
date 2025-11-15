@@ -148,8 +148,9 @@ describe('AuthController', () => {
     });
 
     it('should throw UnauthorizedException on error', async () => {
+      const invalidData = Buffer.from('invalid-json-{{{').toString('base64');
       const body = {
-        googleData: 'invalid-data',
+        googleData: invalidData,
         establishmentName: 'New Bar',
       };
 

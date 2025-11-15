@@ -100,7 +100,8 @@ describe('AdminService', () => {
       });
       expect(result).toHaveLength(1);
       expect(result[0].name).toBe('Bar do João');
-      expect(result[0].proprietario.name).toBe('João');
+      expect(result[0].proprietario).toBeDefined();
+      expect(result[0].proprietario?.name).toBe('João');
     });
 
     it('should handle establishments without users', async () => {

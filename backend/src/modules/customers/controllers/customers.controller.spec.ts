@@ -59,7 +59,6 @@ describe('CustomersController', () => {
     it('should create a new customer', async () => {
       const createCustomerDto: CreateCustomerDto = {
         name: 'João Silva',
-        email: 'joao@test.com',
         phone: '123456789',
       };
 
@@ -74,7 +73,6 @@ describe('CustomersController', () => {
     it('should handle errors when creating customer', async () => {
       const createCustomerDto: CreateCustomerDto = {
         name: 'João Silva',
-        email: 'joao@test.com',
         phone: '123456789',
       };
 

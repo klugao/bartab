@@ -141,7 +141,7 @@ describe('EstablishmentAccessGuard', () => {
     it('should allow gerente with matching establishment', () => {
       const user = {
         id: 'user-1',
-        role: UserRole.GERENTE,
+        role: UserRole.PROPRIETARIO,
         establishmentId: 'est-1',
       };
       const params = { establishmentId: 'est-1' };
@@ -155,7 +155,7 @@ describe('EstablishmentAccessGuard', () => {
     it('should deny gerente with non-matching establishment', () => {
       const user = {
         id: 'user-1',
-        role: UserRole.GERENTE,
+        role: UserRole.PROPRIETARIO,
         establishmentId: 'est-1',
       };
       const params = { establishmentId: 'est-2' };

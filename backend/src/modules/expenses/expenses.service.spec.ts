@@ -52,7 +52,7 @@ describe('ExpensesService', () => {
     it('should create a new expense', async () => {
       const createExpenseDto: CreateExpenseDto = {
         description: 'Compra de cerveja',
-        amount: 500.0,
+        amount: '500.0',
         year: 2024,
         month: 1,
       };

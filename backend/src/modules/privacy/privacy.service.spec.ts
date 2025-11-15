@@ -169,7 +169,8 @@ describe('PrivacyService', () => {
       expect(result.export_info).toBeDefined();
       expect(result.export_info.lgpd_reference).toContain('Art. 18');
       expect(result.user_data.id).toBe('user-1');
-      expect(result.establishment_data.name).toBe('Bar do João');
+      expect(result.establishment_data).toBeDefined();
+      expect(result.establishment_data?.name).toBe('Bar do João');
       expect(result.customers_data).toHaveLength(1);
       expect(result.items_data).toHaveLength(1);
       expect(result.sales_history).toHaveLength(1);
