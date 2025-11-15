@@ -104,6 +104,11 @@ describe('TabsService', () => {
     itemsService = module.get<ItemsService>(ItemsService);
 
     jest.clearAllMocks();
+    
+    // Silenciar logs do console durante os testes
+    jest.spyOn(console, 'log').mockImplementation();
+    jest.spyOn(console, 'error').mockImplementation();
+    jest.spyOn(console, 'warn').mockImplementation();
   });
 
   it('deve estar definido', () => {
