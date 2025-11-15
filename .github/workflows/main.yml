@@ -244,6 +244,18 @@ jobs:
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
+      
+      - name: Verificar configuração GCP
+        run: |
+          if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then
+            echo "❌ ERRO: Secret GCP_SA_KEY não está configurado!"
+            echo "📝 Configure o secret no repositório GitHub:"
+            echo "   Settings > Secrets and variables > Actions > New repository secret"
+            echo "   Nome: GCP_SA_KEY"
+            echo "   Valor: JSON da service account do GCP"
+            exit 1
+          fi
+          echo "✅ Secret GCP_SA_KEY encontrado"
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -308,6 +320,18 @@ jobs:
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
+      
+      - name: Verificar configuração GCP
+        run: |
+          if [ -z "${{ secrets.GCP_SA_KEY }}" ]; then
+            echo "❌ ERRO: Secret GCP_SA_KEY não está configurado!"
+            echo "📝 Configure o secret no repositório GitHub:"
+            echo "   Settings > Secrets and variables > Actions > New repository secret"
+            echo "   Nome: GCP_SA_KEY"
+            echo "   Valor: JSON da service account do GCP"
+            exit 1
+          fi
+          echo "✅ Secret GCP_SA_KEY encontrado"
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
