@@ -4,9 +4,9 @@
 
 set -e
 
-PROJECT_ID="bartab-475300"
-SERVICE_NAME="bartab-backend"
-REGION="us-central1"
+PROJECT_ID="${PROJECT_ID:-bartab-475300}"
+SERVICE_NAME="${SERVICE_NAME:-bartab-backend}"
+REGION="${REGION:-us-central1}"
 
 echo "🔄 Reiniciando Backend - BarTab"
 echo "================================"
@@ -25,10 +25,12 @@ echo "🌎 Região: $REGION"
 echo "🚀 Serviço: $SERVICE_NAME"
 echo ""
 
-echo "🔄 Atualizando serviço (isso força uma nova revisão com os secrets atualizados)..."
+echo "🔄 Atualizando serviço (forçando nova revisão via env var RESTARTED_AT)..."
+RESTARTED_AT="$(date +%s)"
 gcloud run services update $SERVICE_NAME \
     --region=$REGION \
-    --project=$PROJECT_ID
+    --project=$PROJECT_ID \
+    --update-env-vars=RESTARTED_AT=$RESTARTED_AT
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

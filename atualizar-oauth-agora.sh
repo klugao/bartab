@@ -5,9 +5,18 @@
 
 set -e
 
-PROJECT_ID="bartab-475300"
-CLIENT_ID="REDACTED"
-CLIENT_SECRET="REDACTED"
+PROJECT_ID="${PROJECT_ID:-bartab-475300}"
+CLIENT_ID="${GOOGLE_CLIENT_ID:-}"
+CLIENT_SECRET="${GOOGLE_CLIENT_SECRET:-}"
+
+if [ -z "$CLIENT_ID" ] || [ -z "$CLIENT_SECRET" ]; then
+    echo "❌ Variáveis de ambiente GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET não definidas."
+    echo ""
+    echo "Defina-as antes de executar, por exemplo:"
+    echo "   export GOOGLE_CLIENT_ID=\"<seu_client_id>\""
+    echo "   export GOOGLE_CLIENT_SECRET=\"<seu_client_secret>\""
+    exit 1
+fi
 
 echo "🔑 Atualizando Credenciais OAuth do Google"
 echo "=========================================="
