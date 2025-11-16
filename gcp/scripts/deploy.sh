@@ -148,6 +148,7 @@ if [ "$DEPLOY_FRONTEND" = true ]; then
     echo ""
     echo "🔨 Building imagem Docker do frontend..."
     docker build \
+        --platform linux/amd64 \
         --build-arg VITE_API_BASE_URL=${BACKEND_URL}/api \
         -t gcr.io/$PROJECT_ID/bartab-frontend:latest .
     
