@@ -12,6 +12,10 @@ RUN npm ci
 # Copiar código fonte
 COPY . .
 
+# Receber a URL da API no build e expor para o Vite
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
+
 # Build da aplicação
 RUN npm run build
 
