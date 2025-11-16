@@ -177,7 +177,7 @@ describe('AdminController', () => {
       };
       mockAdminService.deactivateEstablishment.mockResolvedValue(response);
 
-      const result = await controller.deactivateEstablishment('est-1');
+      const result = await controller.deactivateEstablishment('est-1', {});
 
       expect(adminService.deactivateEstablishment).toHaveBeenCalledWith('est-1');
       expect(result).toEqual(response);
