@@ -417,16 +417,20 @@ export default function AdminDashboard() {
               <CardContent>
                 <div className="flex gap-2">
                   {est.active ? (
-                    <Button
-                      onClick={() => handleDeactivate(est.id, est.name)}
-                      variant="outline"
-                      className="flex-1 border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50"
-                      disabled={user?.establishment?.id === est.id}
-                      title={user?.establishment?.id === est.id ? 'Você não pode inativar o seu próprio estabelecimento' : undefined}
-                    >
-                      <PowerOff className="w-4 h-4 mr-2" />
-                      Inativar
-                    </Button>
+                    user?.establishment?.id === est.id ? (
+                      <div className="flex-1 text-center text-sm text-gray-500 border border-dashed border-gray-300 rounded-md py-2">
+                        Você não pode inativar o seu próprio estabelecimento
+                      </div>
+                    ) : (
+                      <Button
+                        onClick={() => handleDeactivate(est.id, est.name)}
+                        variant="outline"
+                        className="flex-1 border-red-300 text-red-700 hover:bg-red-50"
+                      >
+                        <PowerOff className="w-4 h-4 mr-2" />
+                        Inativar
+                      </Button>
+                    )
                   ) : (
                     <Button
                       onClick={() => handleActivate(est.id, est.name)}
