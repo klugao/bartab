@@ -4,6 +4,8 @@
 
 set -e
 
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 PROJECT_ID="${PROJECT_ID:-bartab-475300}"
 SERVICE_NAME="${SERVICE_NAME:-bartab-backend}"
 REGION="${REGION:-us-central1}"
@@ -16,7 +18,7 @@ echo ""
 if ! command -v gcloud &> /dev/null; then
     echo "❌ gcloud não encontrado!"
     echo ""
-    echo "Instale primeiro: ./instalar-gcloud.sh"
+    echo "Instale primeiro: $DIR/instalar-gcloud.sh"
     exit 1
 fi
 
@@ -51,4 +53,5 @@ echo ""
 echo "🐛 Para ver os logs:"
 echo "   gcloud logs tail --service=$SERVICE_NAME --project=$PROJECT_ID"
 echo ""
+
 

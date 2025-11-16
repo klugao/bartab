@@ -5,6 +5,8 @@
 
 set -e
 
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 PROJECT_ID="${PROJECT_ID:-bartab-475300}"
 CLIENT_ID="${GOOGLE_CLIENT_ID:-}"
 CLIENT_SECRET="${GOOGLE_CLIENT_SECRET:-}"
@@ -29,7 +31,7 @@ if ! command -v gcloud &> /dev/null; then
     echo "❌ gcloud não encontrado!"
     echo ""
     echo "Por favor, instale o Google Cloud SDK primeiro:"
-    echo "   ./instalar-gcloud.sh"
+    echo "   $DIR/instalar-gcloud.sh"
     echo ""
     echo "Ou manualmente:"
     echo "   curl https://sdk.cloud.google.com | bash"
@@ -83,11 +85,7 @@ echo ""
 echo "📝 Próximo passo: Reiniciar o backend"
 echo ""
 echo "Execute:"
-echo "   gcloud run services update bartab-backend \\"
-echo "     --region=us-central1 \\"
-echo "     --project=$PROJECT_ID"
+echo "   gcp/scripts/reiniciar-backend.sh"
 echo ""
-echo "Ou simplesmente:"
-echo "   ./reiniciar-backend.sh"
-echo ""
+
 

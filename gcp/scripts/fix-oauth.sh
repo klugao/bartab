@@ -5,6 +5,8 @@
 
 set -e
 
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 echo "🔧 Configurando Google OAuth no Cloud Run..."
 echo ""
 
@@ -91,4 +93,5 @@ echo "   1. Aguarde 1-2 minutos (propagação das mudanças)"
 echo "   2. Limpe o cache do navegador (Cmd+Shift+R)"
 echo "   3. Tente em uma aba anônima"
 echo ""
+
 

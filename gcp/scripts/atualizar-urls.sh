@@ -159,6 +159,7 @@ echo "   • Tente em aba anônima"
 echo "   • Veja os logs: gcloud run services logs read bartab-backend --limit=50"
 echo ""
 echo "📊 Verificar configuração atual:"
-echo "   ./verificar-config.sh"
+echo "   gcp/scripts/verificar-config.sh"
 echo ""
+
 

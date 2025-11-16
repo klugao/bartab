@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script para instalar o Google Cloud SDK no macOS
-# Uso: ./instalar-gcloud.sh
+# Uso: gcp/scripts/instalar-gcloud.sh
 
 set -e
 
@@ -41,7 +41,8 @@ echo "   gcloud auth login"
 echo "   gcloud config set project bartab-475300"
 echo ""
 echo "4. Depois, execute o script de atualização do OAuth:"
-echo "   ./atualizar-oauth.sh"
+echo "   gcp/scripts/atualizar-oauth.sh"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
 

@@ -181,13 +181,13 @@ echo ""
 
 if [ "$CALLBACK" != "$EXPECTED_CALLBACK" ]; then
     echo -e "${YELLOW}1.${NC} Atualizar variáveis de ambiente:"
-    echo "   ./atualizar-urls.sh"
+    echo "   gcp/scripts/atualizar-urls.sh"
     echo ""
 fi
 
 if [ "$CLIENT_ID" = "placeholder" ] || [ "$CLIENT_ID" = "your-google-client-id" ]; then
     echo -e "${YELLOW}2.${NC} Configurar credenciais OAuth reais:"
-    echo "   ./fix-oauth.sh"
+    echo "   gcp/scripts/fix-oauth.sh"
     echo ""
 fi
 
@@ -202,4 +202,5 @@ echo ""
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
+
 

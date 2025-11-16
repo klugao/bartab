@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script para atualizar credenciais OAuth do Google
-# Uso: ./atualizar-oauth.sh
+# Uso: gcp/scripts/atualizar-oauth.sh
 
 set -e
 
@@ -77,8 +77,7 @@ echo "✅ Secrets atualizados com sucesso!"
 echo ""
 echo "📝 Próximos passos:"
 echo "   1. Fazer um novo deploy do backend:"
-echo "      cd gcp/scripts"
-echo "      ./deploy.sh"
+echo "      gcp/scripts/deploy.sh"
 echo ""
 echo "   2. Ou reiniciar o serviço para carregar os novos secrets:"
 echo "      gcloud run services update bartab-backend --region=us-central1 --project=$PROJECT_ID"
@@ -92,4 +91,5 @@ echo ""
 echo "   Authorized redirect URIs:"
 echo "   → https://bartab-backend-312426210115.us-central1.run.app/api/auth/google/callback"
 echo ""
+
 
