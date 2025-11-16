@@ -367,7 +367,7 @@ export default function AdminDashboard() {
 
         {/* Tab: Todos */}
         <TabsContent value="all" className="space-y-4">
-          {allEstablishments.map((est) => (
+                  {allEstablishments.map((est) => (
             <Card key={est.id} className={!est.active ? 'opacity-60 bg-gray-50' : ''}>
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -420,7 +420,9 @@ export default function AdminDashboard() {
                     <Button
                       onClick={() => handleDeactivate(est.id, est.name)}
                       variant="outline"
-                      className="flex-1 border-red-300 text-red-700 hover:bg-red-50"
+                      className="flex-1 border-red-300 text-red-700 hover:bg-red-50 disabled:opacity-50"
+                      disabled={user?.establishment?.id === est.id}
+                      title={user?.establishment?.id === est.id ? 'Você não pode inativar o seu próprio estabelecimento' : undefined}
                     >
                       <PowerOff className="w-4 h-4 mr-2" />
                       Inativar

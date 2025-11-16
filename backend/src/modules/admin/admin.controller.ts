@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Param, Body, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards, Query, BadRequestException, Req } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -64,7 +64,11 @@ export class AdminController {
    * Inativa um estabelecimento
    */
   @Post('deactivate/:idEstabelecimento')
-  async deactivateEstablishment(@Param('idEstabelecimento') id: string) {
+  async deactivateEstablishment(@Param('idEstabelecimento') id: string, @Req() req: any) {
+    // Evita que o administrador inative o próprio estabelecimento
+    if (req?.user?.establishmentId && req.user.establishmentId === id) {
+      throw new BadRequestException('Você não pode inativar o seu próprio estabelecimento.');
+    }
     return this.adminService.deactivateEstablishment(id);
   }
 
