@@ -20,6 +20,81 @@ export class AuthController {
     private establishmentRepository: Repository<Establishment>,
   ) {}
 
+  /**
+   * Obtém a URL do frontend com fallback para produção
+   * Prioridade:
+   * 1. FRONTEND_URL (se configurada)
+   * 2. URL de produção baseada em PROJECT_NUMBER ou metadados do Cloud Run
+   * 3. localhost (apenas desenvolvimento)
+   */
+  private async getFrontendUrl(): Promise<string> {
+    // Se FRONTEND_URL estiver configurada, usar ela
+    if (process.env.FRONTEND_URL) {
+      return process.env.FRONTEND_URL;
+    }
+
+    // Se estiver em produção, tentar construir a URL de produção
+    if (process.env.NODE_ENV === 'production') {
+      const region = process.env.REGION || 'us-central1';
+      
+      // Tentar obter project number de variável de ambiente (configurado no deploy)
+      let projectNumber = process.env.PROJECT_NUMBER;
+      
+      // Se não tiver PROJECT_NUMBER, tentar obter dos metadados do Cloud Run
+      if (!projectNumber) {
+        try {
+          // Cloud Run expõe metadados através de um servidor interno
+          const metadataUrl = 'http://metadata.google.internal/computeMetadata/v1/project/numeric-project-id';
+          
+          // Usar AbortController para timeout de 1 segundo
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 1000);
+          
+          const response = await fetch(metadataUrl, {
+            headers: {
+              'Metadata-Flavor': 'Google',
+            },
+            signal: controller.signal,
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (response.ok) {
+            projectNumber = await response.text();
+            console.log(`🔗 [AUTH] Project number obtido dos metadados: ${projectNumber}`);
+          }
+        } catch (error) {
+          // Falhou ao obter metadados (timeout ou erro de rede), continuar com outras opções
+          if (error.name !== 'AbortError') {
+            console.warn('⚠️ [AUTH] Não foi possível obter project number dos metadados:', error.message);
+          }
+        }
+      }
+      
+      // Se tivermos project number, construir a URL de produção
+      if (projectNumber) {
+        const frontendUrl = `https://bartab-frontend-${projectNumber}.${region}.run.app`;
+        console.log(`🔗 [AUTH] Usando URL de produção: ${frontendUrl}`);
+        return frontendUrl;
+      }
+      
+      // Última tentativa: inferir project number da URL do próprio backend (se disponível)
+      // O formato é: https://bartab-backend-{PROJECT_NUMBER}.{REGION}.run.app
+      const kService = process.env.K_SERVICE;
+      if (kService && kService.startsWith('bartab-backend-')) {
+        const inferredProjectNumber = kService.replace('bartab-backend-', '');
+        const frontendUrl = `https://bartab-frontend-${inferredProjectNumber}.${region}.run.app`;
+        console.log(`🔗 [AUTH] Usando URL de produção inferida: ${frontendUrl}`);
+        return frontendUrl;
+      }
+      
+      console.warn('⚠️ [AUTH] Não foi possível determinar URL de produção, usando localhost');
+    }
+
+    // Fallback para desenvolvimento
+    return 'http://localhost:5173';
+  }
+
   @Get('google')
   @UseGuards(AuthGuard('google'))
   async googleAuth(@Req() req: Request) {
@@ -30,17 +105,18 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
     const user = await this.authService.validateGoogleUser(req.user);
+    const frontendUrl = await this.getFrontendUrl();
 
     if (!user) {
       // Usuário não existe, redireciona para página de registro
       const googleData = Buffer.from(JSON.stringify(req.user)).toString('base64');
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/register?data=${googleData}`);
+      return res.redirect(`${frontendUrl}/register?data=${googleData}`);
     }
 
     // Usuário existe, gera token e redireciona
     const loginData = await this.authService.login(user);
     const token = loginData.access_token;
-    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/auth/callback?token=${token}`);
+    return res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
   }
 
   @Post('register')
