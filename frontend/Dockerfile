@@ -9,7 +9,11 @@ COPY package*.json ./
 # Instalar dependências
 RUN npm ci
 
-# Copiar código fonte
+# Copiar index.html primeiro (crítico para o Vite)
+COPY index.html ./
+
+# Copiar todos os outros arquivos necessários para o build
+# O .dockerignore já filtra o que não é necessário
 COPY . .
 
 # Receber a URL da API no build e expor para o Vite

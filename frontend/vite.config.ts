@@ -22,6 +22,9 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
+      strategies: 'generateSW',
+      filename: 'sw.js',
+      injectRegister: 'auto',
       includeAssets: ['BarTab.svg', 'icons/*.png'],
       manifest: {
         name: 'BarTab - Gestão de Comandas',

@@ -13,8 +13,9 @@ steps:
       - 'gcr.io/$PROJECT_ID/bartab-frontend:latest'
       - '--build-arg'
       - 'VITE_API_BASE_URL=${_API_URL}'
-      - '.'
-    dir: 'frontend'
+      - '-f'
+      - 'frontend/Dockerfile'
+      - './frontend'
 
   # Step 2: Push da imagem para Container Registry
   - name: 'gcr.io/cloud-builders/docker'
