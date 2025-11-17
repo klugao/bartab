@@ -71,11 +71,16 @@ export class AuthController {
         }
       }
       
-      // Se tivermos project number, construir a URL de produção
+      // Cloud Run pode ter múltiplos formatos de URL funcionando:
+      // 1. Formato com hash: https://bartab-frontend-{HASH}-{REGION}.a.run.app (retornado pelo gcloud)
+      // 2. Formato com project number: https://bartab-frontend-{PROJECT_NUMBER}.{REGION}.run.app
+      // Se tivermos PROJECT_NUMBER, podemos tentar construir a URL com project number como fallback
       if (projectNumber) {
-        const frontendUrl = `https://bartab-frontend-${projectNumber}.${region}.run.app`;
-        console.log(`🔗 [AUTH] Usando URL de produção: ${frontendUrl}`);
-        return frontendUrl;
+        const frontendUrlWithProjectNumber = `https://bartab-frontend-${projectNumber}.${region}.run.app`;
+        console.log(`🔗 [AUTH] Tentando URL de produção com project number: ${frontendUrlWithProjectNumber}`);
+        // Usar o formato com project number como fallback se não tivermos FRONTEND_URL
+        // Nota: Este formato pode funcionar, mas o formato oficial do gcloud é preferível
+        return frontendUrlWithProjectNumber;
       }
       
       // Se chegou aqui, não foi possível obter project number

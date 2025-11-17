@@ -96,33 +96,52 @@ if [ "$DEPLOY_BACKEND" = true ]; then
         echo "🗄️  Conectando ao Cloud SQL: $SQL_INSTANCE"
     fi
     
-    # Obter ou construir URL do frontend para configurar variáveis de ambiente
+    # Obter URLs reais dos serviços (Cloud Run usa hash, não project number)
     FRONTEND_URL_EXISTING=$(gcloud run services describe bartab-frontend --platform=managed --region=$REGION --format="value(status.url)" 2>/dev/null || echo "")
     if [ -z "$FRONTEND_URL_EXISTING" ]; then
-        # Frontend não existe ainda, construir URL baseada no formato do Cloud Run
-        PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
-        FRONTEND_URL_EXISTING="https://bartab-frontend-${PROJECT_NUMBER}.${REGION}.run.app"
-        echo -e "${YELLOW}⚠️  Frontend não encontrado, usando URL esperada: $FRONTEND_URL_EXISTING${NC}"
-        echo -e "${YELLOW}   (Atualize manualmente após deploy do frontend usando: gcp/scripts/atualizar-urls.sh)${NC}"
+        echo -e "${YELLOW}⚠️  Frontend não encontrado${NC}"
+        echo -e "${YELLOW}   Configure FRONTEND_URL manualmente após deploy do frontend usando: gcp/scripts/atualizar-urls.sh${NC}"
+        # Deixar vazio, será configurado depois
+        FRONTEND_URL_EXISTING=""
     else
         echo "🔗 Frontend URL: $FRONTEND_URL_EXISTING"
     fi
     
-    # Obter project number para usar como fallback
-    PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
-    
-    # Construir URL de callback do backend
-    BACKEND_URL_EXPECTED="https://bartab-backend-${PROJECT_NUMBER}.${REGION}.run.app"
-    CALLBACK_URL="${BACKEND_URL_EXPECTED}/api/auth/google/callback"
+    # Obter URL real do backend para callback (não construir baseado em project number)
+    BACKEND_URL_EXISTING=$(gcloud run services describe bartab-backend --platform=managed --region=$REGION --format="value(status.url)" 2>/dev/null || echo "")
+    if [ -z "$BACKEND_URL_EXISTING" ]; then
+        # Backend ainda não existe, será criado neste deploy
+        BACKEND_URL_EXISTING=""
+        CALLBACK_URL=""
+    else
+        CALLBACK_URL="${BACKEND_URL_EXISTING}/api/auth/google/callback"
+        echo "🔗 Backend URL: $BACKEND_URL_EXISTING"
+    fi
     
     echo ""
     echo "📋 Configurando variáveis de ambiente:"
-    echo "   FRONTEND_URL: $FRONTEND_URL_EXISTING"
-    echo "   CORS_ORIGIN: $FRONTEND_URL_EXISTING"
-    echo "   GOOGLE_CALLBACK_URL: $CALLBACK_URL"
-    echo "   PROJECT_NUMBER: $PROJECT_NUMBER (fallback para URL de produção)"
-    echo "   REGION: $REGION"
+    if [ -n "$FRONTEND_URL_EXISTING" ]; then
+        echo "   FRONTEND_URL: $FRONTEND_URL_EXISTING"
+        echo "   CORS_ORIGIN: $FRONTEND_URL_EXISTING"
+    else
+        echo "   ⚠️  FRONTEND_URL: não configurado (será necessário atualizar depois)"
+    fi
+    if [ -n "$CALLBACK_URL" ]; then
+        echo "   GOOGLE_CALLBACK_URL: $CALLBACK_URL"
+    else
+        echo "   ⚠️  GOOGLE_CALLBACK_URL: será atualizado após deploy"
+    fi
     echo ""
+    
+    # Construir string de env vars apenas com valores não vazios
+    ENV_VARS="NODE_ENV=production,PORT=8080"
+    if [ -n "$FRONTEND_URL_EXISTING" ]; then
+        ENV_VARS="${ENV_VARS},FRONTEND_URL=${FRONTEND_URL_EXISTING},CORS_ORIGIN=${FRONTEND_URL_EXISTING}"
+    fi
+    if [ -n "$CALLBACK_URL" ]; then
+        ENV_VARS="${ENV_VARS},GOOGLE_CALLBACK_URL=${CALLBACK_URL}"
+    fi
+    ENV_VARS="${ENV_VARS},REGION=${REGION}"
     
     gcloud run deploy bartab-backend \
         --image=gcr.io/$PROJECT_ID/bartab-backend:latest \
@@ -130,7 +149,7 @@ if [ "$DEPLOY_BACKEND" = true ]; then
         --region=$REGION \
         --allow-unauthenticated \
         --service-account=bartab-backend-sa@$PROJECT_ID.iam.gserviceaccount.com \
-        --set-env-vars="NODE_ENV=production,PORT=8080,FRONTEND_URL=${FRONTEND_URL_EXISTING},CORS_ORIGIN=${FRONTEND_URL_EXISTING},GOOGLE_CALLBACK_URL=${CALLBACK_URL},PROJECT_NUMBER=${PROJECT_NUMBER},REGION=${REGION}" \
+        --set-env-vars="${ENV_VARS}" \
         --set-secrets="DATABASE_URL=bartab-database-url:latest,JWT_SECRET=bartab-jwt-secret:latest,GOOGLE_CLIENT_ID=bartab-google-client-id:latest,GOOGLE_CLIENT_SECRET=bartab-google-client-secret:latest,SMTP_USER=bartab-smtp-user:latest,SMTP_PASS=bartab-smtp-pass:latest" \
         --memory=512Mi \
         --cpu=1 \
@@ -139,18 +158,31 @@ if [ "$DEPLOY_BACKEND" = true ]; then
         --min-instances=0 \
         $SQL_ARGS
     
-    # Obter URL do backend
+    # Obter URL real do backend após deploy
     BACKEND_URL=$(gcloud run services describe bartab-backend --platform=managed --region=$REGION --format="value(status.url)")
     
-    # Atualizar callback URL com a URL real do backend
-    REAL_CALLBACK_URL="${BACKEND_URL}/api/auth/google/callback"
-    echo ""
-    echo "🔄 Atualizando GOOGLE_CALLBACK_URL com URL real do backend..."
-    gcloud run services update bartab-backend \
-        --platform=managed \
-        --region=$REGION \
-        --update-env-vars="GOOGLE_CALLBACK_URL=${REAL_CALLBACK_URL}" \
-        --quiet
+    # Atualizar variáveis com URLs reais se necessário
+    if [ -n "$BACKEND_URL" ]; then
+        REAL_CALLBACK_URL="${BACKEND_URL}/api/auth/google/callback"
+        
+        # Se frontend não estava configurado, tentar obter agora
+        if [ -z "$FRONTEND_URL_EXISTING" ]; then
+            FRONTEND_URL_EXISTING=$(gcloud run services describe bartab-frontend --platform=managed --region=$REGION --format="value(status.url)" 2>/dev/null || echo "")
+        fi
+        
+        echo ""
+        echo "🔄 Atualizando variáveis com URLs reais..."
+        UPDATE_ENV="GOOGLE_CALLBACK_URL=${REAL_CALLBACK_URL}"
+        if [ -n "$FRONTEND_URL_EXISTING" ]; then
+            UPDATE_ENV="${UPDATE_ENV},FRONTEND_URL=${FRONTEND_URL_EXISTING},CORS_ORIGIN=${FRONTEND_URL_EXISTING}"
+        fi
+        
+        gcloud run services update bartab-backend \
+            --platform=managed \
+            --region=$REGION \
+            --update-env-vars="${UPDATE_ENV}" \
+            --quiet
+    fi
     
     echo ""
     echo -e "${GREEN}✅ Backend deployed com sucesso!${NC}"
