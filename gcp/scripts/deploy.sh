@@ -73,7 +73,14 @@ if [ "$DEPLOY_BACKEND" = true ]; then
     echo ""
     
     # Ir para diretório do backend
-    cd "$(dirname "$0")/../../backend"
+    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+    BACKEND_DIR="$SCRIPT_DIR/../../backend"
+    if [ ! -d "$BACKEND_DIR" ]; then
+        echo -e "${RED}❌ Diretório backend não encontrado em: $BACKEND_DIR${NC}"
+        echo "   Certifique-se de estar executando do diretório raiz do projeto"
+        exit 1
+    fi
+    cd "$BACKEND_DIR"
     
     echo "🔨 Building imagem Docker do backend..."
     docker build --platform linux/amd64 -t gcr.io/$PROJECT_ID/bartab-backend:latest .
@@ -190,7 +197,14 @@ if [ "$DEPLOY_FRONTEND" = true ]; then
     echo "🔗 API URL: ${BACKEND_URL}/api"
     
     # Ir para diretório do frontend
-    cd "$(dirname "$0")/../../frontend"
+    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+    FRONTEND_DIR="$SCRIPT_DIR/../../frontend"
+    if [ ! -d "$FRONTEND_DIR" ]; then
+        echo -e "${RED}❌ Diretório frontend não encontrado em: $FRONTEND_DIR${NC}"
+        echo "   Certifique-se de estar executando do diretório raiz do projeto"
+        exit 1
+    fi
+    cd "$FRONTEND_DIR"
     
     echo ""
     echo "🔨 Building imagem Docker do frontend..."
