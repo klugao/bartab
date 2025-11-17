@@ -229,22 +229,13 @@ if [ "$DEPLOY_FRONTEND" = true ]; then
         --max-instances=10 \
         --min-instances=0
     
-    # Obter URL do frontend
-    FRONTEND_URL=$(gcloud run services describe bartab-frontend --platform=managed --region=$REGION --format="value(status.url)")
+    # Usar URL com project number (formato preferido)
+    FRONTEND_URL_DEPLOYED="https://bartab-frontend-${PROJECT_NUMBER}.${REGION}.run.app"
     
     echo ""
     echo -e "${GREEN}✅ Frontend deployed com sucesso!${NC}"
-    echo -e "${GREEN}🔗 URL: $FRONTEND_URL${NC}"
+    echo -e "${GREEN}🔗 URL: $FRONTEND_URL_DEPLOYED${NC}"
     echo ""
-    
-    # Atualizar CORS no backend
-    if [ "$DEPLOY_BACKEND" = false ] && [ ! -z "$FRONTEND_URL" ]; then
-        echo -e "${YELLOW}⚠️  Lembre-se de atualizar o CORS do backend com a URL do frontend:${NC}"
-        echo "   CORS_ORIGIN=$FRONTEND_URL"
-        echo "   FRONTEND_URL=$FRONTEND_URL"
-        echo ""
-        echo "   Execute: ./update-backend-env.sh"
-    fi
     
     cd ..
 fi
@@ -255,13 +246,13 @@ echo "✅ Deploy concluído com sucesso!"
 echo "==========================================${NC}"
 echo ""
 
-if [ ! -z "$BACKEND_URL" ]; then
-    echo "📦 Backend: $BACKEND_URL"
-fi
+# Sempre usar URLs com project number (formato preferido)
+PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
+BACKEND_URL_DISPLAY="https://bartab-backend-${PROJECT_NUMBER}.${REGION}.run.app"
+FRONTEND_URL_DISPLAY="https://bartab-frontend-${PROJECT_NUMBER}.${REGION}.run.app"
 
-if [ ! -z "$FRONTEND_URL" ]; then
-    echo "🎨 Frontend: $FRONTEND_URL"
-fi
+echo "📦 Backend: $BACKEND_URL_DISPLAY"
+echo "🎨 Frontend: $FRONTEND_URL_DISPLAY"
 
 echo ""
 echo "📝 Próximos passos:"
