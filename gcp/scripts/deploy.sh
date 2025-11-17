@@ -36,6 +36,12 @@ echo "📋 Projeto: $PROJECT_ID"
 echo "🌍 Região: $REGION"
 echo ""
 
+# Calcular diretório raiz do projeto (uma vez, antes de qualquer cd)
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+echo "📁 Diretório raiz do projeto: $PROJECT_ROOT"
+echo ""
+
 # Perguntar o que fazer
 echo "O que você deseja fazer?"
 echo "  1) Deploy completo (Backend + Frontend)"
@@ -72,15 +78,14 @@ if [ "$DEPLOY_BACKEND" = true ]; then
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
     
-    # Ir para diretório do backend (o script está em gcp/scripts, então volta 2 níveis para raiz)
-    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-    PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+    # Ir para diretório do backend (PROJECT_ROOT já foi calculado no início)
     BACKEND_DIR="$PROJECT_ROOT/backend"
+    
     if [ ! -d "$BACKEND_DIR" ]; then
         echo -e "${RED}❌ Diretório backend não encontrado em: $BACKEND_DIR${NC}"
         exit 1
     fi
-    cd "$BACKEND_DIR"
+    cd "$BACKEND_DIR" || exit 1
     
     echo "🔨 Building imagem Docker do backend..."
     docker build --platform linux/amd64 -t gcr.io/$PROJECT_ID/bartab-backend:latest .
@@ -191,15 +196,14 @@ if [ "$DEPLOY_FRONTEND" = true ]; then
     echo "🔗 Backend URL (usando project number): $BACKEND_URL"
     echo "🔗 API URL: ${BACKEND_URL}/api"
     
-    # Ir para diretório do frontend (o script está em gcp/scripts, então volta 2 níveis para raiz)
-    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-    PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+    # Ir para diretório do frontend (PROJECT_ROOT já foi calculado no início)
     FRONTEND_DIR="$PROJECT_ROOT/frontend"
+    
     if [ ! -d "$FRONTEND_DIR" ]; then
         echo -e "${RED}❌ Diretório frontend não encontrado em: $FRONTEND_DIR${NC}"
         exit 1
     fi
-    cd "$FRONTEND_DIR"
+    cd "$FRONTEND_DIR" || exit 1
     
     echo ""
     echo "🔨 Building imagem Docker do frontend..."
