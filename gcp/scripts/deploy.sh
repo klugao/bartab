@@ -76,7 +76,7 @@ if [ "$DEPLOY_BACKEND" = true ]; then
     cd "$(dirname "$0")/../../backend"
     
     echo "🔨 Building imagem Docker do backend..."
-    docker build -t gcr.io/$PROJECT_ID/bartab-backend:latest .
+    docker build --platform linux/amd64 -t gcr.io/$PROJECT_ID/bartab-backend:latest .
     
     echo ""
     echo "📤 Enviando imagem para Container Registry..."
