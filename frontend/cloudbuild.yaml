@@ -61,8 +61,10 @@ options:
 timeout: '900s'
 
 # Substituições (variáveis)
+# NOTA: Substitua ${PROJECT_NUMBER} pelo seu project number antes de usar Cloud Build
+# Ou use: gcloud builds submit --substitutions=_API_URL=https://bartab-backend-312426210115.us-central1.run.app/api
 substitutions:
-  _API_URL: 'https://bartab-backend-nvwtehomyq-uc.a.run.app/api'
+  _API_URL: 'https://bartab-backend-312426210115.us-central1.run.app/api'
 
 # Tags para organização
 tags:

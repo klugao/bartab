@@ -102,8 +102,9 @@ options:
 timeout: '1800s'
 
 # Substituições
+# NOTA: Substitua pelo seu project number antes de usar Cloud Build
 substitutions:
-  _API_URL: 'https://bartab-backend-XXXXXXX-uc.a.run.app'
+  _API_URL: 'https://bartab-backend-312426210115.us-central1.run.app/api'
 
 # Imagens
 images:
