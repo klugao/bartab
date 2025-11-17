@@ -22,61 +22,17 @@ echo "📦 Project ID: $PROJECT_ID"
 echo "📍 Region: $REGION"
 echo ""
 
-# Obter URLs reais dos serviços do gcloud (formato oficial)
-BACKEND_URL_GCLOUD=$(gcloud run services describe bartab-backend --platform=managed --region=$REGION --format="value(status.url)" 2>/dev/null || echo "")
-FRONTEND_URL_GCLOUD=$(gcloud run services describe bartab-frontend --platform=managed --region=$REGION --format="value(status.url)" 2>/dev/null || echo "")
-
-if [ -z "$BACKEND_URL_GCLOUD" ]; then
-    echo -e "${RED}❌ Não foi possível obter URL do backend${NC}"
-    exit 1
-fi
-
-if [ -z "$FRONTEND_URL_GCLOUD" ]; then
-    echo -e "${RED}❌ Não foi possível obter URL do frontend${NC}"
-    exit 1
-fi
-
-# Cloud Run pode ter múltiplos formatos de URL funcionando
-# Usar a URL obtida do gcloud (formato oficial)
-# Mas também construir formato alternativo com project number caso necessário
-BACKEND_URL="$BACKEND_URL_GCLOUD"
-FRONTEND_URL="$FRONTEND_URL_GCLOUD"
-
-# Se a URL do gcloud usa hash mas existe formato com project number, oferecer opção
-BACKEND_URL_ALT="https://bartab-backend-${PROJECT_NUMBER}.${REGION}.run.app"
-FRONTEND_URL_ALT="https://bartab-frontend-${PROJECT_NUMBER}.${REGION}.run.app"
-
+# Construir URLs usando project number (formato novo)
+BACKEND_URL="https://bartab-backend-${PROJECT_NUMBER}.${REGION}.run.app"
+FRONTEND_URL="https://bartab-frontend-${PROJECT_NUMBER}.${REGION}.run.app"
 CALLBACK_URL="${BACKEND_URL}/api/auth/google/callback"
 
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "📋 SUAS URLs"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-echo -e "${GREEN}URLs oficiais (do gcloud):${NC}"
-echo -e "${GREEN}Frontend:${NC} $FRONTEND_URL"
-echo -e "${GREEN}Backend:${NC}  $BACKEND_URL"
-echo -e "${GREEN}Callback:${NC} $CALLBACK_URL"
-echo ""
-if [[ "$FRONTEND_URL" != "$FRONTEND_URL_ALT" ]]; then
-    echo -e "${YELLOW}URLs alternativas (formato com project number):${NC}"
-    echo -e "${YELLOW}Frontend:${NC} $FRONTEND_URL_ALT"
-    echo -e "${YELLOW}Backend:${NC}  $BACKEND_URL_ALT"
-    echo -e "${YELLOW}Callback:${NC} ${BACKEND_URL_ALT}/api/auth/google/callback"
-    echo ""
-    echo -e "${BLUE}💡 Nota: Ambos os formatos podem funcionar. Usando o formato oficial do gcloud.${NC}"
-    echo ""
-fi
-
 # Verificar se os serviços existem
-echo "🔍 Verificando serviços..."
-BACKEND_EXISTS=$(gcloud run services list --format="value(metadata.name)" | grep "^bartab-backend$" || echo "")
-FRONTEND_EXISTS=$(gcloud run services list --format="value(metadata.name)" | grep "^bartab-frontend$" || echo "")
+BACKEND_EXISTS=$(gcloud run services list --format="value(metadata.name)" --region=$REGION | grep "^bartab-backend$" || echo "")
+FRONTEND_EXISTS=$(gcloud run services list --format="value(metadata.name)" --region=$REGION | grep "^bartab-frontend$" || echo "")
 
 if [ -z "$BACKEND_EXISTS" ]; then
     echo -e "${RED}❌ Serviço bartab-backend não encontrado${NC}"
-    echo ""
-    echo "Serviços disponíveis:"
-    gcloud run services list --format="table(name,region,status.url)"
     exit 1
 fi
 
@@ -85,16 +41,13 @@ if [ -z "$FRONTEND_EXISTS" ]; then
     exit 1
 fi
 
-echo -e "${GREEN}✅ Serviços encontrados${NC}"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "📋 SUAS URLs (formato com project number)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-
-# Verificar URLs atuais
-CURRENT_BACKEND=$(gcloud run services describe bartab-backend --platform=managed --region=$REGION --format="value(status.url)")
-CURRENT_FRONTEND=$(gcloud run services describe bartab-frontend --platform=managed --region=$REGION --format="value(status.url)")
-
-echo "📊 URLs Atuais:"
-echo "   Backend:  $CURRENT_BACKEND"
-echo "   Frontend: $CURRENT_FRONTEND"
+echo -e "${GREEN}Frontend:${NC} $FRONTEND_URL"
+echo -e "${GREEN}Backend:${NC}  $BACKEND_URL"
+echo -e "${GREEN}Callback:${NC} $CALLBACK_URL"
 echo ""
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

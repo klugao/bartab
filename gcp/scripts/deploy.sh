@@ -96,27 +96,16 @@ if [ "$DEPLOY_BACKEND" = true ]; then
         echo "🗄️  Conectando ao Cloud SQL: $SQL_INSTANCE"
     fi
     
-    # Obter URLs reais dos serviços (Cloud Run usa hash, não project number)
-    FRONTEND_URL_EXISTING=$(gcloud run services describe bartab-frontend --platform=managed --region=$REGION --format="value(status.url)" 2>/dev/null || echo "")
-    if [ -z "$FRONTEND_URL_EXISTING" ]; then
-        echo -e "${YELLOW}⚠️  Frontend não encontrado${NC}"
-        echo -e "${YELLOW}   Configure FRONTEND_URL manualmente após deploy do frontend usando: gcp/scripts/atualizar-urls.sh${NC}"
-        # Deixar vazio, será configurado depois
-        FRONTEND_URL_EXISTING=""
-    else
-        echo "🔗 Frontend URL: $FRONTEND_URL_EXISTING"
-    fi
+    # Obter project number para construir URLs com formato com project number
+    PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
     
-    # Obter URL real do backend para callback (não construir baseado em project number)
-    BACKEND_URL_EXISTING=$(gcloud run services describe bartab-backend --platform=managed --region=$REGION --format="value(status.url)" 2>/dev/null || echo "")
-    if [ -z "$BACKEND_URL_EXISTING" ]; then
-        # Backend ainda não existe, será criado neste deploy
-        BACKEND_URL_EXISTING=""
-        CALLBACK_URL=""
-    else
-        CALLBACK_URL="${BACKEND_URL_EXISTING}/api/auth/google/callback"
-        echo "🔗 Backend URL: $BACKEND_URL_EXISTING"
-    fi
+    # Construir URLs usando project number (formato preferido)
+    FRONTEND_URL_EXISTING="https://bartab-frontend-${PROJECT_NUMBER}.${REGION}.run.app"
+    BACKEND_URL_EXISTING="https://bartab-backend-${PROJECT_NUMBER}.${REGION}.run.app"
+    CALLBACK_URL="${BACKEND_URL_EXISTING}/api/auth/google/callback"
+    
+    echo "🔗 Frontend URL: $FRONTEND_URL_EXISTING"
+    echo "🔗 Backend URL: $BACKEND_URL_EXISTING"
     
     echo ""
     echo "📋 Configurando variáveis de ambiente:"
@@ -134,7 +123,8 @@ if [ "$DEPLOY_BACKEND" = true ]; then
     echo ""
     
     # Construir string de env vars apenas com valores não vazios
-    ENV_VARS="NODE_ENV=production,PORT=8080"
+    # NOTA: PORT é reservado pelo Cloud Run e não pode ser definido manualmente
+    ENV_VARS="NODE_ENV=production"
     if [ -n "$FRONTEND_URL_EXISTING" ]; then
         ENV_VARS="${ENV_VARS},FRONTEND_URL=${FRONTEND_URL_EXISTING},CORS_ORIGIN=${FRONTEND_URL_EXISTING}"
     fi
@@ -158,24 +148,14 @@ if [ "$DEPLOY_BACKEND" = true ]; then
         --min-instances=0 \
         $SQL_ARGS
     
-    # Obter URL real do backend após deploy
+    # Obter URL real do backend após deploy (para confirmar)
     BACKEND_URL=$(gcloud run services describe bartab-backend --platform=managed --region=$REGION --format="value(status.url)")
     
-    # Atualizar variáveis com URLs reais se necessário
+    # Atualizar variáveis com URLs usando project number (formato preferido)
     if [ -n "$BACKEND_URL" ]; then
-        REAL_CALLBACK_URL="${BACKEND_URL}/api/auth/google/callback"
-        
-        # Se frontend não estava configurado, tentar obter agora
-        if [ -z "$FRONTEND_URL_EXISTING" ]; then
-            FRONTEND_URL_EXISTING=$(gcloud run services describe bartab-frontend --platform=managed --region=$REGION --format="value(status.url)" 2>/dev/null || echo "")
-        fi
-        
         echo ""
-        echo "🔄 Atualizando variáveis com URLs reais..."
-        UPDATE_ENV="GOOGLE_CALLBACK_URL=${REAL_CALLBACK_URL}"
-        if [ -n "$FRONTEND_URL_EXISTING" ]; then
-            UPDATE_ENV="${UPDATE_ENV},FRONTEND_URL=${FRONTEND_URL_EXISTING},CORS_ORIGIN=${FRONTEND_URL_EXISTING}"
-        fi
+        echo "🔄 Atualizando variáveis com URLs usando project number..."
+        UPDATE_ENV="GOOGLE_CALLBACK_URL=${CALLBACK_URL},FRONTEND_URL=${FRONTEND_URL_EXISTING},CORS_ORIGIN=${FRONTEND_URL_EXISTING},PROJECT_NUMBER=${PROJECT_NUMBER},REGION=${REGION}"
         
         gcloud run services update bartab-backend \
             --platform=managed \

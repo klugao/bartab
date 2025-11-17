@@ -28,9 +28,11 @@ export class AuthController {
    * 3. localhost (apenas desenvolvimento)
    */
   private async getFrontendUrl(): Promise<string> {
-    // Se FRONTEND_URL estiver configurada, usar ela
+    // Se FRONTEND_URL estiver configurada, usar ela (removendo espaços e quebras de linha)
     if (process.env.FRONTEND_URL) {
-      return process.env.FRONTEND_URL;
+      const url = process.env.FRONTEND_URL.trim().replace(/\s+/g, '').replace(/\n/g, '').replace(/\r/g, '');
+      console.log(`🔗 [AUTH] Usando FRONTEND_URL: "${url}"`);
+      return url;
     }
 
     // Se estiver em produção, tentar construir a URL de produção
@@ -76,10 +78,11 @@ export class AuthController {
       // 2. Formato com project number: https://bartab-frontend-{PROJECT_NUMBER}.{REGION}.run.app
       // Se tivermos PROJECT_NUMBER, podemos tentar construir a URL com project number como fallback
       if (projectNumber) {
-        const frontendUrlWithProjectNumber = `https://bartab-frontend-${projectNumber}.${region}.run.app`;
-        console.log(`🔗 [AUTH] Tentando URL de produção com project number: ${frontendUrlWithProjectNumber}`);
-        // Usar o formato com project number como fallback se não tivermos FRONTEND_URL
-        // Nota: Este formato pode funcionar, mas o formato oficial do gcloud é preferível
+        // Limpar project number de espaços e quebras de linha
+        const cleanProjectNumber = String(projectNumber).trim().replace(/\s+/g, '').replace(/\n/g, '').replace(/\r/g, '');
+        const cleanRegion = String(region).trim().replace(/\s+/g, '').replace(/\n/g, '').replace(/\r/g, '');
+        const frontendUrlWithProjectNumber = `https://bartab-frontend-${cleanProjectNumber}.${cleanRegion}.run.app`;
+        console.log(`🔗 [AUTH] Usando URL de produção com project number: "${frontendUrlWithProjectNumber}"`);
         return frontendUrlWithProjectNumber;
       }
       
@@ -110,18 +113,27 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleAuthRedirect(@Req() req: Request, @Res() res: Response) {
     const user = await this.authService.validateGoogleUser(req.user);
-    const frontendUrl = await this.getFrontendUrl();
-
+    let frontendUrl = await this.getFrontendUrl();
+    
+    // Garantir que a URL está limpa (sem espaços, quebras de linha, etc)
+    frontendUrl = frontendUrl.trim().replace(/\s+/g, '').replace(/\n/g, '').replace(/\r/g, '');
+    
+    console.log(`🔗 [AUTH] Redirecionando para: "${frontendUrl}"`);
+    
     if (!user) {
       // Usuário não existe, redireciona para página de registro
       const googleData = Buffer.from(JSON.stringify(req.user)).toString('base64');
-      return res.redirect(`${frontendUrl}/register?data=${googleData}`);
+      const redirectUrl = `${frontendUrl}/register?data=${googleData}`;
+      console.log(`🔗 [AUTH] Redirecionando para registro: "${redirectUrl}"`);
+      return res.redirect(redirectUrl);
     }
 
     // Usuário existe, gera token e redireciona
     const loginData = await this.authService.login(user);
     const token = loginData.access_token;
-    return res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+    const redirectUrl = `${frontendUrl}/auth/callback?token=${token}`;
+    console.log(`🔗 [AUTH] Redirecionando para callback: "${redirectUrl}"`);
+    return res.redirect(redirectUrl);
   }
 
   @Post('register')
