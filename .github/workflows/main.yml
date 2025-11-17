@@ -253,6 +253,27 @@ jobs:
           docker push gcr.io/$PROJECT_ID/bartab-backend:$GITHUB_SHA
           docker push gcr.io/$PROJECT_ID/bartab-backend:latest
 
+      - name: Get Project Number
+        id: project-number
+        run: |
+          PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
+          echo "number=$PROJECT_NUMBER" >> $GITHUB_OUTPUT
+          echo "📦 Project Number: $PROJECT_NUMBER"
+
+      - name: Build URLs
+        id: urls
+        run: |
+          PROJECT_NUMBER="${{ steps.project-number.outputs.number }}"
+          BACKEND_URL="https://bartab-backend-${PROJECT_NUMBER}.${REGION}.run.app"
+          FRONTEND_URL="https://bartab-frontend-${PROJECT_NUMBER}.${REGION}.run.app"
+          CALLBACK_URL="${BACKEND_URL}/api/auth/google/callback"
+          echo "backend_url=$BACKEND_URL" >> $GITHUB_OUTPUT
+          echo "frontend_url=$FRONTEND_URL" >> $GITHUB_OUTPUT
+          echo "callback_url=$CALLBACK_URL" >> $GITHUB_OUTPUT
+          echo "🔗 Backend URL: $BACKEND_URL"
+          echo "🔗 Frontend URL: $FRONTEND_URL"
+          echo "🔗 Callback URL: $CALLBACK_URL"
+
       - name: Deploy Backend to Cloud Run
         run: |
           gcloud run deploy bartab-backend \
@@ -260,7 +281,7 @@ jobs:
             --platform=managed \
             --region=$REGION \
             --allow-unauthenticated \
-            --set-env-vars="NODE_ENV=production" \
+            --set-env-vars="NODE_ENV=production,FRONTEND_URL=${{ steps.urls.outputs.frontend_url }},CORS_ORIGIN=${{ steps.urls.outputs.frontend_url }},GOOGLE_CALLBACK_URL=${{ steps.urls.outputs.callback_url }},PROJECT_NUMBER=${{ steps.project-number.outputs.number }},REGION=$REGION" \
             --set-secrets="DATABASE_URL=bartab-database-url:latest,JWT_SECRET=bartab-jwt-secret:latest,GOOGLE_CLIENT_ID=bartab-google-client-id:latest,GOOGLE_CLIENT_SECRET=bartab-google-client-secret:latest,SMTP_USER=bartab-smtp-user:latest,SMTP_PASS=bartab-smtp-pass:latest" \
             --memory=512Mi \
             --cpu=1 \
@@ -269,7 +290,7 @@ jobs:
       - name: Get Backend URL
         id: backend-url
         run: |
-          URL=$(gcloud run services describe bartab-backend --platform=managed --region=$REGION --format="value(status.url)")
+          URL="${{ steps.urls.outputs.backend_url }}"
           echo "url=$URL" >> $GITHUB_OUTPUT
           echo "✅ Backend deployed at: $URL"
 
@@ -312,18 +333,21 @@ jobs:
       - name: Configure Docker
         run: gcloud auth configure-docker
 
-      - name: Get Backend URL
+      - name: Get Backend URL for Frontend
         id: get-backend-url
         run: |
           BACKEND_URL="${{ needs.deploy-backend.outputs.backend_url }}"
+          API_URL="${BACKEND_URL}/api"
           echo "backend_url=$BACKEND_URL" >> $GITHUB_OUTPUT
+          echo "api_url=$API_URL" >> $GITHUB_OUTPUT
           echo "🔗 Using backend URL: $BACKEND_URL"
+          echo "🔗 Using API URL: $API_URL"
 
       - name: Build Frontend Image
         run: |
           cd frontend
           docker build \
-            --build-arg VITE_API_BASE_URL=${{ steps.get-backend-url.outputs.backend_url }} \
+            --build-arg VITE_API_BASE_URL=${{ steps.get-backend-url.outputs.api_url }} \
             -t gcr.io/$PROJECT_ID/bartab-frontend:$GITHUB_SHA \
             -t gcr.io/$PROJECT_ID/bartab-frontend:latest .
 

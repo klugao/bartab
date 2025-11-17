@@ -80,7 +80,8 @@ const Customers = () => {
     // Se o cliente tem tabs e balance_due negativo, calcular baseado nas tabs
     if (customer.tabs && customer.tabs.length > 0 && parseFloat(customer.balance_due) < 0) {
       const calculatedDebt = calculateTotalDebt(customer);
-      return calculatedDebt;
+      // Retornar negativo para ser consistente com balance_due do banco (negativo = dívida)
+      return -calculatedDebt;
     }
     // Caso contrário, usar o balance_due do banco
     return parseFloat(customer.balance_due);
