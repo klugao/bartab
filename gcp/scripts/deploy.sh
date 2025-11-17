@@ -180,17 +180,14 @@ if [ "$DEPLOY_FRONTEND" = true ]; then
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
     
-    # Obter URL do backend se já existe
-    if [ -z "$BACKEND_URL" ]; then
-        BACKEND_URL=$(gcloud run services describe bartab-backend --platform=managed --region=$REGION --format="value(status.url)" 2>/dev/null || echo "")
-    fi
+    # Obter project number para construir URL do backend com project number
+    PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
     
-    if [ -z "$BACKEND_URL" ]; then
-        echo -e "${YELLOW}⚠️  Backend não encontrado. Por favor, configure a URL da API manualmente.${NC}"
-        read -p "Digite a URL do backend: " BACKEND_URL
-    fi
+    # Usar URL com project number (formato preferido)
+    BACKEND_URL="https://bartab-backend-${PROJECT_NUMBER}.${REGION}.run.app"
     
-    echo "🔗 API URL: $BACKEND_URL"
+    echo "🔗 Backend URL (usando project number): $BACKEND_URL"
+    echo "🔗 API URL: ${BACKEND_URL}/api"
     
     # Ir para diretório do frontend
     cd "$(dirname "$0")/../../frontend"
