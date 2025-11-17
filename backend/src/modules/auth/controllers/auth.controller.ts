@@ -78,17 +78,17 @@ export class AuthController {
         return frontendUrl;
       }
       
-      // Última tentativa: inferir project number da URL do próprio backend (se disponível)
-      // O formato é: https://bartab-backend-{PROJECT_NUMBER}.{REGION}.run.app
-      const kService = process.env.K_SERVICE;
-      if (kService && kService.startsWith('bartab-backend-')) {
-        const inferredProjectNumber = kService.replace('bartab-backend-', '');
-        const frontendUrl = `https://bartab-frontend-${inferredProjectNumber}.${region}.run.app`;
-        console.log(`🔗 [AUTH] Usando URL de produção inferida: ${frontendUrl}`);
-        return frontendUrl;
-      }
-      
-      console.warn('⚠️ [AUTH] Não foi possível determinar URL de produção, usando localhost');
+      // Se chegou aqui, não foi possível obter project number
+      // Log de debug para ajudar a identificar o problema
+      console.error('❌ [AUTH] ERRO: Não foi possível determinar URL de produção!');
+      console.error('❌ [AUTH] Variáveis disponíveis:', {
+        NODE_ENV: process.env.NODE_ENV,
+        REGION: process.env.REGION,
+        PROJECT_NUMBER: process.env.PROJECT_NUMBER,
+        FRONTEND_URL: process.env.FRONTEND_URL,
+        K_SERVICE: process.env.K_SERVICE,
+      });
+      console.warn('⚠️ [AUTH] Usando localhost como fallback (isso NÃO deve acontecer em produção!)');
     }
 
     // Fallback para desenvolvimento

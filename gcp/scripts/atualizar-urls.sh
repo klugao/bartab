@@ -107,11 +107,12 @@ echo ""
 echo "🔄 Atualizando variáveis de ambiente no Backend..."
 echo ""
 
-# Atualizar backend
+# Atualizar backend com todas as variáveis necessárias
+echo "🔄 Atualizando variáveis de ambiente no Backend..."
 gcloud run services update bartab-backend \
     --platform=managed \
     --region=$REGION \
-    --update-env-vars="GOOGLE_CALLBACK_URL=${CALLBACK_URL},FRONTEND_URL=${FRONTEND_URL},CORS_ORIGIN=${FRONTEND_URL}" \
+    --update-env-vars="GOOGLE_CALLBACK_URL=${CALLBACK_URL},FRONTEND_URL=${FRONTEND_URL},CORS_ORIGIN=${FRONTEND_URL},PROJECT_NUMBER=${PROJECT_NUMBER},REGION=${REGION}" \
     --quiet
 
 echo ""
