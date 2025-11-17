@@ -3,16 +3,59 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import { customersApi } from '../services/api';
 import { formatCurrency } from '../utils/formatters';
 import { useCurrencyInput } from '../hooks/use-currency-input';
-import type { Customer } from '../types';
+import type { Customer, Tab } from '../types';
+
+interface DebtCustomer extends Customer {
+  tabs?: Tab[];
+}
 
 interface PayDebtModalProps {
-  customer: Customer;
+  customer: DebtCustomer;
   onClose: () => void;
   onSuccess: () => void;
 }
 
 const PayDebtModal = ({ customer, onClose, onSuccess }: PayDebtModalProps) => {
-  const debtAmount = Math.abs(parseFloat(customer.balance_due));
+  // Calcular dívida total a partir das contas
+  const calculateTabTotal = (tab: Tab): number => {
+    if (!tab.tabItems) return 0;
+    return tab.tabItems.reduce((sum, item) => sum + parseFloat(item.total), 0);
+  };
+
+  const calculateTabPaid = (tab: Tab): number => {
+    if (!tab.payments) return 0;
+    // NÃO contar pagamentos LATER como efetivamente pagos
+    return tab.payments.reduce((sum, payment) => {
+      if (payment.method === 'LATER') {
+        return sum;
+      }
+      return sum + parseFloat(payment.amount);
+    }, 0);
+  };
+
+  const calculateTabRemaining = (tab: Tab): number => {
+    const total = calculateTabTotal(tab);
+    const paid = calculateTabPaid(tab);
+    return total - paid;
+  };
+
+  const calculateTotalDebt = (): number => {
+    const closedTabsWithDebt = customer.tabs?.filter(tab => {
+      const isClosedTab = tab.status === 'CLOSED';
+      const remaining = calculateTabRemaining(tab);
+      const hasDebt = remaining > 0;
+      return isClosedTab && hasDebt;
+    }) || [];
+    
+    const totalDebt = closedTabsWithDebt.reduce((sum, tab) => {
+      const remaining = calculateTabRemaining(tab);
+      return sum + remaining;
+    }, 0);
+    
+    return totalDebt;
+  };
+
+  const debtAmount = calculateTotalDebt();
   const amountInput = useCurrencyInput(debtAmount);
   const [method, setMethod] = useState<string>('CASH');
   const [note, setNote] = useState('');

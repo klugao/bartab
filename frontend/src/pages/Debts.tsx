@@ -114,6 +114,23 @@ const Debts = () => {
     return remaining;
   };
 
+  const calculateTotalDebt = (customer: DebtCustomer): number => {
+    const closedTabsWithDebt = customer.tabs?.filter(tab => {
+      const isClosedTab = tab.status === 'CLOSED';
+      const remaining = calculateTabRemaining(tab);
+      const hasDebt = remaining > 0;
+      return isClosedTab && hasDebt;
+    }) || [];
+    
+    const totalDebt = closedTabsWithDebt.reduce((sum, tab) => {
+      const remaining = calculateTabRemaining(tab);
+      return sum + remaining;
+    }, 0);
+    
+    console.log(`💳 Dívida total calculada para ${customer.name}: R$ ${totalDebt.toFixed(2)}`);
+    return totalDebt;
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -148,7 +165,6 @@ const Debts = () => {
         <div className="space-y-4">
           {customers.map((customer) => {
             const isExpanded = expandedCustomers.has(customer.id);
-            const debtAmount = parseFloat(customer.balance_due);
             const closedTabsWithDebt = customer.tabs?.filter(tab => {
               const isClosedTab = tab.status === 'CLOSED';
               const remaining = calculateTabRemaining(tab);
@@ -164,6 +180,8 @@ const Debts = () => {
               
               return isClosedTab && hasDebt;
             }) || [];
+            
+            const totalDebt = calculateTotalDebt(customer);
             
             console.log(`👤 Cliente ${customer.name}: ${closedTabsWithDebt.length} conta(s) com dívida`);
 
@@ -187,7 +205,7 @@ const Debts = () => {
                           <div>
                             <span className="text-sm text-gray-600">Dívida Total: </span>
                             <span className="text-lg font-bold text-red-600">
-                              {formatCurrency(Math.abs(debtAmount))}
+                              {formatCurrency(totalDebt)}
                             </span>
                           </div>
                           {closedTabsWithDebt.length > 0 && (
