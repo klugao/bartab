@@ -72,12 +72,12 @@ if [ "$DEPLOY_BACKEND" = true ]; then
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
     
-    # Ir para diretório do backend
+    # Ir para diretório do backend (o script está em gcp/scripts, então volta 2 níveis para raiz)
     SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-    BACKEND_DIR="$SCRIPT_DIR/../../backend"
+    PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+    BACKEND_DIR="$PROJECT_ROOT/backend"
     if [ ! -d "$BACKEND_DIR" ]; then
         echo -e "${RED}❌ Diretório backend não encontrado em: $BACKEND_DIR${NC}"
-        echo "   Certifique-se de estar executando do diretório raiz do projeto"
         exit 1
     fi
     cd "$BACKEND_DIR"
@@ -155,25 +155,20 @@ if [ "$DEPLOY_BACKEND" = true ]; then
         --min-instances=0 \
         $SQL_ARGS
     
-    # Obter URL real do backend após deploy (para confirmar)
-    BACKEND_URL=$(gcloud run services describe bartab-backend --platform=managed --region=$REGION --format="value(status.url)")
-    
     # Atualizar variáveis com URLs usando project number (formato preferido)
-    if [ -n "$BACKEND_URL" ]; then
-        echo ""
-        echo "🔄 Atualizando variáveis com URLs usando project number..."
-        UPDATE_ENV="GOOGLE_CALLBACK_URL=${CALLBACK_URL},FRONTEND_URL=${FRONTEND_URL_EXISTING},CORS_ORIGIN=${FRONTEND_URL_EXISTING},PROJECT_NUMBER=${PROJECT_NUMBER},REGION=${REGION}"
-        
-        gcloud run services update bartab-backend \
-            --platform=managed \
-            --region=$REGION \
-            --update-env-vars="${UPDATE_ENV}" \
-            --quiet
-    fi
+    echo ""
+    echo "🔄 Atualizando variáveis com URLs usando project number..."
+    UPDATE_ENV="GOOGLE_CALLBACK_URL=${CALLBACK_URL},FRONTEND_URL=${FRONTEND_URL_EXISTING},CORS_ORIGIN=${FRONTEND_URL_EXISTING},PROJECT_NUMBER=${PROJECT_NUMBER},REGION=${REGION}"
+    
+    gcloud run services update bartab-backend \
+        --platform=managed \
+        --region=$REGION \
+        --update-env-vars="${UPDATE_ENV}" \
+        --quiet
     
     echo ""
     echo -e "${GREEN}✅ Backend deployed com sucesso!${NC}"
-    echo -e "${GREEN}🔗 URL: $BACKEND_URL${NC}"
+    echo -e "${GREEN}🔗 URL: ${BACKEND_URL_EXISTING}${NC}"
     echo ""
     
     # Voltar para o diretório raiz
@@ -196,12 +191,12 @@ if [ "$DEPLOY_FRONTEND" = true ]; then
     echo "🔗 Backend URL (usando project number): $BACKEND_URL"
     echo "🔗 API URL: ${BACKEND_URL}/api"
     
-    # Ir para diretório do frontend
+    # Ir para diretório do frontend (o script está em gcp/scripts, então volta 2 níveis para raiz)
     SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-    FRONTEND_DIR="$SCRIPT_DIR/../../frontend"
+    PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+    FRONTEND_DIR="$PROJECT_ROOT/frontend"
     if [ ! -d "$FRONTEND_DIR" ]; then
         echo -e "${RED}❌ Diretório frontend não encontrado em: $FRONTEND_DIR${NC}"
-        echo "   Certifique-se de estar executando do diretório raiz do projeto"
         exit 1
     fi
     cd "$FRONTEND_DIR"
