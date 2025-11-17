@@ -69,11 +69,24 @@ fi
 # Atribuir permissões
 echo ""
 echo "🔐 Atribuindo permissões..."
+
+# Permissão para atuar como ela mesma (CRÍTICO para Cloud Run com --service-account)
+echo "   - Configurando permissão 'actAs'..."
+gcloud iam service-accounts add-iam-policy-binding $SA_EMAIL \
+    --member="serviceAccount:$SA_EMAIL" \
+    --role="roles/iam.serviceAccountUser" \
+    --condition=None \
+    --quiet 2>/dev/null || echo -e "${YELLOW}     ⚠️  Permissão já existe${NC}"
+
+# Cloud SQL Client
+echo "   - Cloud SQL Client..."
 gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:$SA_EMAIL" \
     --role="roles/cloudsql.client" \
     --condition=None
 
+# Secret Manager Secret Accessor
+echo "   - Secret Manager Secret Accessor..."
 gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:$SA_EMAIL" \
     --role="roles/secretmanager.secretAccessor" \
