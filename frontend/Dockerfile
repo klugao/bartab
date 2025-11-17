@@ -9,12 +9,18 @@ COPY package*.json ./
 # Instalar dependências
 RUN npm ci
 
-# Copiar index.html primeiro (crítico para o Vite)
-COPY index.html ./
-
-# Copiar todos os outros arquivos necessários para o build
+# Copiar todos os arquivos necessários para o build
 # O .dockerignore já filtra o que não é necessário
 COPY . .
+
+# Verificar se index.html existe (crítico para o Vite)
+RUN if [ ! -f index.html ]; then \
+      echo "ERRO: index.html não encontrado!" && \
+      echo "Arquivos no diretório:" && \
+      ls -la && \
+      exit 1; \
+    fi && \
+    echo "✅ index.html encontrado"
 
 # Receber a URL da API no build e expor para o Vite
 ARG VITE_API_BASE_URL
