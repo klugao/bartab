@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { customersApi } from '../services/api';
-import type { Customer, CreateCustomerDto } from '../types';
+import type { Customer, CreateCustomerDto, Tab } from '../types';
 import { useToast } from '../hooks/use-toast';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
+interface CustomerWithTabs extends Customer {
+  tabs?: Tab[];
+}
+
 const Customers = () => {
   const { toast } = useToast();
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
+  const [customers, setCustomers] = useState<CustomerWithTabs[]>([]);
+  const [filteredCustomers, setFilteredCustomers] = useState<CustomerWithTabs[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -33,11 +37,83 @@ const Customers = () => {
     setFilteredCustomers(filtered);
   }, [customers, searchTerm]);
 
+  // Funções para calcular o saldo devedor baseado nas tabs
+  const calculateTabTotal = (tab: Tab): number => {
+    if (!tab.tabItems) return 0;
+    return tab.tabItems.reduce((sum, item) => sum + parseFloat(item.total), 0);
+  };
+
+  const calculateTabPaid = (tab: Tab): number => {
+    if (!tab.payments) return 0;
+    // NÃO contar pagamentos LATER como efetivamente pagos
+    return tab.payments.reduce((sum, payment) => {
+      if (payment.method === 'LATER') {
+        return sum;
+      }
+      return sum + parseFloat(payment.amount);
+    }, 0);
+  };
+
+  const calculateTabRemaining = (tab: Tab): number => {
+    const total = calculateTabTotal(tab);
+    const paid = calculateTabPaid(tab);
+    return total - paid;
+  };
+
+  const calculateTotalDebt = (customer: CustomerWithTabs): number => {
+    const closedTabsWithDebt = customer.tabs?.filter(tab => {
+      const isClosedTab = tab.status === 'CLOSED';
+      const remaining = calculateTabRemaining(tab);
+      const hasDebt = remaining > 0;
+      return isClosedTab && hasDebt;
+    }) || [];
+    
+    const totalDebt = closedTabsWithDebt.reduce((sum, tab) => {
+      const remaining = calculateTabRemaining(tab);
+      return sum + remaining;
+    }, 0);
+    
+    return totalDebt;
+  };
+
+  const getCustomerBalance = (customer: CustomerWithTabs): number => {
+    // Se o cliente tem tabs e balance_due negativo, calcular baseado nas tabs
+    if (customer.tabs && customer.tabs.length > 0 && parseFloat(customer.balance_due) < 0) {
+      const calculatedDebt = calculateTotalDebt(customer);
+      return calculatedDebt;
+    }
+    // Caso contrário, usar o balance_due do banco
+    return parseFloat(customer.balance_due);
+  };
+
   const loadCustomers = async () => {
     try {
       setLoading(true);
+      // Buscar todos os clientes
       const allCustomers = await customersApi.getAll();
-      setCustomers(allCustomers);
+      
+      // Buscar clientes com dívidas (que incluem as tabs)
+      const customersWithDebts = await customersApi.getCustomersWithDebts() as CustomerWithTabs[];
+      
+      // Criar um mapa de clientes com dívidas pelo ID
+      const debtCustomersMap = new Map<string, CustomerWithTabs>();
+      customersWithDebts.forEach(customer => {
+        debtCustomersMap.set(customer.id, customer);
+      });
+      
+      // Mesclar os dados: usar tabs dos clientes com dívidas quando disponível
+      const mergedCustomers = allCustomers.map(customer => {
+        const debtCustomer = debtCustomersMap.get(customer.id);
+        if (debtCustomer && debtCustomer.tabs) {
+          return {
+            ...customer,
+            tabs: debtCustomer.tabs
+          };
+        }
+        return customer;
+      }) as CustomerWithTabs[];
+      
+      setCustomers(mergedCustomers);
     } catch (error) {
       console.error('Erro ao carregar clientes:', error);
     } finally {
@@ -228,17 +304,23 @@ const Customers = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`text-sm font-medium ${
-                        parseFloat(customer.balance_due) < 0 
-                          ? 'text-red-600' 
-                          : 'text-green-600'
-                      }`}>
-                        {parseFloat(customer.balance_due) < 0 ? (
-                          <span>R$ {Math.abs(parseFloat(customer.balance_due)).toFixed(2).replace('.', ',')}</span>
-                        ) : (
-                          <span>R$ {parseFloat(customer.balance_due).toFixed(2).replace('.', ',')}</span>
-                        )}
-                      </div>
+                      {(() => {
+                        const balance = getCustomerBalance(customer);
+                        const isNegative = balance < 0;
+                        return (
+                          <div className={`text-sm font-medium ${
+                            isNegative 
+                              ? 'text-red-600' 
+                              : 'text-green-600'
+                          }`}>
+                            {isNegative ? (
+                              <span>R$ {Math.abs(balance).toFixed(2).replace('.', ',')}</span>
+                            ) : (
+                              <span>R$ {balance.toFixed(2).replace('.', ',')}</span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-1">
