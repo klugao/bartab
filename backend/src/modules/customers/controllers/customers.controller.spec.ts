@@ -96,17 +96,19 @@ describe('CustomersController', () => {
     it('should return all customers', async () => {
       const customers = [mockCustomer];
       mockCustomersService.findAll.mockResolvedValue(customers);
+      const paginationDto = { page: 1, limit: 10 };
 
-      const result = await controller.findAll(mockRequest);
+      const result = await controller.findAll(paginationDto, mockRequest);
 
-      expect(service.findAll).toHaveBeenCalledWith('est-1');
+      expect(service.findAll).toHaveBeenCalledWith('est-1', 1, 10);
       expect(result).toEqual(customers);
     });
 
     it('should handle errors when finding all customers', async () => {
       mockCustomersService.findAll.mockRejectedValue(new Error('Database error'));
+      const paginationDto = { page: 1, limit: 10 };
 
-      const result = await controller.findAll(mockRequest);
+      const result = await controller.findAll(paginationDto, mockRequest);
 
       expect(result).toEqual({ error: 'Database error' });
     });

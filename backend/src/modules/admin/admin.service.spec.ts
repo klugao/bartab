@@ -7,6 +7,7 @@ import { User } from '../auth/entities/user.entity';
 import { NotificationService } from '../notification/notification.service';
 import { ApprovalStatus } from '../../common/enums';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 
 describe('AdminService', () => {
   let service: AdminService;
@@ -52,6 +53,10 @@ describe('AdminService', () => {
     sendRejectionEmail: jest.fn(),
   };
 
+  const mockJwtService = {
+    sign: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -67,6 +72,10 @@ describe('AdminService', () => {
         {
           provide: NotificationService,
           useValue: mockNotificationService,
+        },
+        {
+          provide: JwtService,
+          useValue: mockJwtService,
         },
       ],
     }).compile();

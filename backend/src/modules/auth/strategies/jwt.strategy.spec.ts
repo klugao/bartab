@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
+import { Establishment } from '../entities/establishment.entity';
 import { UnauthorizedException } from '@nestjs/common';
 import { UserRole } from '../../../common/enums';
 
@@ -37,6 +38,10 @@ describe('JwtStrategy', () => {
     }),
   };
 
+  const mockEstablishmentRepository = {
+    findOne: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -48,6 +53,10 @@ describe('JwtStrategy', () => {
         {
           provide: getRepositoryToken(User),
           useValue: mockUserRepository,
+        },
+        {
+          provide: getRepositoryToken(Establishment),
+          useValue: mockEstablishmentRepository,
         },
       ],
     }).compile();
@@ -85,6 +94,7 @@ describe('JwtStrategy', () => {
         role: mockUser.role,
         establishmentId: mockUser.establishment_id,
         establishment: mockUser.establishment,
+        isImpersonating: false,
       });
     });
 

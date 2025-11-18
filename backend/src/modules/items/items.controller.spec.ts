@@ -75,10 +75,11 @@ describe('ItemsController', () => {
     it('should return all items', async () => {
       const items = [mockItem];
       mockItemsService.findAll.mockResolvedValue(items);
+      const paginationDto = { page: 1, limit: 10 };
 
-      const result = await controller.findAll(mockRequest);
+      const result = await controller.findAll(paginationDto, mockRequest);
 
-      expect(service.findAll).toHaveBeenCalledWith('est-1');
+      expect(service.findAll).toHaveBeenCalledWith('est-1', 1, 10);
       expect(result).toEqual(items);
     });
   });

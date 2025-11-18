@@ -52,6 +52,12 @@ describe('AuthController', () => {
     user: {
       userId: 'user-1',
       establishmentId: 'est-1',
+      establishment: {
+        id: 'est-1',
+        name: 'Bar do João',
+        active: true,
+        statusAprovacao: ApprovalStatus.APROVADO,
+      },
     },
   } as any;
 
