@@ -399,8 +399,8 @@ export default function AdminDashboard() {
         {/* Tab: Todos */}
         <TabsContent value="all" className="space-y-4">
                   {allEstablishments.map((est) => (
-            <Card key={est.id} className={!est.active ? 'opacity-60 bg-gray-50' : ''}>
-              <CardHeader>
+            <Card key={est.id} className={!est.active ? 'bg-gray-50' : ''}>
+              <CardHeader className={!est.active ? 'opacity-60' : ''}>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <CardTitle className="flex items-center gap-2">
