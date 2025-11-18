@@ -106,3 +106,4 @@ grep -E "GOOGLE_CLIENT_ID|GOOGLE_CLIENT_SECRET|GOOGLE_CALLBACK_URL" .env
 
 Isso evita problemas quando você deleta ou atualiza as credenciais de produção.
 
+
