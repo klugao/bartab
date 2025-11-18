@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { PlusIcon, PencilIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { PlusIcon, PencilIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, ArrowUpIcon, ArrowDownIcon, ArrowsUpDownIcon } from '@heroicons/react/24/outline';
 import { customersApi } from '../services/api';
 import type { Customer, CreateCustomerDto, Tab, PaginatedResponse } from '../types';
 import { useToast } from '../hooks/use-toast';
@@ -12,6 +12,7 @@ interface CustomerWithTabs extends Customer {
 const Customers = () => {
   const { toast } = useToast();
   const [customers, setCustomers] = useState<CustomerWithTabs[]>([]);
+  const [allCustomers, setAllCustomers] = useState<CustomerWithTabs[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<CustomerWithTabs[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -28,18 +29,210 @@ const Customers = () => {
   });
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const loadingRef = useRef(false);
 
   useEffect(() => {
+    // Evitar carregamentos duplicados usando ref
+    if (loadingRef.current) {
+      console.log('[Customers] Já está carregando, ignorando chamada duplicada');
+      return;
+    }
+    
+    const loadCustomers = async () => {
+      try {
+        loadingRef.current = true;
+        setLoading(true);
+        
+        // Se há ordenação, carregar todos os registros (sem paginação)
+        // Senão, carregar apenas a página atual
+        const shouldLoadAll = !!sortColumn;
+        
+        let response;
+        if (shouldLoadAll) {
+          // Carregar todos os clientes sem paginação
+          // O PaginationDto tem @Max(100), então não podemos passar um limite muito alto
+          // Vamos fazer múltiplas requisições se necessário, ou usar o máximo permitido (100)
+          // Por enquanto, vamos usar 100 e fazer múltiplas requisições se houver mais registros
+          response = await customersApi.getAll(1, 100);
+          
+          // Se a resposta for paginada e houver mais páginas, fazer requisições adicionais
+          if (!Array.isArray(response) && response.meta && response.meta.total > 100) {
+            const totalPages = Math.ceil(response.meta.total / 100);
+            const allCustomersData = [...response.data];
+            
+            // Carregar páginas adicionais
+            for (let p = 2; p <= totalPages; p++) {
+              try {
+                const nextPage = await customersApi.getAll(p, 100);
+                if (Array.isArray(nextPage)) {
+                  allCustomersData.push(...nextPage);
+                } else if (nextPage && nextPage.data) {
+                  allCustomersData.push(...nextPage.data);
+                }
+              } catch (pageError) {
+                console.warn(`[Customers] Erro ao carregar página ${p}:`, pageError);
+                // Continuar mesmo se uma página falhar
+              }
+            }
+            
+            // Criar resposta unificada
+            response = {
+              data: allCustomersData,
+              meta: {
+                total: response.meta.total,
+                page: 1,
+                limit: 100,
+                totalPages: totalPages
+              }
+            };
+          }
+        } else {
+          // Carregar apenas a página atual
+          response = await customersApi.getAll(page, limit);
+        }
+        
+        // Verificar se a resposta é válida
+        if (!response) {
+          throw new Error('Resposta vazia da API');
+        }
+        
+        // Verificar se é resposta paginada ou array simples (compatibilidade)
+        let customersData: Customer[];
+        let totalCount: number;
+        let totalPagesCount: number;
+        
+        if (Array.isArray(response)) {
+          customersData = response;
+          totalCount = response.length;
+          totalPagesCount = shouldLoadAll ? 1 : Math.ceil(response.length / limit);
+        } else if (response && typeof response === 'object' && 'data' in response && 'meta' in response) {
+          const paginatedResponse = response as PaginatedResponse<Customer>;
+          customersData = Array.isArray(paginatedResponse.data) ? paginatedResponse.data : [];
+          totalCount = paginatedResponse.meta?.total || customersData.length;
+          // Quando shouldLoadAll é true, usamos o total real do backend, não totalPages da resposta
+          totalPagesCount = shouldLoadAll ? Math.ceil(totalCount / limit) : (paginatedResponse.meta?.totalPages || 1);
+        } else {
+          throw new Error('Formato de resposta inválido da API');
+        }
+        
+        // Garantir que customersData é um array válido
+        if (!Array.isArray(customersData)) {
+          console.warn('[Customers] customersData não é um array, convertendo...');
+          customersData = [];
+        }
+        
+        console.log(`[Customers] Dados recebidos: ${customersData.length} clientes, total: ${totalCount}, shouldLoadAll: ${shouldLoadAll}`);
+        
+        // Buscar clientes com dívidas (que incluem as tabs)
+        // IMPORTANTE: getCustomersWithDebts pode não retornar todos os clientes, apenas os que têm dívidas
+        // Por isso, sempre usamos customersData como base e apenas mesclamos as tabs quando disponíveis
+        let customersWithDebts: CustomerWithTabs[] = [];
+        try {
+          customersWithDebts = await customersApi.getCustomersWithDebts() as CustomerWithTabs[];
+        } catch (debtError: any) {
+          console.warn('Erro ao carregar clientes com dívidas (continuando sem tabs):', debtError);
+          // Continuar sem as tabs se houver erro - não é crítico
+          customersWithDebts = [];
+        }
+        
+        // Criar um mapa de clientes com dívidas pelo ID
+        const debtCustomersMap = new Map<string, CustomerWithTabs>();
+        if (Array.isArray(customersWithDebts)) {
+          customersWithDebts.forEach(customer => {
+            if (customer && customer.id) {
+              debtCustomersMap.set(customer.id, customer);
+            }
+          });
+        }
+        
+        // Mesclar os dados: usar tabs dos clientes com dívidas quando disponível
+        // Garantir que TODOS os clientes de customersData sejam incluídos
+        const mergedCustomers = customersData.map(customer => {
+          if (!customer || !customer.id) return customer;
+          const debtCustomer = debtCustomersMap.get(customer.id);
+          if (debtCustomer && debtCustomer.tabs) {
+            return {
+              ...customer,
+              tabs: debtCustomer.tabs
+            };
+          }
+          // Retornar o cliente mesmo sem tabs (importante para garantir que todos sejam incluídos)
+          return customer;
+        }) as CustomerWithTabs[];
+        
+        console.log(`[Customers] Carregados ${mergedCustomers.length} clientes (shouldLoadAll: ${shouldLoadAll}, totalCount: ${totalCount})`);
+        
+        if (shouldLoadAll) {
+          // Quando há ordenação, armazenar todos os clientes
+          setAllCustomers(mergedCustomers);
+          setCustomers([]); // Limpar customers da página atual
+          setTotal(totalCount);
+          // totalPages será calculado dinamicamente baseado nos dados filtrados/ordenados
+          setTotalPages(1); // Valor inicial, será recalculado pelo useMemo
+        } else {
+          // Sem ordenação, usar comportamento normal de paginação
+          setCustomers(mergedCustomers);
+          setAllCustomers([]); // Limpar allCustomers
+          setTotal(totalCount);
+          setTotalPages(totalPagesCount);
+        }
+      } catch (error: any) {
+        console.error('Erro ao carregar clientes:', error);
+        console.error('Detalhes do erro:', {
+          message: error?.message,
+          response: error?.response?.data,
+          status: error?.response?.status,
+          shouldLoadAll: !!sortColumn,
+          sortColumn
+        });
+        
+        const errorMessage = error?.response?.data?.message || error?.message || 'Erro desconhecido ao carregar clientes';
+        toast({
+          title: 'Erro',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+        
+        // Em caso de erro, limpar os dados para evitar estados inconsistentes
+        if (sortColumn) {
+          setAllCustomers([]);
+        } else {
+          setCustomers([]);
+        }
+        setFilteredCustomers([]);
+      } finally {
+        loadingRef.current = false;
+        setLoading(false);
+      }
+    };
+    
     loadCustomers();
-  }, [page]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, limit, sortColumn]);
 
   useEffect(() => {
-    const filtered = customers.filter(customer =>
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.phone?.includes(searchTerm)
+    // Se há ordenação, usar allCustomers, senão usar customers (página atual)
+    const sourceData = sortColumn ? allCustomers : customers;
+    // Garantir que sourceData seja um array válido
+    if (!Array.isArray(sourceData)) {
+      setFilteredCustomers([]);
+      return;
+    }
+    // Se há ordenação mas ainda não carregou os dados, não filtrar ainda
+    if (sortColumn && sourceData.length === 0) {
+      setFilteredCustomers([]);
+      return;
+    }
+    const filtered = sourceData.filter(customer =>
+      customer && customer.name && (
+        customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        customer.phone?.includes(searchTerm)
+      )
     );
     setFilteredCustomers(filtered);
-  }, [customers, searchTerm]);
+  }, [customers, allCustomers, searchTerm, sortColumn]);
 
   // Funções para calcular o saldo devedor baseado nas tabs
   const calculateTabTotal = (tab: Tab): number => {
@@ -81,46 +274,252 @@ const Customers = () => {
   };
 
   const getCustomerBalance = (customer: CustomerWithTabs): number => {
-    // Se o cliente tem tabs e balance_due negativo, calcular baseado nas tabs
-    if (customer.tabs && customer.tabs.length > 0 && parseFloat(customer.balance_due) < 0) {
-      const calculatedDebt = calculateTotalDebt(customer);
-      // Retornar negativo para ser consistente com balance_due do banco (negativo = dívida)
-      return -calculatedDebt;
+    try {
+      if (!customer) return 0;
+      
+      // Se o cliente tem tabs e balance_due negativo, calcular baseado nas tabs
+      if (customer.tabs && customer.tabs.length > 0 && customer.balance_due && parseFloat(customer.balance_due) < 0) {
+        const calculatedDebt = calculateTotalDebt(customer);
+        // Retornar negativo para ser consistente com balance_due do banco (negativo = dívida)
+        return -calculatedDebt;
+      }
+      // Caso contrário, usar o balance_due do banco
+      return customer.balance_due ? parseFloat(customer.balance_due) : 0;
+    } catch (error) {
+      console.error(`[Customers] Erro ao calcular saldo do cliente:`, error);
+      return 0;
     }
-    // Caso contrário, usar o balance_due do banco
-    return parseFloat(customer.balance_due);
   };
 
-  const loadCustomers = async () => {
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      // Se já está ordenando por esta coluna, inverte a direção
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Nova coluna, começa com ascendente
+      setSortColumn(column);
+      setSortDirection('asc');
+      setPage(1); // Voltar para primeira página ao mudar ordenação
+    }
+  };
+
+  const sortCustomers = (customers: CustomerWithTabs[], column: string, direction: 'asc' | 'desc'): CustomerWithTabs[] => {
+    if (!Array.isArray(customers) || customers.length === 0) {
+      return [];
+    }
+    
     try {
-      setLoading(true);
-      // Buscar clientes com paginação
-      const response = await customersApi.getAll(page, limit);
-      
-      // Verificar se é resposta paginada ou array simples (compatibilidade)
-      let allCustomers: Customer[];
-      if (Array.isArray(response)) {
-        allCustomers = response;
-        setTotal(response.length);
-        setTotalPages(1);
-      } else {
-        const paginatedResponse = response as PaginatedResponse<Customer>;
-        allCustomers = paginatedResponse.data;
-        setTotal(paginatedResponse.meta.total);
-        setTotalPages(paginatedResponse.meta.totalPages);
+      const sorted = [...customers].sort((a, b) => {
+        // Verificações de segurança
+        if (!a || !b) return 0;
+        
+        let aValue: string | number;
+        let bValue: string | number;
+
+        try {
+          switch (column) {
+            case 'name':
+              aValue = (a.name || '').toLowerCase();
+              bValue = (b.name || '').toLowerCase();
+              break;
+            case 'phone':
+              aValue = (a.phone || '').toLowerCase();
+              bValue = (b.phone || '').toLowerCase();
+              break;
+            case 'days_in_debt':
+              aValue = a.days_in_negative_balance !== null && a.days_in_negative_balance >= 0 ? a.days_in_negative_balance : -1;
+              bValue = b.days_in_negative_balance !== null && b.days_in_negative_balance >= 0 ? b.days_in_negative_balance : -1;
+              break;
+            case 'balance':
+              aValue = getCustomerBalance(a);
+              bValue = getCustomerBalance(b);
+              break;
+            default:
+              return 0;
+          }
+
+          if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+          if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+          return 0;
+        } catch (error) {
+          console.error(`[Customers] Erro ao ordenar cliente:`, error);
+          return 0;
+        }
+      });
+
+      return sorted;
+    } catch (error) {
+      console.error(`[Customers] Erro na função sortCustomers:`, error);
+      return customers; // Retornar array original em caso de erro
+    }
+  };
+
+  const sortedAndFilteredCustomers = useMemo(() => {
+    try {
+      if (!Array.isArray(filteredCustomers)) {
+        return [];
       }
       
+      let result = filteredCustomers;
+      if (sortColumn) {
+        result = sortCustomers(result, sortColumn, sortDirection);
+        console.log(`[Customers] Ordenação aplicada: ${sortColumn} ${sortDirection}, ${result.length} clientes após ordenação`);
+      }
+      return result;
+    } catch (error) {
+      console.error(`[Customers] Erro ao ordenar/filtrar clientes:`, error);
+      return filteredCustomers || [];
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredCustomers, sortColumn, sortDirection]);
+
+  // Aplicar paginação após ordenação quando houver ordenação ativa
+  const paginatedCustomers = useMemo(() => {
+    if (!sortColumn) {
+      // Sem ordenação, usar dados da página atual
+      return sortedAndFilteredCustomers;
+    }
+    // Com ordenação, aplicar paginação manualmente
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginated = sortedAndFilteredCustomers.slice(startIndex, endIndex);
+    console.log(`[Customers] Paginação: página ${page}, ${paginated.length} de ${sortedAndFilteredCustomers.length} clientes (índices ${startIndex}-${endIndex})`);
+    return paginated;
+  }, [sortedAndFilteredCustomers, page, limit, sortColumn]);
+
+  // Recalcular totalPages quando há ordenação baseado nos dados filtrados e ordenados
+  const effectiveTotalPages = useMemo(() => {
+    if (sortColumn) {
+      // Com ordenação, calcular baseado nos dados filtrados e ordenados
+      return Math.ceil(sortedAndFilteredCustomers.length / limit) || 1;
+    }
+    // Sem ordenação, usar totalPages do backend
+    return totalPages;
+  }, [sortColumn, sortedAndFilteredCustomers.length, limit, totalPages]);
+
+  // Resetar página se ela for maior que o total de páginas efetivas
+  useEffect(() => {
+    if (sortColumn && page > effectiveTotalPages && effectiveTotalPages > 0) {
+      setPage(1);
+    }
+  }, [sortColumn, page, effectiveTotalPages]);
+
+  const loadCustomers = async () => {
+    // Evitar carregamentos duplicados
+    if (loading) {
+      console.log('[Customers] Já está carregando, ignorando chamada duplicada');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      
+      // Se há ordenação, carregar todos os registros (sem paginação)
+      // Senão, carregar apenas a página atual
+      const shouldLoadAll = !!sortColumn;
+      
+      let response;
+      if (shouldLoadAll) {
+        // Carregar todos os clientes sem paginação
+        // O PaginationDto tem @Max(100), então não podemos passar um limite muito alto
+        // Vamos fazer múltiplas requisições se necessário, ou usar o máximo permitido (100)
+        // Por enquanto, vamos usar 100 e fazer múltiplas requisições se houver mais registros
+        response = await customersApi.getAll(1, 100);
+        
+        // Se a resposta for paginada e houver mais páginas, fazer requisições adicionais
+        if (!Array.isArray(response) && response.meta && response.meta.total > 100) {
+          const totalPages = Math.ceil(response.meta.total / 100);
+          const allCustomersData = [...response.data];
+          
+          // Carregar páginas adicionais
+          for (let p = 2; p <= totalPages; p++) {
+            try {
+              const nextPage = await customersApi.getAll(p, 100);
+              if (Array.isArray(nextPage)) {
+                allCustomersData.push(...nextPage);
+              } else if (nextPage && nextPage.data) {
+                allCustomersData.push(...nextPage.data);
+              }
+            } catch (pageError) {
+              console.warn(`[Customers] Erro ao carregar página ${p}:`, pageError);
+              // Continuar mesmo se uma página falhar
+            }
+          }
+          
+          // Criar resposta unificada
+          response = {
+            data: allCustomersData,
+            meta: {
+              total: response.meta.total,
+              page: 1,
+              limit: 100,
+              totalPages: totalPages
+            }
+          };
+        }
+      } else {
+        // Carregar apenas a página atual
+        response = await customersApi.getAll(page, limit);
+      }
+      
+      // Verificar se a resposta é válida
+      if (!response) {
+        throw new Error('Resposta vazia da API');
+      }
+      
+      // Verificar se é resposta paginada ou array simples (compatibilidade)
+      let customersData: Customer[];
+      let totalCount: number;
+      let totalPagesCount: number;
+      
+      if (Array.isArray(response)) {
+        customersData = response;
+        totalCount = response.length;
+        totalPagesCount = shouldLoadAll ? 1 : Math.ceil(response.length / limit);
+      } else if (response && typeof response === 'object' && 'data' in response && 'meta' in response) {
+        const paginatedResponse = response as PaginatedResponse<Customer>;
+        customersData = Array.isArray(paginatedResponse.data) ? paginatedResponse.data : [];
+        totalCount = paginatedResponse.meta?.total || customersData.length;
+        // Quando shouldLoadAll é true, usamos o total real do backend, não totalPages da resposta
+        totalPagesCount = shouldLoadAll ? Math.ceil(totalCount / limit) : (paginatedResponse.meta?.totalPages || 1);
+      } else {
+        throw new Error('Formato de resposta inválido da API');
+      }
+      
+      // Garantir que customersData é um array válido
+      if (!Array.isArray(customersData)) {
+        console.warn('[Customers] customersData não é um array, convertendo...');
+        customersData = [];
+      }
+      
+      console.log(`[Customers] Dados recebidos: ${customersData.length} clientes, total: ${totalCount}, shouldLoadAll: ${shouldLoadAll}`);
+      
       // Buscar clientes com dívidas (que incluem as tabs)
-      const customersWithDebts = await customersApi.getCustomersWithDebts() as CustomerWithTabs[];
+      // IMPORTANTE: getCustomersWithDebts pode não retornar todos os clientes, apenas os que têm dívidas
+      // Por isso, sempre usamos customersData como base e apenas mesclamos as tabs quando disponíveis
+      let customersWithDebts: CustomerWithTabs[] = [];
+      try {
+        customersWithDebts = await customersApi.getCustomersWithDebts() as CustomerWithTabs[];
+      } catch (debtError: any) {
+        console.warn('Erro ao carregar clientes com dívidas (continuando sem tabs):', debtError);
+        // Continuar sem as tabs se houver erro - não é crítico
+        customersWithDebts = [];
+      }
       
       // Criar um mapa de clientes com dívidas pelo ID
       const debtCustomersMap = new Map<string, CustomerWithTabs>();
-      customersWithDebts.forEach(customer => {
-        debtCustomersMap.set(customer.id, customer);
-      });
+      if (Array.isArray(customersWithDebts)) {
+        customersWithDebts.forEach(customer => {
+          if (customer && customer.id) {
+            debtCustomersMap.set(customer.id, customer);
+          }
+        });
+      }
       
       // Mesclar os dados: usar tabs dos clientes com dívidas quando disponível
-      const mergedCustomers = allCustomers.map(customer => {
+      // Garantir que TODOS os clientes de customersData sejam incluídos
+      const mergedCustomers = customersData.map(customer => {
+        if (!customer || !customer.id) return customer;
         const debtCustomer = debtCustomersMap.get(customer.id);
         if (debtCustomer && debtCustomer.tabs) {
           return {
@@ -128,17 +527,50 @@ const Customers = () => {
             tabs: debtCustomer.tabs
           };
         }
+        // Retornar o cliente mesmo sem tabs (importante para garantir que todos sejam incluídos)
         return customer;
       }) as CustomerWithTabs[];
       
-      setCustomers(mergedCustomers);
-    } catch (error) {
+      console.log(`[Customers] Carregados ${mergedCustomers.length} clientes (shouldLoadAll: ${shouldLoadAll}, totalCount: ${totalCount})`);
+      
+      if (shouldLoadAll) {
+        // Quando há ordenação, armazenar todos os clientes
+        setAllCustomers(mergedCustomers);
+        setCustomers([]); // Limpar customers da página atual
+        setTotal(totalCount);
+        // totalPages será calculado dinamicamente baseado nos dados filtrados/ordenados
+        setTotalPages(1); // Valor inicial, será recalculado pelo useMemo
+      } else {
+        // Sem ordenação, usar comportamento normal de paginação
+        setCustomers(mergedCustomers);
+        setAllCustomers([]); // Limpar allCustomers
+        setTotal(totalCount);
+        setTotalPages(totalPagesCount);
+      }
+    } catch (error: any) {
       console.error('Erro ao carregar clientes:', error);
+      console.error('Detalhes do erro:', {
+        message: error?.message,
+        response: error?.response?.data,
+        status: error?.response?.status,
+        shouldLoadAll,
+        sortColumn
+      });
+      
+      const errorMessage = error?.response?.data?.message || error?.message || 'Erro desconhecido ao carregar clientes';
       toast({
         title: 'Erro',
-        description: 'Erro ao carregar clientes',
+        description: errorMessage,
         variant: 'destructive',
       });
+      
+      // Em caso de erro, limpar os dados para evitar estados inconsistentes
+      if (shouldLoadAll) {
+        setAllCustomers([]);
+      } else {
+        setCustomers([]);
+      }
+      setFilteredCustomers([]);
     } finally {
       setLoading(false);
     }
@@ -271,21 +703,24 @@ const Customers = () => {
         />
         {searchTerm && (
           <p className="text-sm text-gray-600 mt-2">
-            {filteredCustomers.length} cliente(s) encontrado(s) nesta página
+            {sortedAndFilteredCustomers.length} cliente(s) encontrado(s){sortColumn ? ` (${paginatedCustomers.length} nesta página)` : ' nesta página'}
           </p>
         )}
         {!searchTerm && total > 0 && (
           <p className="text-sm text-gray-600 mt-2">
-            Mostrando {customers.length} de {total} cliente(s) - Página {page} de {totalPages}
+            {sortColumn 
+              ? `Mostrando ${paginatedCustomers.length} de ${sortedAndFilteredCustomers.length} cliente(s) - Página ${page} de ${effectiveTotalPages}`
+              : `Mostrando ${customers.length} de ${total} cliente(s) - Página ${page} de ${totalPages}`
+            }
           </p>
         )}
       </div>
 
       {/* Lista de clientes */}
       <div className="card">
-        {customers.length === 0 ? (
+        {((sortColumn ? allCustomers.length === 0 : customers.length === 0)) ? (
           <p className="text-gray-500 text-center py-8">Nenhum cliente cadastrado</p>
-        ) : filteredCustomers.length === 0 ? (
+        ) : paginatedCustomers.length === 0 ? (
           <p className="text-gray-500 text-center py-8">
             Nenhum cliente encontrado com "{searchTerm}"
           </p>
@@ -294,17 +729,73 @@ const Customers = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nome
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                    onClick={() => handleSort('name')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Nome</span>
+                      {sortColumn === 'name' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowUpIcon className="h-4 w-4" />
+                        ) : (
+                          <ArrowDownIcon className="h-4 w-4" />
+                        )
+                      ) : (
+                        <ArrowsUpDownIcon className="h-4 w-4 text-gray-400" />
+                      )}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Telefone
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                    onClick={() => handleSort('phone')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Telefone</span>
+                      {sortColumn === 'phone' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowUpIcon className="h-4 w-4" />
+                        ) : (
+                          <ArrowDownIcon className="h-4 w-4" />
+                        )
+                      ) : (
+                        <ArrowsUpDownIcon className="h-4 w-4 text-gray-400" />
+                      )}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Dias em Débito
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                    onClick={() => handleSort('days_in_debt')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Dias em Débito</span>
+                      {sortColumn === 'days_in_debt' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowUpIcon className="h-4 w-4" />
+                        ) : (
+                          <ArrowDownIcon className="h-4 w-4" />
+                        )
+                      ) : (
+                        <ArrowsUpDownIcon className="h-4 w-4 text-gray-400" />
+                      )}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Saldo
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                    onClick={() => handleSort('balance')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Saldo</span>
+                      {sortColumn === 'balance' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowUpIcon className="h-4 w-4" />
+                        ) : (
+                          <ArrowDownIcon className="h-4 w-4" />
+                        )
+                      ) : (
+                        <ArrowsUpDownIcon className="h-4 w-4 text-gray-400" />
+                      )}
+                    </div>
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ações
@@ -312,7 +803,7 @@ const Customers = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredCustomers.map((customer) => (
+                {paginatedCustomers.map((customer) => (
                   <tr key={customer.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
@@ -383,10 +874,10 @@ const Customers = () => {
       </div>
 
       {/* Controles de paginação */}
-      {totalPages > 1 && (
+      {((sortColumn && effectiveTotalPages > 1) || (!sortColumn && totalPages > 1)) && (
         <div className="mt-6 flex items-center justify-between">
           <div className="text-sm text-gray-700">
-            Página {page} de {totalPages}
+            Página {page} de {sortColumn ? effectiveTotalPages : totalPages}
           </div>
           <div className="flex space-x-2">
             <button
@@ -398,8 +889,8 @@ const Customers = () => {
               Anterior
             </button>
             <button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
+              onClick={() => setPage(p => Math.min(sortColumn ? effectiveTotalPages : totalPages, p + 1))}
+              disabled={page === (sortColumn ? effectiveTotalPages : totalPages)}
               className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
             >
               Próxima

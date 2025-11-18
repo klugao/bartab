@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { PlusIcon, PencilIcon, TrashIcon, EyeSlashIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { PlusIcon, PencilIcon, TrashIcon, EyeSlashIcon, ChevronLeftIcon, ChevronRightIcon, ArrowUpIcon, ArrowDownIcon, ArrowsUpDownIcon } from '@heroicons/react/24/outline';
 import { itemsApi } from '../services/api';
 import type { Item, CreateItemDto, PaginatedResponse } from '../types';
 import { useToast } from '../hooks/use-toast';
@@ -9,6 +9,7 @@ import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 const Items = () => {
   const { toast } = useToast();
   const [items, setItems] = useState<Item[]>([]);
+  const [allItems, setAllItems] = useState<Item[]>([]);
   const [filteredItems, setFilteredItems] = useState<Item[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -28,45 +29,237 @@ const Items = () => {
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
   const [itemToDeactivate, setItemToDeactivate] = useState<string | null>(null);
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const loadingRef = useRef(false);
 
   useEffect(() => {
+    // Evitar carregamentos duplicados usando ref
+    if (loadingRef.current) {
+      console.log('[Items] Já está carregando, ignorando chamada duplicada');
+      return;
+    }
+    
+    const loadItems = async () => {
+      try {
+        loadingRef.current = true;
+        setLoading(true);
+        
+        // Se há ordenação, carregar todos os registros (sem paginação)
+        // Senão, carregar apenas a página atual
+        const shouldLoadAll = !!sortColumn;
+        
+        let response;
+        if (shouldLoadAll) {
+          // Carregar todos os produtos sem paginação
+          // O PaginationDto tem @Max(100), então não podemos passar um limite muito alto
+          // Vamos fazer múltiplas requisições se necessário, ou usar o máximo permitido (100)
+          response = await itemsApi.getAll(1, 100);
+          
+          // Se a resposta for paginada e houver mais páginas, fazer requisições adicionais
+          if (!Array.isArray(response) && response.meta && response.meta.total > 100) {
+            const totalPages = Math.ceil(response.meta.total / 100);
+            const allItemsData = [...response.data];
+            
+            // Carregar páginas adicionais
+            for (let p = 2; p <= totalPages; p++) {
+              try {
+                const nextPage = await itemsApi.getAll(p, 100);
+                if (Array.isArray(nextPage)) {
+                  allItemsData.push(...nextPage);
+                } else if (nextPage && nextPage.data) {
+                  allItemsData.push(...nextPage.data);
+                }
+              } catch (pageError) {
+                console.warn(`[Items] Erro ao carregar página ${p}:`, pageError);
+                // Continuar mesmo se uma página falhar
+              }
+            }
+            
+            // Criar resposta unificada
+            response = {
+              data: allItemsData,
+              meta: {
+                total: response.meta.total,
+                page: 1,
+                limit: 100,
+                totalPages: totalPages
+              }
+            };
+          }
+        } else {
+          // Carregar apenas a página atual
+          response = await itemsApi.getAll(page, limit);
+        }
+        
+        // Verificar se a resposta é válida
+        if (!response) {
+          throw new Error('Resposta vazia da API');
+        }
+        
+        // Verificar se é resposta paginada ou array simples (compatibilidade)
+        let itemsData: Item[];
+        let totalCount: number;
+        let totalPagesCount: number;
+        
+        if (Array.isArray(response)) {
+          itemsData = response;
+          totalCount = response.length;
+          totalPagesCount = shouldLoadAll ? 1 : Math.ceil(response.length / limit);
+        } else if (response && typeof response === 'object' && 'data' in response && 'meta' in response) {
+          const paginatedResponse = response as PaginatedResponse<Item>;
+          itemsData = Array.isArray(paginatedResponse.data) ? paginatedResponse.data : [];
+          totalCount = paginatedResponse.meta?.total || itemsData.length;
+          // Quando shouldLoadAll é true, usamos o total real do backend, não totalPages da resposta
+          totalPagesCount = shouldLoadAll ? Math.ceil(totalCount / limit) : (paginatedResponse.meta?.totalPages || 1);
+        } else {
+          throw new Error('Formato de resposta inválido da API');
+        }
+        
+        // Garantir que itemsData é um array válido
+        if (!Array.isArray(itemsData)) {
+          console.warn('[Items] itemsData não é um array, convertendo...');
+          itemsData = [];
+        }
+        
+        if (shouldLoadAll) {
+          // Quando há ordenação, armazenar todos os produtos
+          setAllItems(itemsData);
+          setItems([]); // Limpar items da página atual
+          setTotal(totalCount);
+          // totalPages será calculado dinamicamente baseado nos dados filtrados/ordenados
+          setTotalPages(1); // Valor inicial, será recalculado pelo useMemo
+        } else {
+          // Sem ordenação, usar comportamento normal de paginação
+          setItems(itemsData);
+          setAllItems([]); // Limpar allItems
+          setTotal(totalCount);
+          setTotalPages(totalPagesCount);
+        }
+      } catch (error: any) {
+        console.error('Erro ao carregar itens:', error);
+        console.error('Detalhes do erro:', {
+          message: error?.message,
+          response: error?.response?.data,
+          status: error?.response?.status,
+          shouldLoadAll: !!sortColumn,
+          sortColumn
+        });
+        
+        const errorMessage = error?.response?.data?.message || error?.message || 'Erro desconhecido ao carregar produtos';
+        toast({
+          title: 'Erro',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+        
+        // Em caso de erro, limpar os dados para evitar estados inconsistentes
+        if (sortColumn) {
+          setAllItems([]);
+        } else {
+          setItems([]);
+        }
+        setFilteredItems([]);
+      } finally {
+        loadingRef.current = false;
+        setLoading(false);
+      }
+    };
+    
     loadItems();
-  }, [page]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, limit, sortColumn]);
 
   useEffect(() => {
-    const filtered = items.filter(item =>
+    // Se há ordenação, usar allItems, senão usar items (página atual)
+    const sourceData = sortColumn ? allItems : items;
+    const filtered = sourceData.filter(item =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredItems(filtered);
-  }, [items, searchTerm]);
+  }, [items, allItems, searchTerm, sortColumn]);
 
-  const loadItems = async () => {
-    try {
-      setLoading(true);
-      const response = await itemsApi.getAll(page, limit);
-      
-      // Verificar se é resposta paginada ou array simples (compatibilidade)
-      if (Array.isArray(response)) {
-        setItems(response);
-        setTotal(response.length);
-        setTotalPages(1);
-      } else {
-        const paginatedResponse = response as PaginatedResponse<Item>;
-        setItems(paginatedResponse.data);
-        setTotal(paginatedResponse.meta.total);
-        setTotalPages(paginatedResponse.meta.totalPages);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar itens:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao carregar produtos',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      // Se já está ordenando por esta coluna, inverte a direção
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Nova coluna, começa com ascendente
+      setSortColumn(column);
+      setSortDirection('asc');
+      setPage(1); // Voltar para primeira página ao mudar ordenação
     }
   };
+
+  const sortItems = (items: Item[], column: string, direction: 'asc' | 'desc'): Item[] => {
+    const sorted = [...items].sort((a, b) => {
+      let aValue: string | number | boolean;
+      let bValue: string | number | boolean;
+
+      switch (column) {
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case 'price':
+          aValue = parseFloat(a.price);
+          bValue = parseFloat(b.price);
+          break;
+        case 'status':
+          // Ativo primeiro quando ascendente
+          aValue = a.active ? 1 : 0;
+          bValue = b.active ? 1 : 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return sorted;
+  };
+
+  const sortedAndFilteredItems = useMemo(() => {
+    let result = filteredItems;
+    if (sortColumn) {
+      result = sortItems(result, sortColumn, sortDirection);
+    }
+    return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredItems, sortColumn, sortDirection]);
+
+  // Aplicar paginação após ordenação quando houver ordenação ativa
+  const paginatedItems = useMemo(() => {
+    if (!sortColumn) {
+      // Sem ordenação, usar dados da página atual
+      return sortedAndFilteredItems;
+    }
+    // Com ordenação, aplicar paginação manualmente
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    return sortedAndFilteredItems.slice(startIndex, endIndex);
+  }, [sortedAndFilteredItems, page, limit, sortColumn]);
+
+  // Recalcular totalPages quando há ordenação baseado nos dados filtrados e ordenados
+  const effectiveTotalPages = useMemo(() => {
+    if (sortColumn) {
+      // Com ordenação, calcular baseado nos dados filtrados e ordenados
+      return Math.ceil(sortedAndFilteredItems.length / limit) || 1;
+    }
+    // Sem ordenação, usar totalPages do backend
+    return totalPages;
+  }, [sortColumn, sortedAndFilteredItems.length, limit, totalPages]);
+
+  // Resetar página se ela for maior que o total de páginas efetivas
+  useEffect(() => {
+    if (sortColumn && page > effectiveTotalPages && effectiveTotalPages > 0) {
+      setPage(1);
+    }
+  }, [sortColumn, page, effectiveTotalPages]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -238,21 +431,24 @@ const Items = () => {
         />
         {searchTerm && (
           <p className="text-sm text-gray-600 mt-2">
-            {filteredItems.length} produto(s) encontrado(s) nesta página
+            {sortedAndFilteredItems.length} produto(s) encontrado(s){sortColumn ? ` (${paginatedItems.length} nesta página)` : ' nesta página'}
           </p>
         )}
         {!searchTerm && total > 0 && (
           <p className="text-sm text-gray-600 mt-2">
-            Mostrando {items.length} de {total} produto(s) - Página {page} de {totalPages}
+            {sortColumn 
+              ? `Mostrando ${paginatedItems.length} de ${sortedAndFilteredItems.length} produto(s) - Página ${page} de ${effectiveTotalPages}`
+              : `Mostrando ${items.length} de ${total} produto(s) - Página ${page} de ${totalPages}`
+            }
           </p>
         )}
       </div>
 
       {/* Lista de itens */}
       <div className="card">
-        {items.length === 0 ? (
+        {((sortColumn ? allItems.length === 0 : items.length === 0)) ? (
           <p className="text-gray-500 text-center py-8">Nenhum produto cadastrado</p>
-        ) : filteredItems.length === 0 ? (
+        ) : paginatedItems.length === 0 ? (
           <p className="text-gray-500 text-center py-8">
             Nenhum produto encontrado com "{searchTerm}"
           </p>
@@ -261,14 +457,56 @@ const Items = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nome
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                    onClick={() => handleSort('name')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Nome</span>
+                      {sortColumn === 'name' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowUpIcon className="h-4 w-4" />
+                        ) : (
+                          <ArrowDownIcon className="h-4 w-4" />
+                        )
+                      ) : (
+                        <ArrowsUpDownIcon className="h-4 w-4 text-gray-400" />
+                      )}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Preço
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                    onClick={() => handleSort('price')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Preço</span>
+                      {sortColumn === 'price' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowUpIcon className="h-4 w-4" />
+                        ) : (
+                          <ArrowDownIcon className="h-4 w-4" />
+                        )
+                      ) : (
+                        <ArrowsUpDownIcon className="h-4 w-4 text-gray-400" />
+                      )}
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                    onClick={() => handleSort('status')}
+                  >
+                    <div className="flex items-center space-x-1">
+                      <span>Status</span>
+                      {sortColumn === 'status' ? (
+                        sortDirection === 'asc' ? (
+                          <ArrowUpIcon className="h-4 w-4" />
+                        ) : (
+                          <ArrowDownIcon className="h-4 w-4" />
+                        )
+                      ) : (
+                        <ArrowsUpDownIcon className="h-4 w-4 text-gray-400" />
+                      )}
+                    </div>
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ações
@@ -276,7 +514,7 @@ const Items = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredItems.map((item) => (
+                {paginatedItems.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
@@ -333,10 +571,10 @@ const Items = () => {
       </div>
 
       {/* Controles de paginação */}
-      {totalPages > 1 && (
+      {((sortColumn && effectiveTotalPages > 1) || (!sortColumn && totalPages > 1)) && (
         <div className="mt-6 flex items-center justify-between">
           <div className="text-sm text-gray-700">
-            Página {page} de {totalPages}
+            Página {page} de {sortColumn ? effectiveTotalPages : totalPages}
           </div>
           <div className="flex space-x-2">
             <button
@@ -348,8 +586,8 @@ const Items = () => {
               Anterior
             </button>
             <button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
+              onClick={() => setPage(p => Math.min(sortColumn ? effectiveTotalPages : totalPages, p + 1))}
+              disabled={page === (sortColumn ? effectiveTotalPages : totalPages)}
               className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
             >
               Próxima
