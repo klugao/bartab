@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { customersApi } from '../services/api';
-import type { Customer, CreateCustomerDto, Tab } from '../types';
+import type { Customer, CreateCustomerDto, Tab, PaginatedResponse } from '../types';
 import { useToast } from '../hooks/use-toast';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
 
@@ -15,6 +15,10 @@ const Customers = () => {
   const [filteredCustomers, setFilteredCustomers] = useState<CustomerWithTabs[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -27,7 +31,7 @@ const Customers = () => {
 
   useEffect(() => {
     loadCustomers();
-  }, []);
+  }, [page]);
 
   useEffect(() => {
     const filtered = customers.filter(customer =>
@@ -90,8 +94,21 @@ const Customers = () => {
   const loadCustomers = async () => {
     try {
       setLoading(true);
-      // Buscar todos os clientes
-      const allCustomers = await customersApi.getAll();
+      // Buscar clientes com paginação
+      const response = await customersApi.getAll(page, limit);
+      
+      // Verificar se é resposta paginada ou array simples (compatibilidade)
+      let allCustomers: Customer[];
+      if (Array.isArray(response)) {
+        allCustomers = response;
+        setTotal(response.length);
+        setTotalPages(1);
+      } else {
+        const paginatedResponse = response as PaginatedResponse<Customer>;
+        allCustomers = paginatedResponse.data;
+        setTotal(paginatedResponse.meta.total);
+        setTotalPages(paginatedResponse.meta.totalPages);
+      }
       
       // Buscar clientes com dívidas (que incluem as tabs)
       const customersWithDebts = await customersApi.getCustomersWithDebts() as CustomerWithTabs[];
@@ -117,6 +134,11 @@ const Customers = () => {
       setCustomers(mergedCustomers);
     } catch (error) {
       console.error('Erro ao carregar clientes:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao carregar clientes',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -149,6 +171,7 @@ const Customers = () => {
       setShowForm(false);
       setEditingCustomer(null);
       resetForm();
+      setPage(1); // Voltar para primeira página após criar/editar
       loadCustomers();
     } catch (error: any) {
       console.error('Erro ao salvar cliente:', error);
@@ -187,7 +210,12 @@ const Customers = () => {
         title: 'Sucesso!',
         description: 'Cliente excluído com sucesso!',
       });
-      loadCustomers();
+      // Se a página atual ficar vazia após deletar, voltar para página anterior
+      if (customers.length === 1 && page > 1) {
+        setPage(page - 1);
+      } else {
+        loadCustomers();
+      }
     } catch (error) {
       console.error('Erro ao excluir cliente:', error);
       toast({
@@ -243,7 +271,12 @@ const Customers = () => {
         />
         {searchTerm && (
           <p className="text-sm text-gray-600 mt-2">
-            {filteredCustomers.length} cliente(s) encontrado(s) de {customers.length} total
+            {filteredCustomers.length} cliente(s) encontrado(s) nesta página
+          </p>
+        )}
+        {!searchTerm && total > 0 && (
+          <p className="text-sm text-gray-600 mt-2">
+            Mostrando {customers.length} de {total} cliente(s) - Página {page} de {totalPages}
           </p>
         )}
       </div>
@@ -348,6 +381,33 @@ const Customers = () => {
           </div>
         )}
       </div>
+
+      {/* Controles de paginação */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between">
+          <div className="text-sm text-gray-700">
+            Página {page} de {totalPages}
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+            >
+              <ChevronLeftIcon className="h-4 w-4 mr-1" />
+              Anterior
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+            >
+              Próxima
+              <ChevronRightIcon className="h-4 w-4 ml-1" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal do formulário */}
       {showForm && (

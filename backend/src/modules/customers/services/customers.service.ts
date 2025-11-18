@@ -6,6 +6,7 @@ import { CreateCustomerDto } from '../dto/create-customer.dto';
 import { UpdateCustomerDto } from '../dto/update-customer.dto';
 import { TabStatus } from '../../tabs/entities/tab.entity';
 import { Payment, PaymentMethod } from '../../payments/entities/payment.entity';
+import { PaginatedResponse } from '../../../common/interfaces/paginated-response.interface';
 
 @Injectable()
 export class CustomersService {
@@ -33,14 +34,43 @@ export class CustomersService {
     }
   }
 
-  async findAll(establishmentId: string): Promise<any[]> {
-    const customers = await this.customersRepository.find({
+  async findAll(establishmentId: string, page?: number, limit?: number): Promise<any[] | PaginatedResponse<any>> {
+    const pageNumber = page || 1;
+    const pageSize = limit || 10;
+    const skip = (pageNumber - 1) * pageSize;
+
+    // Se não há parâmetros de paginação, retorna todos (compatibilidade)
+    if (!page && !limit) {
+      const customers = await this.customersRepository.find({
+        where: { establishment_id: establishmentId },
+        order: { name: 'ASC' }
+      });
+      
+      // Adicionar campo calculado days_in_negative_balance
+      return customers.map(customer => this.addDaysInNegativeBalance(customer));
+    }
+
+    // Com paginação
+    const [customers, total] = await this.customersRepository.findAndCount({
       where: { establishment_id: establishmentId },
-      order: { name: 'ASC' }
+      order: { name: 'ASC' },
+      skip,
+      take: pageSize,
     });
-    
+
     // Adicionar campo calculado days_in_negative_balance
-    return customers.map(customer => this.addDaysInNegativeBalance(customer));
+    const data = customers.map(customer => this.addDaysInNegativeBalance(customer));
+    const totalPages = Math.ceil(total / pageSize);
+
+    return {
+      data,
+      meta: {
+        total,
+        page: pageNumber,
+        limit: pageSize,
+        totalPages,
+      },
+    };
   }
 
   private addDaysInNegativeBalance(customer: Customer): any {

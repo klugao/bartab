@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query } from '@nestjs/common';
 import { CustomersService } from '../services/customers.service';
 import { CreateCustomerDto } from '../dto/create-customer.dto';
 import { UpdateCustomerDto } from '../dto/update-customer.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
+import { PaginationDto } from '../../../common/dto/pagination.dto';
 
 @Controller('customers')
 @UseGuards(JwtAuthGuard)
@@ -26,12 +27,13 @@ export class CustomersController {
   }
 
   @Get()
-  async findAll(@Req() req: any) {
+  async findAll(@Query() paginationDto: PaginationDto, @Req() req: any) {
     try {
-      const customers = await this.customersService.findAll(req.user.establishmentId);
+      const result = await this.customersService.findAll(req.user.establishmentId, paginationDto.page, paginationDto.limit);
       // Log sem dados pessoais (LGPD)
-      console.log('Clientes listados', { count: customers.length, establishmentId: req.user.establishmentId.substring(0, 8) });
-      return customers;
+      const count = Array.isArray(result) ? result.length : result.meta.total;
+      console.log('Clientes listados', { count, establishmentId: req.user.establishmentId.substring(0, 8) });
+      return result;
     } catch (error) {
       console.error('Erro ao buscar customers:', error.message);
       return { error: error.message };

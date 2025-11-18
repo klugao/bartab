@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { customersApi } from '../services/api';
-import type { Customer } from '../types';
+import type { Customer, PaginatedResponse } from '../types';
 import CreateCustomerModal from './CreateCustomerModal';
 
 interface NewTabModalProps {
@@ -26,10 +26,13 @@ const NewTabModal = ({ isOpen, onClose, onConfirm }: NewTabModalProps) => {
 
   const loadCustomers = async () => {
     try {
-      const allCustomers = await customersApi.getAll();
-      setCustomers(allCustomers);
+      const result = await customersApi.getAll();
+      // Normalizar a resposta: pode ser um array ou um objeto PaginatedResponse
+      const customersArray = Array.isArray(result) ? result : (result as PaginatedResponse<Customer>).data;
+      setCustomers(customersArray || []);
     } catch (error) {
       console.error('Erro ao carregar clientes:', error);
+      setCustomers([]); // Garantir que sempre seja um array
     }
   };
 

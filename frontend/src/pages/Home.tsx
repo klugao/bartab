@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, AlertTriangle } from 'lucide-react';
 import { tabsApi, customersApi } from '../services/api';
-import type { Tab, Customer } from '../types';
+import type { Tab, Customer, PaginatedResponse } from '../types';
 import CardTab from '../components/CardTab';
 import NewTabModal from '../components/NewTabModal';
 import ErrorBoundary from '../components/ErrorBoundary';
@@ -92,10 +92,13 @@ const Home = () => {
 
   const loadCustomers = async () => {
     try {
-      const data = await customersApi.getAll();
-      setCustomers(data);
+      const result = await customersApi.getAll();
+      // Normalizar a resposta: pode ser um array ou um objeto PaginatedResponse
+      const customersArray = Array.isArray(result) ? result : (result as PaginatedResponse<Customer>).data;
+      setCustomers(customersArray || []);
     } catch (error) {
       console.error('Erro ao carregar clientes:', error);
+      setCustomers([]); // Garantir que sempre seja um array
       toast({
         variant: "destructive",
         title: "Erro",

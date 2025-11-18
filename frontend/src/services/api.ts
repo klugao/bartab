@@ -12,7 +12,8 @@ import type {
   AddItemDto,
   AddPaymentDto,
   Establishment,
-  UpdateEstablishmentDto
+  UpdateEstablishmentDto,
+  PaginatedResponse
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
@@ -51,7 +52,13 @@ api.interceptors.response.use(
 
 // Customers API
 export const customersApi = {
-  getAll: () => api.get<Customer[]>('/customers').then(res => res.data),
+  getAll: (page?: number, limit?: number) => {
+    const params = new URLSearchParams();
+    if (page) params.append('page', page.toString());
+    if (limit) params.append('limit', limit.toString());
+    const queryString = params.toString();
+    return api.get<Customer[] | PaginatedResponse<Customer>>(`/customers${queryString ? `?${queryString}` : ''}`).then(res => res.data);
+  },
   getById: (id: string) => api.get<Customer>(`/customers/${id}`).then(res => res.data),
   create: (data: CreateCustomerDto) => api.post<Customer>('/customers', data).then(res => res.data),
   update: (id: string, data: Partial<CreateCustomerDto>) => api.patch<Customer>(`/customers/${id}`, data).then(res => res.data),
@@ -65,7 +72,13 @@ export const customersApi = {
 
 // Items API
 export const itemsApi = {
-  getAll: () => api.get<Item[]>('/items').then(res => res.data),
+  getAll: (page?: number, limit?: number) => {
+    const params = new URLSearchParams();
+    if (page) params.append('page', page.toString());
+    if (limit) params.append('limit', limit.toString());
+    const queryString = params.toString();
+    return api.get<Item[] | PaginatedResponse<Item>>(`/items${queryString ? `?${queryString}` : ''}`).then(res => res.data);
+  },
   getActive: () => api.get<Item[]>('/items/active').then(res => res.data),
   getActiveBestSellers: () => api.get<Item[]>('/items/active/best-sellers').then(res => res.data),
   getById: (id: string) => api.get<Item>(`/items/${id}`).then(res => res.data),

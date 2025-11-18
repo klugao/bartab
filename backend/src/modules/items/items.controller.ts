@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query } from '@nestjs/common';
 import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 
 @Controller('items')
 @UseGuards(JwtAuthGuard)
@@ -15,8 +16,8 @@ export class ItemsController {
   }
 
   @Get()
-  findAll(@Req() req: any) {
-    return this.itemsService.findAll(req.user.establishmentId);
+  findAll(@Query() paginationDto: PaginationDto, @Req() req: any) {
+    return this.itemsService.findAll(req.user.establishmentId, paginationDto.page, paginationDto.limit);
   }
 
   @Get('active')

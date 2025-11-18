@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Item } from './entities/item.entity';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
+import { PaginatedResponse } from '../../common/interfaces/paginated-response.interface';
 
 @Injectable()
 export class ItemsService {
@@ -21,11 +22,38 @@ export class ItemsService {
     return await this.itemsRepository.save(item);
   }
 
-  async findAll(establishmentId: string): Promise<Item[]> {
-    return await this.itemsRepository.find({
+  async findAll(establishmentId: string, page?: number, limit?: number): Promise<Item[] | PaginatedResponse<Item>> {
+    const pageNumber = page || 1;
+    const pageSize = limit || 10;
+    const skip = (pageNumber - 1) * pageSize;
+
+    // Se não há parâmetros de paginação, retorna todos (compatibilidade)
+    if (!page && !limit) {
+      return await this.itemsRepository.find({
+        where: { establishment_id: establishmentId },
+        order: { name: 'ASC' }
+      });
+    }
+
+    // Com paginação
+    const [data, total] = await this.itemsRepository.findAndCount({
       where: { establishment_id: establishmentId },
-      order: { name: 'ASC' }
+      order: { name: 'ASC' },
+      skip,
+      take: pageSize,
     });
+
+    const totalPages = Math.ceil(total / pageSize);
+
+    return {
+      data,
+      meta: {
+        total,
+        page: pageNumber,
+        limit: pageSize,
+        totalPages,
+      },
+    };
   }
 
   async findActive(establishmentId: string): Promise<Item[]> {

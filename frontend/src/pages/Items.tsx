@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { PlusIcon, PencilIcon, TrashIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, TrashIcon, EyeSlashIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { itemsApi } from '../services/api';
-import type { Item, CreateItemDto } from '../types';
+import type { Item, CreateItemDto, PaginatedResponse } from '../types';
 import { useToast } from '../hooks/use-toast';
 import { useCurrencyInput } from '../hooks/use-currency-input';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal';
@@ -12,6 +12,10 @@ const Items = () => {
   const [filteredItems, setFilteredItems] = useState<Item[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -27,7 +31,7 @@ const Items = () => {
 
   useEffect(() => {
     loadItems();
-  }, []);
+  }, [page]);
 
   useEffect(() => {
     const filtered = items.filter(item =>
@@ -39,10 +43,26 @@ const Items = () => {
   const loadItems = async () => {
     try {
       setLoading(true);
-      const allItems = await itemsApi.getAll();
-      setItems(allItems);
+      const response = await itemsApi.getAll(page, limit);
+      
+      // Verificar se é resposta paginada ou array simples (compatibilidade)
+      if (Array.isArray(response)) {
+        setItems(response);
+        setTotal(response.length);
+        setTotalPages(1);
+      } else {
+        const paginatedResponse = response as PaginatedResponse<Item>;
+        setItems(paginatedResponse.data);
+        setTotal(paginatedResponse.meta.total);
+        setTotalPages(paginatedResponse.meta.totalPages);
+      }
     } catch (error) {
       console.error('Erro ao carregar itens:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao carregar produtos',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -87,6 +107,7 @@ const Items = () => {
       setShowForm(false);
       setEditingItem(null);
       resetForm();
+      setPage(1); // Voltar para primeira página após criar/editar
       loadItems();
     } catch (error: any) {
       console.error('Erro ao salvar item:', error);
@@ -125,7 +146,12 @@ const Items = () => {
         title: 'Sucesso!',
         description: 'Produto excluído com sucesso!',
       });
-      loadItems();
+      // Se a página atual ficar vazia após deletar, voltar para página anterior
+      if (items.length === 1 && page > 1) {
+        setPage(page - 1);
+      } else {
+        loadItems();
+      }
     } catch (error: any) {
       console.error('Erro ao excluir item:', error);
       const errorMessage = error.response?.data?.message || 'Erro ao excluir produto';
@@ -212,7 +238,12 @@ const Items = () => {
         />
         {searchTerm && (
           <p className="text-sm text-gray-600 mt-2">
-            {filteredItems.length} produto(s) encontrado(s) de {items.length} total
+            {filteredItems.length} produto(s) encontrado(s) nesta página
+          </p>
+        )}
+        {!searchTerm && total > 0 && (
+          <p className="text-sm text-gray-600 mt-2">
+            Mostrando {items.length} de {total} produto(s) - Página {page} de {totalPages}
           </p>
         )}
       </div>
@@ -300,6 +331,33 @@ const Items = () => {
           </div>
         )}
       </div>
+
+      {/* Controles de paginação */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-between">
+          <div className="text-sm text-gray-700">
+            Página {page} de {totalPages}
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+            >
+              <ChevronLeftIcon className="h-4 w-4 mr-1" />
+              Anterior
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+            >
+              Próxima
+              <ChevronRightIcon className="h-4 w-4 ml-1" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal do formulário */}
       {showForm && (

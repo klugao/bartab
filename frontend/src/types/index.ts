@@ -107,3 +107,13 @@ export interface UpdateEstablishmentDto {
   email?: string;
   pix_qr_code?: string;
 }
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
