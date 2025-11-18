@@ -201,6 +201,16 @@ export class AuthController {
     return { authenticated: true };
   }
 
+  @Post('refresh')
+  @UseGuards(JwtAuthGuard)
+  async refreshToken(@Req() req: any) {
+    // O JwtAuthGuard já validou o token e carregou o usuário
+    // Se chegou aqui, o token ainda é válido (mas pode estar próximo de expirar)
+    const user = await this.authService.getUserById(req.user.userId);
+    const refreshData = await this.authService.refreshToken(user);
+    return refreshData;
+  }
+
   // Endpoint temporário para login direto (apenas desenvolvimento/testes)
   @Post('dev-login')
   async devLogin(@Body() body: { email: string }) {

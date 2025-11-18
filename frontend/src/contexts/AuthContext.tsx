@@ -1,6 +1,7 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../lib/config';
+import { isTokenExpiringSoon, isTokenExpired } from '../lib/token-utils';
 
 interface User {
   id: string;
@@ -40,18 +41,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // SECURITY: localStorage é usado para persistir a sessão do usuário
-    // Verificar se há um token salvo ao carregar a aplicação
-    const savedToken = localStorage.getItem('token');
-    if (savedToken) {
-      login(savedToken);
-    } else {
-      setIsLoading(false);
+  const logout = useCallback(() => {
+    setUser(null);
+    setToken(null);
+    setOriginalUser(null);
+    setOriginalToken(null);
+    // SECURITY: Remove token do localStorage ao fazer logout
+    localStorage.removeItem('token');
+    navigate('/login');
+  }, [navigate]);
+
+  const refreshToken = useCallback(async (currentToken: string): Promise<string | null> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${currentToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const newToken = data.access_token;
+        setToken(newToken);
+        localStorage.setItem('token', newToken);
+        console.log('✅ Token renovado automaticamente');
+        return newToken;
+      } else {
+        console.warn('Falha ao renovar token:', response.status);
+        return null;
+      }
+    } catch (error) {
+      console.error('Erro ao renovar token:', error);
+      return null;
     }
   }, []);
 
-  const login = async (newToken: string) => {
+  const login = useCallback(async (newToken: string) => {
     try {
       setToken(newToken);
       // SECURITY: Armazena token no localStorage para persistência de sessão
@@ -67,28 +94,86 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
+      } else if (response.status === 401) {
+        // Token inválido ou expirado - tenta renovar primeiro
+        console.warn('Token inválido ou expirado, tentando renovar...');
+        const refreshedToken = await refreshToken(newToken);
+        if (refreshedToken) {
+          // Se conseguiu renovar, tenta buscar dados do usuário novamente
+          const retryResponse = await fetch(`${API_BASE_URL}/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${refreshedToken}`,
+            },
+          });
+          if (retryResponse.ok) {
+            const userData = await retryResponse.json();
+            setUser(userData);
+            return;
+          }
+        }
+        // Se não conseguiu renovar, faz logout
+        localStorage.removeItem('token');
+        logout();
       } else {
         throw new Error('Falha ao buscar dados do usuário');
       }
     } catch (error) {
       console.error('Erro ao fazer login:', error);
+      // Só faz logout se não for um erro de rede temporário
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        // Erro de rede - mantém o token mas não define o usuário
+        console.warn('Erro de rede ao validar token, mantendo token salvo');
+        setIsLoading(false);
+        return;
+      }
       logout();
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [logout, refreshToken]);
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    setOriginalUser(null);
-    setOriginalToken(null);
-    // SECURITY: Remove token do localStorage ao fazer logout
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
+  // Intervalo para verificar e renovar token automaticamente
+  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const impersonate = async (establishmentId: string) => {
+  useEffect(() => {
+    // SECURITY: localStorage é usado para persistir a sessão do usuário
+    // Verificar se há um token salvo ao carregar a aplicação
+    const savedToken = localStorage.getItem('token');
+    if (savedToken) {
+      login(savedToken);
+    } else {
+      setIsLoading(false);
+    }
+
+    // Configurar intervalo para verificar e renovar token automaticamente
+    // Verifica a cada 30 minutos se o token está próximo de expirar
+    refreshIntervalRef.current = setInterval(() => {
+      const currentToken = localStorage.getItem('token');
+      if (currentToken && token) {
+        // Se o token está próximo de expirar (menos de 1 hora), renova
+        if (isTokenExpiringSoon(currentToken, 60)) {
+          console.log('🔄 Token próximo de expirar, renovando automaticamente...');
+          refreshToken(currentToken).then((newToken) => {
+            if (!newToken) {
+              // Se não conseguiu renovar e o token está expirado, faz logout
+              if (isTokenExpired(currentToken)) {
+                console.warn('Token expirado e não foi possível renovar, fazendo logout');
+                logout();
+              }
+            }
+          });
+        }
+      }
+    }, 30 * 60 * 1000); // 30 minutos
+
+    return () => {
+      if (refreshIntervalRef.current) {
+        clearInterval(refreshIntervalRef.current);
+      }
+    };
+  }, [login, refreshToken, logout, token]);
+
+  const impersonate = useCallback(async (establishmentId: string) => {
     try {
       // Salva o usuário e token original antes de impersonar
       if (!originalUser && user) {
@@ -137,9 +222,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Erro ao impersonar estabelecimento:', error);
       throw error;
     }
-  };
+  }, [user, token, originalUser, originalToken, navigate]);
 
-  const stopImpersonating = async () => {
+  const stopImpersonating = useCallback(async () => {
     try {
       // Se houver token original, restaura
       if (originalToken && originalUser) {
@@ -171,7 +256,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Erro ao parar impersonation:', error);
       logout();
     }
-  };
+  }, [originalToken, originalUser, logout, navigate]);
 
   return (
     <AuthContext.Provider value={{ user, token, originalUser, originalToken, login, logout, impersonate, stopImpersonating, isLoading }}>

@@ -140,6 +140,20 @@ export class AuthService {
     };
   }
 
+  async refreshToken(user: User) {
+    // Mesma lógica do login, mas retorna apenas o token
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      establishmentId: user.establishment_id,
+      role: user.role,
+    };
+
+    return {
+      access_token: this.jwtService.sign(payload),
+    };
+  }
+
   async getUserById(userId: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id: userId },

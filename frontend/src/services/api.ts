@@ -38,14 +38,97 @@ api.interceptors.request.use((config) => {
 });
 
 // Interceptor para tratamento de erros de autenticação
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: any) => void;
+  reject: (error?: any) => void;
+}> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // SECURITY: Remove token ao receber 401 (não autorizado)
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+  async (error) => {
+    const originalRequest = error.config;
+
+    // Se receber 401 e não for uma tentativa de refresh
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/auth/refresh')) {
+      if (isRefreshing) {
+        // Se já está renovando, adiciona à fila
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return api(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      const currentToken = localStorage.getItem('token');
+
+      if (currentToken) {
+        try {
+          // Tenta renovar o token
+          const refreshResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'}/auth/refresh`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${currentToken}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (refreshResponse.ok) {
+            const data = await refreshResponse.json();
+            const newToken = data.access_token;
+            localStorage.setItem('token', newToken);
+            
+            // Processa a fila de requisições pendentes
+            processQueue(null, newToken);
+            isRefreshing = false;
+
+            // Retenta a requisição original com o novo token
+            originalRequest.headers.Authorization = `Bearer ${newToken}`;
+            return api(originalRequest);
+          } else {
+            // Não conseguiu renovar, faz logout
+            processQueue(new Error('Token refresh failed'), null);
+            isRefreshing = false;
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+            return Promise.reject(error);
+          }
+        } catch (refreshError) {
+          // Erro ao tentar renovar
+          processQueue(refreshError, null);
+          isRefreshing = false;
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+          return Promise.reject(error);
+        }
+      } else {
+        // Não há token, faz logout
+        isRefreshing = false;
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+        return Promise.reject(error);
+      }
     }
+
     return Promise.reject(error);
   }
 );
