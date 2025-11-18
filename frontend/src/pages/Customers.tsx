@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, ChevronLeftIcon, ChevronRightIcon, ArrowUpIcon, ArrowDownIcon, ArrowsUpDownIcon } from '@heroicons/react/24/outline';
 import { customersApi } from '../services/api';
 import type { Customer, CreateCustomerDto, Tab, PaginatedResponse } from '../types';
@@ -411,12 +411,12 @@ const Customers = () => {
       return;
     }
     
+    // Se há ordenação, carregar todos os registros (sem paginação)
+    // Senão, carregar apenas a página atual
+    const shouldLoadAll = !!sortColumn;
+    
     try {
       setLoading(true);
-      
-      // Se há ordenação, carregar todos os registros (sem paginação)
-      // Senão, carregar apenas a página atual
-      const shouldLoadAll = !!sortColumn;
       
       let response;
       if (shouldLoadAll) {

@@ -33,139 +33,139 @@ const Items = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const loadingRef = useRef(false);
 
-  useEffect(() => {
+  const loadItems = async () => {
     // Evitar carregamentos duplicados usando ref
     if (loadingRef.current) {
       console.log('[Items] Já está carregando, ignorando chamada duplicada');
       return;
     }
     
-    const loadItems = async () => {
-      try {
-        loadingRef.current = true;
-        setLoading(true);
+    try {
+      loadingRef.current = true;
+      setLoading(true);
+      
+      // Se há ordenação, carregar todos os registros (sem paginação)
+      // Senão, carregar apenas a página atual
+      const shouldLoadAll = !!sortColumn;
+      
+      let response;
+      if (shouldLoadAll) {
+        // Carregar todos os produtos sem paginação
+        // O PaginationDto tem @Max(100), então não podemos passar um limite muito alto
+        // Vamos fazer múltiplas requisições se necessário, ou usar o máximo permitido (100)
+        response = await itemsApi.getAll(1, 100);
         
-        // Se há ordenação, carregar todos os registros (sem paginação)
-        // Senão, carregar apenas a página atual
-        const shouldLoadAll = !!sortColumn;
-        
-        let response;
-        if (shouldLoadAll) {
-          // Carregar todos os produtos sem paginação
-          // O PaginationDto tem @Max(100), então não podemos passar um limite muito alto
-          // Vamos fazer múltiplas requisições se necessário, ou usar o máximo permitido (100)
-          response = await itemsApi.getAll(1, 100);
+        // Se a resposta for paginada e houver mais páginas, fazer requisições adicionais
+        if (!Array.isArray(response) && response.meta && response.meta.total > 100) {
+          const totalPages = Math.ceil(response.meta.total / 100);
+          const allItemsData = [...response.data];
           
-          // Se a resposta for paginada e houver mais páginas, fazer requisições adicionais
-          if (!Array.isArray(response) && response.meta && response.meta.total > 100) {
-            const totalPages = Math.ceil(response.meta.total / 100);
-            const allItemsData = [...response.data];
-            
-            // Carregar páginas adicionais
-            for (let p = 2; p <= totalPages; p++) {
-              try {
-                const nextPage = await itemsApi.getAll(p, 100);
-                if (Array.isArray(nextPage)) {
-                  allItemsData.push(...nextPage);
-                } else if (nextPage && nextPage.data) {
-                  allItemsData.push(...nextPage.data);
-                }
-              } catch (pageError) {
-                console.warn(`[Items] Erro ao carregar página ${p}:`, pageError);
-                // Continuar mesmo se uma página falhar
+          // Carregar páginas adicionais
+          for (let p = 2; p <= totalPages; p++) {
+            try {
+              const nextPage = await itemsApi.getAll(p, 100);
+              if (Array.isArray(nextPage)) {
+                allItemsData.push(...nextPage);
+              } else if (nextPage && nextPage.data) {
+                allItemsData.push(...nextPage.data);
               }
+            } catch (pageError) {
+              console.warn(`[Items] Erro ao carregar página ${p}:`, pageError);
+              // Continuar mesmo se uma página falhar
             }
-            
-            // Criar resposta unificada
-            response = {
-              data: allItemsData,
-              meta: {
-                total: response.meta.total,
-                page: 1,
-                limit: 100,
-                totalPages: totalPages
-              }
-            };
           }
-        } else {
-          // Carregar apenas a página atual
-          response = await itemsApi.getAll(page, limit);
+          
+          // Criar resposta unificada
+          response = {
+            data: allItemsData,
+            meta: {
+              total: response.meta.total,
+              page: 1,
+              limit: 100,
+              totalPages: totalPages
+            }
+          };
         }
-        
-        // Verificar se a resposta é válida
-        if (!response) {
-          throw new Error('Resposta vazia da API');
-        }
-        
-        // Verificar se é resposta paginada ou array simples (compatibilidade)
-        let itemsData: Item[];
-        let totalCount: number;
-        let totalPagesCount: number;
-        
-        if (Array.isArray(response)) {
-          itemsData = response;
-          totalCount = response.length;
-          totalPagesCount = shouldLoadAll ? 1 : Math.ceil(response.length / limit);
-        } else if (response && typeof response === 'object' && 'data' in response && 'meta' in response) {
-          const paginatedResponse = response as PaginatedResponse<Item>;
-          itemsData = Array.isArray(paginatedResponse.data) ? paginatedResponse.data : [];
-          totalCount = paginatedResponse.meta?.total || itemsData.length;
-          // Quando shouldLoadAll é true, usamos o total real do backend, não totalPages da resposta
-          totalPagesCount = shouldLoadAll ? Math.ceil(totalCount / limit) : (paginatedResponse.meta?.totalPages || 1);
-        } else {
-          throw new Error('Formato de resposta inválido da API');
-        }
-        
-        // Garantir que itemsData é um array válido
-        if (!Array.isArray(itemsData)) {
-          console.warn('[Items] itemsData não é um array, convertendo...');
-          itemsData = [];
-        }
-        
-        if (shouldLoadAll) {
-          // Quando há ordenação, armazenar todos os produtos
-          setAllItems(itemsData);
-          setItems([]); // Limpar items da página atual
-          setTotal(totalCount);
-          // totalPages será calculado dinamicamente baseado nos dados filtrados/ordenados
-          setTotalPages(1); // Valor inicial, será recalculado pelo useMemo
-        } else {
-          // Sem ordenação, usar comportamento normal de paginação
-          setItems(itemsData);
-          setAllItems([]); // Limpar allItems
-          setTotal(totalCount);
-          setTotalPages(totalPagesCount);
-        }
-      } catch (error: any) {
-        console.error('Erro ao carregar itens:', error);
-        console.error('Detalhes do erro:', {
-          message: error?.message,
-          response: error?.response?.data,
-          status: error?.response?.status,
-          shouldLoadAll: !!sortColumn,
-          sortColumn
-        });
-        
-        const errorMessage = error?.response?.data?.message || error?.message || 'Erro desconhecido ao carregar produtos';
-        toast({
-          title: 'Erro',
-          description: errorMessage,
-          variant: 'destructive',
-        });
-        
-        // Em caso de erro, limpar os dados para evitar estados inconsistentes
-        if (sortColumn) {
-          setAllItems([]);
-        } else {
-          setItems([]);
-        }
-        setFilteredItems([]);
-      } finally {
-        loadingRef.current = false;
-        setLoading(false);
+      } else {
+        // Carregar apenas a página atual
+        response = await itemsApi.getAll(page, limit);
       }
-    };
-    
+      
+      // Verificar se a resposta é válida
+      if (!response) {
+        throw new Error('Resposta vazia da API');
+      }
+      
+      // Verificar se é resposta paginada ou array simples (compatibilidade)
+      let itemsData: Item[];
+      let totalCount: number;
+      let totalPagesCount: number;
+      
+      if (Array.isArray(response)) {
+        itemsData = response;
+        totalCount = response.length;
+        totalPagesCount = shouldLoadAll ? 1 : Math.ceil(response.length / limit);
+      } else if (response && typeof response === 'object' && 'data' in response && 'meta' in response) {
+        const paginatedResponse = response as PaginatedResponse<Item>;
+        itemsData = Array.isArray(paginatedResponse.data) ? paginatedResponse.data : [];
+        totalCount = paginatedResponse.meta?.total || itemsData.length;
+        // Quando shouldLoadAll é true, usamos o total real do backend, não totalPages da resposta
+        totalPagesCount = shouldLoadAll ? Math.ceil(totalCount / limit) : (paginatedResponse.meta?.totalPages || 1);
+      } else {
+        throw new Error('Formato de resposta inválido da API');
+      }
+      
+      // Garantir que itemsData é um array válido
+      if (!Array.isArray(itemsData)) {
+        console.warn('[Items] itemsData não é um array, convertendo...');
+        itemsData = [];
+      }
+      
+      if (shouldLoadAll) {
+        // Quando há ordenação, armazenar todos os produtos
+        setAllItems(itemsData);
+        setItems([]); // Limpar items da página atual
+        setTotal(totalCount);
+        // totalPages será calculado dinamicamente baseado nos dados filtrados/ordenados
+        setTotalPages(1); // Valor inicial, será recalculado pelo useMemo
+      } else {
+        // Sem ordenação, usar comportamento normal de paginação
+        setItems(itemsData);
+        setAllItems([]); // Limpar allItems
+        setTotal(totalCount);
+        setTotalPages(totalPagesCount);
+      }
+    } catch (error: any) {
+      console.error('Erro ao carregar itens:', error);
+      console.error('Detalhes do erro:', {
+        message: error?.message,
+        response: error?.response?.data,
+        status: error?.response?.status,
+        shouldLoadAll: !!sortColumn,
+        sortColumn
+      });
+      
+      const errorMessage = error?.response?.data?.message || error?.message || 'Erro desconhecido ao carregar produtos';
+      toast({
+        title: 'Erro',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+      
+      // Em caso de erro, limpar os dados para evitar estados inconsistentes
+      if (sortColumn) {
+        setAllItems([]);
+      } else {
+        setItems([]);
+      }
+      setFilteredItems([]);
+    } finally {
+      loadingRef.current = false;
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadItems();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, limit, sortColumn]);
