@@ -1,0 +1,25 @@
+{
+  "name": "bartab",
+  "version": "1.0.0",
+  "description": "Sistema de PDV para gerenciar contas/mesas",
+  "private": true,
+  "scripts": {
+    "start": "bash scripts/dev/start-clean.sh",
+    "stop": "bash scripts/dev/stop-project.sh",
+    "start:db": "docker-compose up -d db",
+    "start:backend": "cd backend && npm run start:dev",
+    "start:frontend": "cd frontend && npm run dev",
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "build": "cd backend && npm run build && cd ../frontend && npm run build",
+    "test": "cd backend && npm test && cd ../frontend && npm test"
+  },
+  "keywords": [
+    "pdv",
+    "bartab",
+    "restaurant",
+    "point-of-sale"
+  ],
+  "author": "Eduardo Klug <eduardo.klug7@gmail.com>",
+  "license": "MIT"
+}
+

@@ -172,19 +172,27 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async getProfile(@Req() req: any) {
     const user = await this.authService.getUserById(req.user.userId);
-    return {
+    const response: any = {
       id: user.id,
       email: user.email,
       name: user.name,
       picture: user.picture,
       role: user.role,
       establishment: {
-        id: user.establishment.id,
-        name: user.establishment.name,
-        active: user.establishment.active,
-        statusAprovacao: user.establishment.statusAprovacao,
+        id: req.user.establishment.id,
+        name: req.user.establishment.name,
+        active: req.user.establishment.active,
+        statusAprovacao: req.user.establishment.statusAprovacao,
       },
     };
+
+    // Se estiver impersonando, adiciona flags de impersonation
+    if (req.user.isImpersonating) {
+      response.isImpersonating = true;
+      response.originalEstablishmentId = req.user.originalEstablishmentId;
+    }
+
+    return response;
   }
 
   @Get('check')

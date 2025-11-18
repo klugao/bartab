@@ -14,7 +14,8 @@ import {
   Calendar,
   AlertCircle,
   Power,
-  PowerOff
+  PowerOff,
+  Eye
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import api from '@/services/api';
@@ -45,12 +46,13 @@ interface Statistics {
 }
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
+  const { user, impersonate } = useAuth();
   const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [pendingEstablishments, setPendingEstablishments] = useState<Establishment[]>([]);
   const [allEstablishments, setAllEstablishments] = useState<Establishment[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('pending');
+  const [impersonatingId, setImpersonatingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.role === 'AdministradorSistema') {
@@ -154,6 +156,26 @@ export default function AdminDashboard() {
       toast({
         title: 'Erro',
         description: 'Não foi possível ativar o estabelecimento',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleImpersonate = async (id: string, name: string) => {
+    if (!confirm(`Tem certeza que deseja visualizar como "${name}"?\n\nVocê poderá ver e editar tudo como se fosse o proprietário.`)) return;
+
+    try {
+      setImpersonatingId(id);
+      await impersonate(id);
+      toast({
+        title: '✅ Visualizando como estabelecimento',
+        description: `Agora você está visualizando como "${name}".`,
+      });
+    } catch (error: any) {
+      setImpersonatingId(null);
+      toast({
+        title: 'Erro',
+        description: error.message || 'Não foi possível visualizar como estabelecimento',
         variant: 'destructive',
       });
     }
@@ -358,6 +380,15 @@ export default function AdminDashboard() {
                       <XCircle className="w-4 h-4 mr-2" />
                       Rejeitar
                     </Button>
+                    <Button
+                      onClick={() => handleImpersonate(est.id, est.name)}
+                      variant="outline"
+                      className="flex-1 border-blue-300 text-blue-700 hover:bg-blue-50"
+                      disabled={impersonatingId === est.id}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Visualizar como
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -422,24 +453,46 @@ export default function AdminDashboard() {
                         Você não pode inativar o seu próprio estabelecimento
                       </div>
                     ) : (
-                      <Button
-                        onClick={() => handleDeactivate(est.id, est.name)}
-                        variant="outline"
-                        className="flex-1 border-red-300 text-red-700 hover:bg-red-50"
-                      >
-                        <PowerOff className="w-4 h-4 mr-2" />
-                        Inativar
-                      </Button>
+                      <>
+                        <Button
+                          onClick={() => handleDeactivate(est.id, est.name)}
+                          variant="outline"
+                          className="flex-1 border-red-300 text-red-700 hover:bg-red-50"
+                        >
+                          <PowerOff className="w-4 h-4 mr-2" />
+                          Inativar
+                        </Button>
+                        <Button
+                          onClick={() => handleImpersonate(est.id, est.name)}
+                          variant="outline"
+                          className="flex-1 border-blue-300 text-blue-700 hover:bg-blue-50"
+                          disabled={impersonatingId === est.id}
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          Visualizar como
+                        </Button>
+                      </>
                     )
                   ) : (
-                    <Button
-                      onClick={() => handleActivate(est.id, est.name)}
-                      variant="outline"
-                      className="flex-1 border-green-300 text-green-700 hover:bg-green-50"
-                    >
-                      <Power className="w-4 h-4 mr-2" />
-                      Ativar
-                    </Button>
+                    <>
+                      <Button
+                        onClick={() => handleActivate(est.id, est.name)}
+                        variant="outline"
+                        className="flex-1 border-green-300 text-green-700 hover:bg-green-50"
+                      >
+                        <Power className="w-4 h-4 mr-2" />
+                        Ativar
+                      </Button>
+                      <Button
+                        onClick={() => handleImpersonate(est.id, est.name)}
+                        variant="outline"
+                        className="flex-1 border-blue-300 text-blue-700 hover:bg-blue-50"
+                        disabled={impersonatingId === est.id}
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Visualizar como
+                      </Button>
+                    </>
                   )}
                 </div>
               </CardContent>

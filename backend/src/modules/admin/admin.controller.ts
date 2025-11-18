@@ -80,5 +80,17 @@ export class AdminController {
   async activateEstablishment(@Param('idEstabelecimento') id: string) {
     return this.adminService.activateEstablishment(id);
   }
+
+  /**
+   * POST /admin/impersonate/:establishmentId
+   * Permite que admin visualize e edite como se fosse o proprietário do estabelecimento
+   */
+  @Post('impersonate/:establishmentId')
+  async impersonateEstablishment(
+    @Param('establishmentId') establishmentId: string,
+    @Req() req: any,
+  ) {
+    return this.adminService.impersonateEstablishment(establishmentId, req.user);
+  }
 }
 

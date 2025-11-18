@@ -1,9 +1,10 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { JwtService } from '@nestjs/jwt';
 import { Establishment } from '../auth/entities/establishment.entity';
 import { User } from '../auth/entities/user.entity';
-import { ApprovalStatus } from '../../common/enums';
+import { ApprovalStatus, UserRole } from '../../common/enums';
 import { NotificationService } from '../notification/notification.service';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class AdminService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private notificationService: NotificationService,
+    private jwtService: JwtService,
   ) {}
 
   /**
@@ -245,6 +247,61 @@ export class AdminService {
         id: establishment.id,
         name: establishment.name,
         active: establishment.active,
+      },
+    };
+  }
+
+  /**
+   * Gera token JWT para impersonar um estabelecimento
+   * Permite que admin visualize e edite como se fosse o proprietário
+   */
+  async impersonateEstablishment(establishmentId: string, adminUser: any) {
+    // Busca o estabelecimento com seus usuários
+    const establishment = await this.establishmentRepository.findOne({
+      where: { id: establishmentId },
+      relations: ['users'],
+    });
+
+    if (!establishment) {
+      throw new NotFoundException('Estabelecimento não encontrado');
+    }
+
+    // Busca o primeiro usuário proprietário do estabelecimento
+    const ownerUser = establishment.users?.find(u => u.role === UserRole.PROPRIETARIO) || establishment.users?.[0];
+
+    if (!ownerUser) {
+      throw new NotFoundException('Nenhum usuário proprietário encontrado para este estabelecimento');
+    }
+
+    // Gera payload JWT com dados do proprietário, mas mantém role de admin
+    // e adiciona flag de impersonation
+    const payload = {
+      sub: adminUser.userId, // ID do admin (para poder voltar)
+      email: adminUser.email, // Email do admin
+      establishmentId: establishment.id, // ID do establishment impersonado
+      role: UserRole.ADMINISTRADOR_SISTEMA, // Mantém role de admin
+      impersonatedEstablishmentId: establishment.id, // Flag de impersonation
+      impersonatedUserId: ownerUser.id, // ID do usuário proprietário
+    };
+
+    // Gera o token
+    const token = this.jwtService.sign(payload);
+
+    // Log de auditoria
+    console.log(`[IMPERSONATION] Admin ${adminUser.email} impersonando estabelecimento ${establishment.name} (${establishment.id})`);
+
+    return {
+      access_token: token,
+      establishment: {
+        id: establishment.id,
+        name: establishment.name,
+        statusAprovacao: establishment.statusAprovacao,
+        active: establishment.active,
+      },
+      owner: {
+        id: ownerUser.id,
+        name: ownerUser.name,
+        email: ownerUser.email,
       },
     };
   }

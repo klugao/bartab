@@ -3,10 +3,14 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { HomeIcon, UsersIcon, CubeIcon, ChartBarIcon, BanknotesIcon, Bars3Icon, XMarkIcon, ShieldCheckIcon, CogIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { SyncManager } from './SyncManager';
+import { Button } from './ui/button';
+import { Alert, AlertDescription } from './ui/alert';
+import { AlertTriangle, ArrowLeft } from 'lucide-react';
 
 const Layout = () => {
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, stopImpersonating, originalUser } = useAuth();
+  const isImpersonating = user?.isImpersonating || (originalUser !== null && user?.establishment?.id !== originalUser?.establishment?.id);
 
   const navigation = [
     { name: 'Contas', href: '/', icon: HomeIcon },
@@ -35,8 +39,43 @@ const Layout = () => {
 
   const closeDrawer = () => setMobileOpen(false);
 
+  const handleStopImpersonating = async () => {
+    try {
+      await stopImpersonating();
+    } catch (error) {
+      console.error('Erro ao parar impersonation:', error);
+    }
+  };
+
   return (
     <div>
+      {/* Banner de Impersonation */}
+      {isImpersonating && originalUser && (
+        <div className="bg-yellow-50 border-b border-yellow-200">
+          <div className="container mx-auto px-4 py-3">
+            <Alert className="bg-yellow-50 border-yellow-300">
+              <AlertTriangle className="h-4 w-4 text-yellow-600" />
+              <AlertDescription className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-yellow-800 font-medium">
+                    Modo de Visualização: Você está visualizando como <strong>{user?.establishment?.name}</strong>
+                  </span>
+                </div>
+                <Button
+                  onClick={handleStopImpersonating}
+                  variant="outline"
+                  size="sm"
+                  className="border-yellow-400 text-yellow-800 hover:bg-yellow-100"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Voltar para minha conta
+                </Button>
+              </AlertDescription>
+            </Alert>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="header">
         <div className="container">
