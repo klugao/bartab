@@ -1,0 +1,363 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{ragged2e}
+\usepackage{lmodern}
+\usepackage{float}
+\usepackage{placeins}
+\usepackage{afterpage}
+\geometry{top=3cm, bottom=3cm, left=3cm, right=3cm}
+\setstretch{1.5}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+    \includegraphics[width=0.4\textwidth]{catolica.png}\\[2cm]
+    {\Large Centro Universitário Católica de Santa Catarina - Joinville}\\[0.5cm]
+    {\large Engenharia de Software}\\[3cm]
+    {\Large Eduardo Vinicios Klug}\\[3cm]
+    {\LARGE \textbf{BarTab - Gestão de Contas e Consumo}}\\[0.3cm]
+    {\large \textbf{de clientes em bares}}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section*{Resumo}
+Este projeto tem como objetivo o desenvolvimento do \textbf{BarTab}, uma solução voltada para pequenos estabelecimentos, como bares e botecos, que enfrentam desafios na gestão de contas e comandas. O foco está em oferecer um sistema simples, intuitivo e acessível para controle de vendas, gerenciamento de mesas e pagamentos, incluindo a funcionalidade de ``Marcar Depois''. O sistema foi desenvolvido utilizando React no frontend e NestJS no backend, com autenticação OAuth via Google, e está implantado em produção no Google Cloud Platform. O projeto englobou atividades como levantamento de requisitos, modelagem, implementação, testes automatizados (126 testes: 51 no backend e 75 no frontend) e deploy automatizado via CI/CD, seguindo boas práticas de engenharia de software.
+
+\section{Introdução}
+
+\subsection{Contexto}
+Pequenos estabelecimentos, como bares e botecos, geralmente utilizam métodos manuais para controle de consumo e fechamento de contas, como anotações em papel, cadernos ou simples calculadoras. Esse processo depende da memória dos atendentes ou de registros físicos sujeitos a extravio ou erros. Além disso, a comunicação entre diferentes membros da equipe (como garçom e caixa) costuma ser informal, o que pode gerar inconsistências nos lançamentos. Não há, nesses ambientes, um sistema centralizado que registre as movimentações de consumo em tempo real ou que permita acompanhar os valores pendentes por cliente de forma automatizada.
+
+\subsection{Justificativa}
+A ausência de um sistema digital dedicado para gerenciamento de contas abertas em pequenos comércios pode resultar em falhas de registro, dificuldades na organização financeira e perda de tempo no fechamento das contas. Mesmo com a existência de soluções de mercado, muitas são desenvolvidas para restaurantes maiores ou com estruturas mais complexas, o que pode dificultar sua adoção em negócios com rotinas mais simples e informais. Assim, existe uma lacuna entre os sistemas existentes e as necessidades reais de estabelecimentos menores. A proposta deste projeto parte da identificação dessa lacuna e da necessidade de soluções mais aderentes à realidade desses empreendedores.
+
+\subsection{Objetivos}
+
+\textbf{Objetivo Principal:}  
+Desenvolver uma solução digital para registrar, gerenciar e finalizar contas abertas em bares e botecos, de forma a reduzir erros manuais e simplificar a rotina, beneficiando diretamente os proprietários desses estabelecimentos com maior controle operacional.
+
+\textbf{Objetivos Secundários:}
+\begin{itemize}
+    \item Organizar os lançamentos de consumo por cliente em uma interface clara e acessível.
+    \item Permitir a utilização de diferentes métodos de pagamento e registrar pendências por cliente.
+    \item Facilitar o acesso ao histórico de consumo e pagamentos, promovendo maior rastreabilidade.
+    \item Reduzir o tempo de fechamento de contas e minimizar a chance de erros de cálculo.
+    \item Fornecer ao proprietário uma visão geral sobre contas ativas e valores a receber.
+    \item Implementar controle de dívidas com tela dedicada para gerenciamento de saldos pendentes.
+    \item Fornecer relatórios mensais de consumo e análise financeira (receitas, despesas e lucro).
+\end{itemize}
+
+\section{Descrição do Projeto}
+
+\subsection{Tema do Projeto}
+O projeto consiste no desenvolvimento de um sistema web para controle de contas abertas e consumo em estabelecimentos de pequeno porte, com foco em bares e botecos. A solução foi desenvolvida utilizando tecnologias web consolidadas, como React no frontend e NestJS no backend, garantindo compatibilidade com navegadores modernos e facilidade de implantação. O sistema encontra-se em produção no Google Cloud Platform (GCP), utilizando Cloud Run para hospedagem dos serviços e Cloud SQL para banco de dados gerenciado.
+
+A simplicidade do sistema foi alcançada através de:
+\begin{itemize}
+    \item Interface com fluxo direto: abertura de contas, adição de itens, visualização do total e encerramento da conta de forma intuitiva.
+    \item Cadastro mínimo necessário: nome do cliente, itens e valor — evitando obrigatoriedade de dados como CPF, e-mail ou login/senha para clientes.
+    \item Funcionalidades voltadas para o essencial do negócio: controle de consumo, métodos de pagamento, pendência (``marcar depois'') e relatórios financeiros.
+    \item Autenticação simplificada via OAuth Google para proprietários e gerentes.
+    \item Suporte a múltiplos estabelecimentos com sistema de administração centralizado.
+\end{itemize}
+
+O sistema foi projetado para ser executado em infraestrutura cloud gerenciada (GCP Cloud Run), permitindo escalabilidade automática sem necessidade de configuração avançada de infraestrutura.
+
+\subsection{Problemas a Resolver}
+Pequenos estabelecimentos enfrentam uma série de dificuldades operacionais na ausência de um sistema informatizado:
+
+\begin{itemize}
+    \item \textbf{Risco de perda de informações:} contas são registradas em papel ou blocos físicos, que podem ser perdidos ou extraviados durante o atendimento.
+    
+    \item \textbf{Erros no cálculo final da conta:} somas manuais ou feitas rapidamente ao final do expediente aumentam a chance de falhas nos valores cobrados.
+    
+    \item \textbf{Falta de controle sobre pendências:} quando o cliente ``marca para pagar depois'', muitas vezes não há registro confiável da dívida. Isso compromete o controle financeiro e a cobrança futura.
+    
+    \item \textbf{Dificuldade na organização do atendimento:} quando há múltiplas contas abertas simultaneamente, o controle manual pode gerar confusões entre nomes semelhantes ou trocas de mesas.
+    
+    \item \textbf{Ausência de histórico:} sem um sistema digital, os dados de consumo e pagamento não são armazenados de forma estruturada, impedindo qualquer tipo de consulta futura ou análise do comportamento dos clientes.
+    
+    \item \textbf{Falta de visão financeira:} sem relatórios estruturados, é difícil acompanhar receitas, despesas e lucro do estabelecimento.
+\end{itemize}
+
+\subsection{Limitações}
+\begin{itemize}
+    \item O sistema não aborda o controle de estoque detalhado.
+    \item Não há integração com sistemas bancários externos para processamento de pagamentos.
+    \item O sistema não inclui funcionalidades de gestão de funcionários ou controle de ponto.
+\end{itemize}
+
+\section{Especificação Técnica}
+
+\subsection{Requisitos de Software}
+
+\textbf{Requisitos Funcionais Implementados:}
+\begin{itemize}
+    \item RF01 - O sistema permite a criação e o controle de contas abertas.
+    \item RF02 - O sistema adiciona e remove itens da conta do cliente.
+    \item RF03 - O sistema exibe resumos de consumo e o total da conta.
+    \item RF04 - O sistema permite diferentes formas de pagamento (dinheiro, débito, crédito, pix e ``pagar depois'').
+    \item RF05 - O sistema armazena o histórico de contas e saldos pendentes.
+    \item RF06 - O sistema permite adicionar, alterar e remover itens do sistema.
+    \item RF07 - O sistema implementa um sistema de ``Marcar Depois'', onde clientes podem deixar contas pendentes e consultá-las posteriormente.
+    \item RF08 - O sistema possui uma tela de controle de dívidas para listar clientes com saldo negativo e permitir registros de pagamento.
+    \item RF09 - O sistema registra o histórico de pagamentos e permite pagamentos parciais.
+    \item RF10 - O sistema permite o cadastro, edição, listagem e exclusão de clientes.
+    \item RF11 - O sistema implementa autenticação via OAuth Google para proprietários e gerentes.
+    \item RF12 - O sistema suporta múltiplos estabelecimentos com administração centralizada.
+    \item RF13 - O sistema fornece relatórios mensais de consumo e análise financeira (receitas, despesas e lucro).
+    \item RF14 - O sistema permite cadastro de despesas do estabelecimento.
+    \item RF15 - O sistema calcula automaticamente saldos devedores e gerencia o campo ``negative\_balance\_since'' para controle temporal de dívidas.
+\end{itemize}
+
+\textbf{Requisitos Não-Funcionais Implementados:}
+\begin{itemize}
+    \item RNF01 - O sistema possui uma interface responsiva e intuitiva, desenvolvida com React e TailwindCSS.
+    \item RNF02 - O sistema utiliza PostgreSQL gerenciado (Cloud SQL) para armazenar informações financeiras de forma segura.
+    \item RNF03 - A arquitetura do sistema permite escalabilidade automática no Cloud Run, suportando até 25 contas abertas simultaneamente, com até 100 operações por hora e até 5.000 transações por mês, sem degradação perceptível de desempenho.
+    \item RNF04 - O sistema permite envio de notificações via e-mail (SMTP) e possui estrutura para integração futura com WhatsApp e SMS.
+    \item RNF05 - O sistema implementa autenticação OAuth Google com JWT para segurança das operações.
+    \item RNF06 - O sistema possui 126 testes automatizados (51 no backend com Jest e 75 no frontend com Vitest).
+    \item RNF07 - O sistema possui CI/CD configurado via GitHub Actions para deploy automático.
+    \item RNF08 - O sistema está em conformidade com LGPD, incluindo políticas de privacidade e termos de uso implementados.
+    \item RNF09 - O sistema implementa padrões de segurança OWASP, incluindo proteção contra SQL Injection (TypeORM), validação de inputs, headers de segurança (Helmet), CORS configurado e rate limiting.
+\end{itemize}
+
+\clearpage
+\thispagestyle{plain}
+\subsection*{Diagrama de Caso de Uso}
+\vspace{1cm}
+\vfill
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=\textwidth,height=0.75\textheight,keepaspectratio]{usecase.png}
+    \caption{Diagrama de Caso de Uso do Sistema de Contas/Mesas}
+    \label{fig:usecase1}
+\end{figure}
+\vfill
+\clearpage
+
+\subsection{Considerações de Design}
+
+\textbf{Arquitetura Implementada:}
+\begin{itemize}
+    \item Backend em NestJS com TypeORM para acesso ao banco de dados
+    \item Frontend em React com TypeScript e Vite como build tool
+    \item Banco de dados PostgreSQL gerenciado (Cloud SQL)
+    \item Autenticação via OAuth Google com Passport.js e JWT
+    \item Deploy em Google Cloud Platform (Cloud Run)
+    \item CI/CD via GitHub Actions
+\end{itemize}
+
+\textbf{Padrões de Arquitetura Aplicados:}
+\begin{itemize}
+    \item Aplicação de Clean Code e SOLID
+    \item Arquitetura em camadas: Controllers → Services → Repository/ORM
+    \item DTOs (Data Transfer Objects) para validação de entrada
+    \item Guards para controle de acesso e autorização
+    \item Estrutura modular preparada para futuras expansões
+\end{itemize}
+
+\clearpage
+\thispagestyle{plain}
+\subsection*{Diagramas C4}
+\vspace{0.5cm}
+\subsubsection*{Diagrama de Contexto}
+\vfill
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth,height=0.75\textheight,keepaspectratio]{context.png}
+    \caption{Diagrama de Contexto - BarTab}
+    \label{fig:c4-contexto}
+\end{figure}
+\vfill
+\clearpage
+
+\thispagestyle{plain}
+\subsubsection*{Diagrama de Contêineres}
+\vfill
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=\textwidth,height=0.75\textheight,keepaspectratio]{cont.png}
+    \caption{Diagrama de Contêineres - BarTab}
+    \label{fig:c4-conteineres}
+\end{figure}
+\vfill
+\clearpage
+
+\thispagestyle{plain}
+\subsubsection*{Diagrama de Componentes}
+\vfill
+\begin{figure}[!htbp]
+    \centering
+    \includegraphics[width=\textwidth,height=0.75\textheight,keepaspectratio]{comp2.png}
+    \caption{Diagrama de Componentes do Backend - BarTab}
+    \label{fig:c4-componentes}
+\end{figure}
+\vfill
+\clearpage
+
+\subsection{Stack Tecnológica}
+\begin{itemize}
+    \item Linguagem: TypeScript
+    \item Frontend: React 18.3 + Vite + TailwindCSS + React Router
+    \item Backend: NestJS 11 + TypeORM 0.3 + Express
+    \item Banco de Dados: PostgreSQL (Cloud SQL no GCP)
+    \item Autenticação: OAuth Google (Passport.js) + JWT
+    \item Gerenciador de Dependências: npm
+    \item Testes: Jest (backend) + Vitest (frontend)
+    \item CI/CD: GitHub Actions
+    \item Cloud Provider: Google Cloud Platform (Cloud Run, Cloud SQL, Secret Manager)
+    \item Containerização: Docker
+\end{itemize}
+
+\subsection{Considerações de Segurança}
+\begin{itemize}
+    \item Autenticação OAuth Google implementada para proprietários e gerentes.
+    \item Controle de acesso baseado em JWT tokens com expiration.
+    \item Guards implementados para proteção de endpoints sensíveis do backend.
+    \item Validação de inputs no frontend e backend (class-validator) para evitar injeções e acessos indevidos.
+    \item Proteção contra SQL Injection através do TypeORM.
+    \item Headers de segurança configurados via Helmet.
+    \item CORS configurado para restringir origens permitidas.
+    \item Rate limiting implementado para prevenir abuso.
+    \item Secrets gerenciados via Google Secret Manager.
+    \item Conformidade com LGPD através de políticas de privacidade e termos de uso implementados.
+    \item Conformidade com OWASP Top 10 através de práticas de segurança implementadas.
+\end{itemize}
+
+\subsection{Regras para ``Marcar Depois''}
+\textbf{Cadastro e Identificação do Cliente:}
+\begin{itemize}
+    \item Ao abrir uma conta, o usuário pode inserir um nome para consulta.
+    \item Se o cliente já existir, o sistema vincula a conta a ele automaticamente.
+    \item Caso não exista, o sistema cria um novo registro automaticamente.
+\end{itemize}
+
+\textbf{Armazenamento de Saldos:}
+\begin{itemize}
+    \item Cada cliente possui um saldo registrado no banco de dados (`balance\_due`), podendo ser positivo ou negativo.
+    \item Se o cliente optar por pagar depois, o valor será adicionado ao saldo devedor como negativo.
+    \item O sistema mantém o campo `negative\_balance\_since` para controlar desde quando o cliente está em débito.
+\end{itemize}
+
+\textbf{Tela de Controle de Dívidas:}
+\begin{itemize}
+    \item O sistema apresenta uma tela dedicada (`/debts`) listando todos os clientes com saldo pendente.
+    \item Possibilidade de marcar pagamentos (parciais ou totais) e atualizar o saldo do cliente.
+    \item Histórico de pagamentos acessível para cada cliente, mostrando todas as contas com saldo devedor.
+    \item Exibição detalhada de cada conta: itens consumidos, pagamentos realizados e saldo restante.
+    \item Quando o saldo é quitado completamente, o cliente é automaticamente removido da lista de dívidas.
+    \item Estrutura preparada para envio de notificações via e-mail, com possibilidade de expansão para WhatsApp e SMS.
+\end{itemize}
+
+\section{Status da Implementação}
+
+\subsection{Funcionalidades Implementadas}
+O sistema encontra-se 100\% implementado e em produção. Todas as funcionalidades principais foram desenvolvidas:
+
+\begin{itemize}
+    \item \textbf{CRUD Completo:} Clientes, Itens, Despesas
+    \item \textbf{Gestão de Contas:} Abertura, adição/remoção de itens, fechamento
+    \item \textbf{Pagamentos:} Suporte a dinheiro, débito, crédito, pix e ``pagar depois''
+    \item \textbf{Controle de Dívidas:} Tela dedicada com histórico completo e pagamentos parciais
+    \item \textbf{Autenticação:} OAuth Google para proprietários e gerentes
+    \item \textbf{Administração:} Sistema multi-estabelecimento com painel admin
+    \item \textbf{Relatórios:} Relatórios mensais de consumo, receitas, despesas e lucro
+    \item \textbf{Conformidade:} LGPD e OWASP implementadas
+\end{itemize}
+
+\subsection{Testes Implementados}
+O sistema possui 126 testes automatizados implementados:
+\begin{itemize}
+    \item \textbf{Backend:} 51 testes unitários e de integração utilizando Jest
+    \item \textbf{Frontend:} 75 testes de componentes e integração utilizando Vitest
+    \item \textbf{Cobertura:} Relatórios de cobertura de código gerados para ambas as camadas
+\end{itemize}
+
+\subsection{Deploy e Infraestrutura}
+O sistema está implantado em produção no Google Cloud Platform:
+\begin{itemize}
+    \item \textbf{Backend:} Cloud Run com escalabilidade automática
+    \item \textbf{Frontend:} Cloud Run servindo aplicação React
+    \item \textbf{Banco de Dados:} Cloud SQL (PostgreSQL) gerenciado
+    \item \textbf{Secrets:} Secret Manager para gerenciamento seguro de credenciais
+    \item \textbf{CI/CD:} GitHub Actions para deploy automático
+    \item \textbf{Containerização:} Docker para ambos os serviços
+\end{itemize}
+
+\section{Próximos Passos}
+
+O projeto foi desenvolvido utilizando a metodologia ágil \textbf{SCRUM}, com sprints quinzenais e entregas incrementais. O sistema encontra-se completo e em produção, seguindo os objetivos estabelecidos.
+
+\subsection*{Cronograma de Sprints Executados}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|c|p{9cm}|}
+\hline
+\textbf{Sprint} & \textbf{Status} & \textbf{Entregas / Objetivos Principais} \\
+\hline
+0 & ✅ Concluído & Planejamento do projeto, definição do backlog inicial, setup do repositório e ferramentas. \\
+1 & ✅ Concluído & Design das interfaces (protótipos), modelagem de dados, diagrama C4 (nível contexto e contêineres). \\
+2 & ✅ Concluído & Implementação do CRUD de clientes e CRUD de itens de consumo. \\
+3 & ✅ Concluído & Tela inicial com cards das contas abertas e funcionalidade para abrir novas contas. \\
+4 & ✅ Concluído & Tela de detalhes da conta: exibição dos itens consumidos, total e botão de pagamento. \\
+5 & ✅ Concluído & Fluxo de pagamento: dinheiro, débito, crédito, pix e opção ``pagar depois''. \\
+6 & ✅ Concluído & Integração do fluxo de ``pagar depois'' com o saldo devedor do cliente e tela de dívidas. \\
+7 & ✅ Concluído & Testes automatizados (unitários, integração e smoke) implementados. \\
+8 & ✅ Concluído & Refatorações, ajustes finais, documentação completa e deploy utilizando CI/CD no GCP. \\
+9 & ✅ Concluído & Implementação de autenticação OAuth, relatórios financeiros, conformidade LGPD/OWASP. \\
+10 & ✅ Concluído & Sistema multi-estabelecimento, painel administrativo e funcionalidade de despesas. \\
+\hline
+\end{tabular}
+\caption{Cronograma de desenvolvimento utilizando SCRUM - Status: Concluído}
+\end{table}
+
+\subsection*{Atividades Contínuas Realizadas}
+
+\begin{itemize}
+    \item \textbf{Daily Logs:} Registro individual semanal de progresso e obstáculos durante todo o desenvolvimento.
+    \item \textbf{Revisão de Sprint:} Avaliação dos objetivos alcançados ao final de cada sprint e replanejamento do backlog.
+    \item \textbf{Retrospectiva de Sprint:} Discussão dos pontos positivos, negativos e melhorias no processo.
+    \item \textbf{Documentação viva:} Utilização de Wiki no repositório GitHub como fonte centralizada de documentação do projeto.
+    \item \textbf{Testes Contínuos:} Implementação de testes durante todo o desenvolvimento, totalizando 126 testes automatizados.
+    \item \textbf{CI/CD:} Configuração e manutenção de pipeline de deploy automatizado via GitHub Actions.
+\end{itemize}
+
+\section{Referências}
+\begin{itemize}
+    \item Documentação oficial do React: \texttt{https://react.dev}
+    \item Documentação oficial do NestJS: \texttt{https://docs.nestjs.com}
+    \item PostgreSQL Documentation: \texttt{https://www.postgresql.org/docs/}
+    \item Tailwind CSS Docs: \texttt{https://tailwindcss.com/docs}
+    \item Vite Documentation: \texttt{https://vitejs.dev}
+    \item Google Cloud Platform Documentation: \texttt{https://cloud.google.com/docs}
+    \item GitHub - CatolicaSC Portfolio Directions: \texttt{https://github.com/CatolicaSC-Portfolio}
+    \item OAuth 2.0 Documentation: \texttt{https://oauth.net/2/}
+\end{itemize}
+
+\newpage
+\section{Avaliações de Professores}
+
+\vspace{2cm}
+\noindent\rule{6cm}{0.4pt}\\
+\noindent Edicarsia Barbiero Pillon
+
+\vspace{2cm}
+\noindent\rule{6cm}{0.4pt}\\
+\noindent Luiz Carlos Camargo
+
+\vspace{2cm}
+\noindent\rule{6cm}{0.4pt}\\
+\noindent Claudinei Dias
+
+\end{document}
