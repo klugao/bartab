@@ -45,8 +45,9 @@ Menu interativo com opções:
 3. Logs recentes
 4. Erros recentes
 5. Health check
-6. Visão completa
-7. Modo contínuo (watch)
+6. Four Golden Signals ⭐
+7. Visão completa
+8. Modo contínuo (watch)
 
 #### 2. Modo com Argumentos
 
@@ -68,6 +69,9 @@ Menu interativo com opções:
 # Health check detalhado
 ./monitor.sh health
 
+# Four Golden Signals (Latency, Traffic, Errors, Saturation)
+./monitor.sh four-signals
+
 # Visão completa
 ./monitor.sh all
 
@@ -84,6 +88,84 @@ Menu interativo com opções:
 Atualiza automaticamente a cada 30 segundos. Perfeito para deixar aberto em um monitor.
 
 **Pressione Ctrl+C para sair.**
+
+---
+
+### ⭐ `setup-four-golden-signals.sh` - Configurar Four Golden Signals
+
+**Quando usar:** Uma vez, para configurar monitoramento dos Four Golden Signals.
+
+**O que faz:**
+- ✅ Configura alertas para Latency (latência)
+- ✅ Configura alertas para Traffic (tráfego)
+- ✅ Configura alertas para Errors (erros)
+- ✅ Configura alertas para Saturation (saturação de recursos)
+- ✅ Cria canal de notificação por email
+
+**Como usar:**
+
+```bash
+./setup-four-golden-signals.sh
+```
+
+Siga as instruções na tela. Você será perguntado sobre:
+- Email para receber alertas (opcional)
+
+**Tempo:** ~3-5 minutos
+
+**📚 Documentação completa:** [../docs/FOUR_GOLDEN_SIGNALS.md](../docs/FOUR_GOLDEN_SIGNALS.md)
+
+---
+
+### 📊 `create-four-golden-signals-dashboard.sh` - Criar Dashboard Visual
+
+**Quando usar:** Uma vez, para criar dashboard visual no console do GCP.
+
+**O que faz:**
+- ✅ Cria dashboard completo dos Four Golden Signals
+- ✅ Configura todos os widgets automaticamente
+- ✅ Organiza visualmente (Latency, Traffic, Errors, Saturation)
+- ✅ Atualiza se já existir
+
+**Como usar:**
+
+```bash
+./create-four-golden-signals-dashboard.sh
+```
+
+**Tempo:** ~30 segundos
+
+**📚 Documentação:** [../docs/CRIAR_DASHBOARD_FOUR_GOLDEN_SIGNALS.md](../docs/CRIAR_DASHBOARD_FOUR_GOLDEN_SIGNALS.md)
+
+---
+
+### ⭐ `four-golden-signals.sh` - Visualizar Four Golden Signals
+
+**Quando usar:** Sempre que quiser ver os Four Golden Signals em tempo real.
+
+**O que mostra:**
+- 📊 **Latency:** Tempo de resposta das requisições
+- 📊 **Traffic:** Volume de requisições
+- 📊 **Errors:** Taxa de erros (4xx e 5xx)
+- 📊 **Saturation:** Uso de CPU, memória e instâncias
+
+**Como usar:**
+
+```bash
+# Visualização única
+./four-golden-signals.sh
+
+# Monitoramento contínuo (atualiza a cada 30s)
+./four-golden-signals.sh watch
+```
+
+Ou através do `monitor.sh`:
+
+```bash
+./monitor.sh four-signals
+```
+
+**📚 Documentação completa:** [../docs/FOUR_GOLDEN_SIGNALS.md](../docs/FOUR_GOLDEN_SIGNALS.md)
 
 ---
 
@@ -277,6 +359,7 @@ brew install bc
 
 ## 📚 Mais Informações
 
+- **Four Golden Signals:** [../docs/FOUR_GOLDEN_SIGNALS.md](../docs/FOUR_GOLDEN_SIGNALS.md) ⭐
 - **Guia completo de monitoramento:** [../docs/MONITORING.md](../docs/MONITORING.md)
 - **Guia de deploy:** [../README.md](../README.md)
 - **Documentação GCP:** https://cloud.google.com/docs
