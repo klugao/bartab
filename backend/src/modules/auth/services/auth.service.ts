@@ -56,11 +56,21 @@ export class AuthService {
       ? UserRole.ADMINISTRADOR_SISTEMA 
       : UserRole.PROPRIETARIO;
 
+    // Verifica se devemos aprovar automaticamente novos estabelecimentos
+    const autoApprove = process.env.AUTO_APPROVE_ESTABLISHMENTS === 'true';
+
+    if (autoApprove) {
+      console.log('✅ [REGISTER] AUTO_APPROVE_ESTABLISHMENTS ativo - aprovando estabelecimento automaticamente');
+    }
+
     // Cria um novo estabelecimento
     // Admin não precisa de aprovação, já é aprovado automaticamente
-    const approvalStatus = userRole === UserRole.ADMINISTRADOR_SISTEMA
+    // Quando AUTO_APPROVE_ESTABLISHMENTS=true, qualquer novo estabelecimento nasce aprovado
+    const approvalStatus = autoApprove
       ? ApprovalStatus.APROVADO
-      : ApprovalStatus.PENDENTE;
+      : userRole === UserRole.ADMINISTRADOR_SISTEMA
+        ? ApprovalStatus.APROVADO
+        : ApprovalStatus.PENDENTE;
 
     const establishment = this.establishmentRepository.create({
       name: establishmentName,
