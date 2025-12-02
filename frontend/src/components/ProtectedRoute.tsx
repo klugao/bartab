@@ -37,18 +37,20 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin 
     return <>{children}</>;
   }
 
-  // Se for proprietário, verifica status de aprovação e se está ativo
-  const isApproved = user.establishment?.statusAprovacao === 'Aprovado';
+  // TEMPORÁRIO: HARD-CODED - Todos os estabelecimentos são considerados aprovados automaticamente
+  // TODO: Remover esta verificação hard-coded quando não for mais necessário
+  const finalApproved = true; // SEMPRE aprovado - acesso total ao sistema
   const isActive = user.establishment?.active !== false; // undefined ou true = ativo
   const isPendingRoute = location.pathname === '/pending-approval';
 
   // Se não foi aprovado OU está inativo, redireciona para pending
-  if ((!isApproved || !isActive) && !isPendingRoute) {
+  // NOTA: Com hard-coded acima, isso só vai redirecionar se estiver inativo
+  if ((!finalApproved || !isActive) && !isPendingRoute) {
     return <Navigate to="/pending-approval" replace />;
   }
 
   // Se está aprovado E ativo, não deixa acessar a página de pending
-  if (isApproved && isActive && isPendingRoute) {
+  if (finalApproved && isActive && isPendingRoute) {
     return <Navigate to="/" replace />;
   }
 

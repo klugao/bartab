@@ -1,0 +1,278 @@
+\documentclass[a0paper,landscape]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[portuguese]{babel}
+\usepackage[margin=2cm]{geometry}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{multicol}
+% \usepackage{qrcode} % Descomente se tiver o pacote instalado
+\usepackage{enumitem}
+\usepackage{wrapfig}
+\usepackage{ifthen}
+
+% Configuração de cores
+\definecolor{sectioncolor}{RGB}{200,0,0} % Vermelho para títulos de seções
+\definecolor{titlecolor}{RGB}{0,0,139} % Azul escuro para título principal
+\definecolor{textcolor}{RGB}{0,0,0} % Preto para texto
+
+% Configuração de tamanhos de fonte para A0
+\newcommand{\hugefont}{\fontsize{72}{86}\selectfont}
+\newcommand{\LARGEfont}{\fontsize{48}{58}\selectfont}
+\newcommand{\Largefont}{\fontsize{36}{43}\selectfont}
+\newcommand{\largefont}{\fontsize{28}{34}\selectfont}
+\newcommand{\normalfontsize}{\fontsize{20}{24}\selectfont}
+\newcommand{\smallfont}{\fontsize{16}{19}\selectfont}
+
+% Configuração de títulos de seção
+\titleformat{\section}
+{\color{sectioncolor}\LARGEfont\bfseries}
+{}
+{0em}
+{}
+
+% Remover numeração de seções
+\setcounter{secnumdepth}{0}
+
+% Configuração de espaçamento
+\setlength{\parskip}{0.5em}
+\setlength{\itemsep}{0.3em}
+
+\begin{document}
+
+% ============================================
+% CABEÇALHO
+% ============================================
+\begin{tikzpicture}[remember picture,overlay]
+    % Logo da Católica (canto superior esquerdo)
+    % Comente a linha abaixo se não tiver a imagem ainda
+    \node[anchor=north west] at (current page.north west) {
+        \IfFileExists{logo-catolica.png}{%
+            \includegraphics[width=8cm,height=auto]{logo-catolica.png}%
+        }{%
+            \framebox(8cm,3cm){Logo Católica}%
+        }
+    };
+    
+    % Título e informações (canto superior direito)
+    \node[anchor=north east,align=right] at (current page.north east) {
+        \begin{minipage}{25cm}
+            {\color{titlecolor}\hugefont\bfseries BarTab}\\[0.5cm]
+            {\Largefont Eduardo Vinicios Klug}\\[0.3cm]
+            {\largefont eduardo.klug@catolicasc.edu.br}
+        \end{minipage}
+    };
+\end{tikzpicture}
+
+\vspace{2cm}
+
+\begin{center}
+{\largefont Graduando do curso de Bacharelado em Engenharia de Software da Católica de SC}
+\end{center}
+
+\vspace{1.5cm}
+
+% ============================================
+% SEÇÃO 1: INTRODUÇÃO
+% ============================================
+\section*{Introdução}
+
+\normalfontsize
+O cenário de pequenos estabelecimentos comerciais, especialmente bares e botecos, enfrenta desafios significativos na gestão de contas e comandas. O controle manual através de papel, cadernos e calculadoras apresenta riscos de perda de informações, erros no cálculo final e dificuldades na organização do atendimento. Este projeto propõe o desenvolvimento de uma plataforma web de gestão de contas focada em estabelecimentos menores, utilizando arquitetura moderna para escalabilidade e segurança. O sistema inclui registro e gerenciamento de clientes, criação e controle de contas abertas, múltiplos métodos de pagamento (incluindo ``pagar depois'' com controle de dívidas) e relatórios financeiros. A plataforma visa melhorar a eficiência operacional, reduzir erros manuais e fortalecer o controle financeiro dos estabelecimentos.
+
+\vspace{1cm}
+
+% ============================================
+% SEÇÃO 2: DESENVOLVIMENTO
+% ============================================
+\section*{Desenvolvimento}
+
+\begin{multicols}{2}
+
+\textbf{\largefont Front-end:}
+\begin{itemize}[leftmargin=*]
+    \item React 18.3
+    \item Vite
+    \item TypeScript
+    \item TailwindCSS
+    \item Axios
+\end{itemize}
+
+\columnbreak
+
+\textbf{\largefont Back-end:}
+\begin{itemize}[leftmargin=*]
+    \item NestJS 11
+    \item TypeORM 0.3
+    \item Express
+    \item PostgreSQL
+\end{itemize}
+
+\end{multicols}
+
+\vspace{0.5cm}
+
+\begin{multicols}{2}
+
+\textbf{\largefont Qualidade:}
+\begin{itemize}[leftmargin=*]
+    \item Jest (backend)
+    \item Vitest (frontend)
+    \item SonarCloud (análise estática)
+\end{itemize}
+
+\columnbreak
+
+\textbf{\largefont Infraestrutura e DevOps:}
+\begin{itemize}[leftmargin=*]
+    \item Google Cloud Platform (Cloud Run, Cloud SQL)
+    \item GitHub Actions (CI/CD)
+    \item Docker
+\end{itemize}
+
+\end{multicols}
+
+\vspace{0.5cm}
+
+% Espaço para logos das tecnologias
+\begin{center}
+% Inclua aqui os logos das tecnologias
+% \includegraphics[height=2cm]{logo-react.png}
+% \includegraphics[height=2cm]{logo-nestjs.png}
+% \includegraphics[height=2cm]{logo-postgresql.png}
+% \includegraphics[height=2cm]{logo-gcp.png}
+% etc...
+\end{center}
+
+\vspace{1cm}
+
+% ============================================
+% SEÇÃO 3: RESULTADO
+% ============================================
+\section*{Resultado}
+
+\normalfontsize
+O sistema foi implantado com sucesso no Google Cloud Platform utilizando serviços como Cloud Run para escalabilidade automática e Cloud SQL para gerenciamento do banco de dados PostgreSQL. A qualidade do software foi garantida através de testes automatizados (Jest/Vitest) com 126 testes implementados (51 backend + 75 frontend) e análise estática contínua via SonarCloud, integrada em pipeline de CI/CD. A plataforma é segura, com autenticação OAuth via Google e controle de acesso baseado em roles (RBAC), capaz de gerenciar todo o ciclo de vida de contas e pagamentos com monitoramento de métricas de negócio em tempo real.
+
+\vspace{0.5cm}
+
+\begin{center}
+% Screenshot da interface
+\IfFileExists{screenshot-interface.png}{%
+    \includegraphics[width=0.8\textwidth,height=0.4\textheight,keepaspectratio]{screenshot-interface.png}%
+}{%
+    \framebox(0.8\textwidth,0.4\textheight){Screenshot da Interface}%
+}
+\end{center}
+
+\vspace{0.3cm}
+
+{\smallfont\textit{Painel de gestão de contas}}
+
+\vspace{0.3cm}
+
+{\smallfont O módulo de gestão permite controle autônomo de contas, clientes e pagamentos. A interface reflete a arquitetura do banco de dados, garantindo que cada conta esteja corretamente vinculada a um cliente e validada por middleware de segurança para prevenir acesso não autorizado aos recursos.}
+
+\vspace{1cm}
+
+% ============================================
+% SEÇÃO 4: QR CODE
+% ============================================
+\begin{center}
+\section*{QR code para acessar a aplicação}
+
+\vspace{0.5cm}
+
+% QR Code - use uma imagem externa ou descomente a linha abaixo se tiver o pacote qrcode
+\IfFileExists{qrcode.png}{%
+    \includegraphics[width=8cm,height=8cm,keepaspectratio]{qrcode.png}%
+}{%
+    \framebox(8cm,8cm){QR Code}%
+}
+% \qrcode[height=8cm]{https://seu-dominio.com} % Descomente se tiver o pacote qrcode instalado
+
+\vspace{0.3cm}
+
+{\smallfont https://seu-dominio.com} % Substitua pela URL real
+\end{center}
+
+\vspace{1cm}
+
+% ============================================
+% SEÇÃO 5: PRINCIPAL CASO DE USO
+% ============================================
+\section*{Principal caso de uso}
+
+\begin{center}
+% Diagrama UML de casos de uso
+\IfFileExists{diagrama-casos-uso.png}{%
+    \includegraphics[width=0.7\textwidth,height=0.35\textheight,keepaspectratio]{diagrama-casos-uso.png}%
+}{%
+    \framebox(0.7\textwidth,0.35\textheight){Diagrama de Casos de Uso}%
+}
+\end{center}
+
+\vspace{0.3cm}
+
+{\smallfont\textit{BarTab - Atendente/Gerente}}
+
+\vspace{1cm}
+
+% ============================================
+% SEÇÃO 6: ARQUITETURA
+% ============================================
+\section*{Arquitetura}
+
+\begin{center}
+% Diagrama de arquitetura
+\IfFileExists{diagrama-arquitetura.png}{%
+    \includegraphics[width=0.9\textwidth,height=0.4\textheight,keepaspectratio]{diagrama-arquitetura.png}%
+}{%
+    \framebox(0.9\textwidth,0.4\textheight){Diagrama de Arquitetura}%
+}
+\end{center}
+
+\vspace{0.3cm}
+
+{\smallfont\textit{CI/CD Pipeline (GitHub Actions) e Google Cloud Platform (Infraestrutura)}}
+
+\vspace{1cm}
+
+% ============================================
+% SEÇÃO 7: CONCLUSÃO
+% ============================================
+\section*{Conclusão}
+
+\normalfontsize
+O desenvolvimento da plataforma BarTab validou a aplicação prática de conceitos avançados de Engenharia de Software em uma solução real. O objetivo principal de criar um sistema escalável de gestão de contas foi alcançado através de uma arquitetura em camadas e segura. As principais lições aprendidas incluem a complexidade de orquestrar ambientes em nuvem (GCP) e a importância crítica da automação (CI/CD) para manter a qualidade do software. Conclui-se que a adoção de padrões de projeto (como Repository Pattern) e estratégias rigorosas de testes são fundamentais para garantir a robustez e manutenibilidade de sistemas modernos multi-tenant.
+
+\vspace{1cm}
+
+% ============================================
+% SEÇÃO 8: REFERÊNCIAS
+% ============================================
+\section*{Referências}
+
+{\smallfont
+\begin{enumerate}[leftmargin=*]
+    \item NESTJS. NestJS - A progressive Node.js framework. Disponível em: https://nestjs.com/. Acesso em: nov. 2025.
+    
+    \item REACT. React: The library for web and native user interfaces. Disponível em: https://react.dev/. Acesso em: nov. 2025.
+    
+    \item GOOGLE CLOUD PLATFORM. Cloud Run Documentation. Disponível em: https://cloud.google.com/run/docs. Acesso em: nov. 2025.
+    
+    \item POSTGRESQL. PostgreSQL: The World's Most Advanced Open Source Relational Database. Disponível em: https://www.postgresql.org/. Acesso em: nov. 2025.
+    
+    \item TYPEORM. TypeORM - Data Mapper, Active Record patterns. Disponível em: https://typeorm.io/. Acesso em: nov. 2025.
+    
+    \item JEST. Jest - Delightful JavaScript Testing. Disponível em: https://jestjs.io/. Acesso em: nov. 2025.
+    
+    \item VITEST. Vitest - Next Generation Testing Framework. Disponível em: https://vitest.dev/. Acesso em: nov. 2025.
+    
+    \item SONARCLOUD. SonarCloud - Clean Code. Disponível em: https://www.sonarsource.com/products/sonarcloud/. Acesso em: nov. 2025.
+\end{enumerate}
+}
+
+\end{document}
+

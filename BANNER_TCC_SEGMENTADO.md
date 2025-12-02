@@ -1,270 +1,210 @@
 # Banner de Apresentação TCC - BarTab
-## Segmentação de Conteúdo e Sugestões de Imagens
+## Estrutura Baseada no Formato ThriveCorp
 
 ---
 
-## 📋 **SEÇÃO 1: TÍTULO E IDENTIFICAÇÃO**
+## 🎯 **SEÇÃO 1: CABEÇALHO E IDENTIFICAÇÃO**
+
+### Layout:
+- **Canto Superior Esquerdo:** Logo da Católica de Santa Catarina
+- **Canto Superior Direito:** 
+  - **Título:** "BarTab" (em destaque, fonte grande e negrito)
+  - **Nome:** "Eduardo Vinicios Klug"
+  - **Email:** "eduardo.klug@catolicasc.edu.br"
+- **Abaixo do cabeçalho:** "Graduando do curso de Bacharelado em Engenharia de Software da Católica de SC"
+
+### Imagens:
+- Logo da Católica de Santa Catarina (canto superior esquerdo)
+- Logo do BarTab (`frontend/public/BarTab.svg` ou `frontend/dist/BarTab.svg`) - opcional no cabeçalho
+
+---
+
+## 📝 **SEÇÃO 2: INTRODUÇÃO**
 
 ### Texto:
-**BarTab - Gestão de Contas e Consumo de clientes em bares**
-
-**Eduardo Vinicios Klug**  
-Centro Universitário Católica de Santa Catarina - Joinville  
-Engenharia de Software
-
-### Imagens Sugeridas:
-- Logo do BarTab (`frontend/public/BarTab.svg` ou `frontend/dist/BarTab.svg`)
-- Logo da instituição (se disponível)
+O cenário de pequenos estabelecimentos comerciais, especialmente bares e botecos, enfrenta desafios significativos na gestão de contas e comandas. O controle manual através de papel, cadernos e calculadoras apresenta riscos de perda de informações, erros no cálculo final e dificuldades na organização do atendimento. Este projeto propõe o desenvolvimento de uma plataforma web de gestão de contas focada em estabelecimentos menores, utilizando arquitetura moderna para escalabilidade e segurança. O sistema inclui registro e gerenciamento de clientes, criação e controle de contas abertas, múltiplos métodos de pagamento (incluindo "pagar depois" com controle de dívidas) e relatórios financeiros. A plataforma visa melhorar a eficiência operacional, reduzir erros manuais e fortalecer o controle financeiro dos estabelecimentos.
 
 ---
 
-## 📋 **SEÇÃO 2: RESUMO EXECUTIVO**
+## 🛠️ **SEÇÃO 3: DESENVOLVIMENTO**
+
+### Tecnologias Utilizadas:
+
+**Front-end:**
+- React 18.3
+- Vite
+- TypeScript
+- TailwindCSS
+- Axios
+
+**Back-end:**
+- NestJS 11
+- TypeORM 0.3
+- Express
+- PostgreSQL
+
+**Qualidade:**
+- Jest (backend)
+- Vitest (frontend)
+- SonarCloud (análise estática)
+
+**Infraestrutura e DevOps:**
+- Google Cloud Platform (Cloud Run, Cloud SQL)
+- GitHub Actions (CI/CD)
+- Docker
+
+### Imagens:
+- Logos das tecnologias organizadas por categoria (Front-end, Back-end, Qualidade, Infraestrutura)
+- Layout similar ao exemplo, com logos visíveis
+
+---
+
+## ✅ **SEÇÃO 4: RESULTADO**
 
 ### Texto:
-Sistema web desenvolvido para pequenos estabelecimentos (bares e botecos) que enfrentam desafios na gestão de contas e comandas. Solução simples, intuitiva e acessível para controle de vendas, gerenciamento de mesas e pagamentos, incluindo funcionalidade de "Marcar Depois". Desenvolvido com React (frontend) e NestJS (backend), autenticação OAuth via Google, implantado em produção no Google Cloud Platform. Inclui 126 testes automatizados (51 backend + 75 frontend) e deploy automatizado via CI/CD.
+O sistema foi implantado com sucesso no Google Cloud Platform utilizando serviços como Cloud Run para escalabilidade automática e Cloud SQL para gerenciamento do banco de dados PostgreSQL. A qualidade do software foi garantida através de testes automatizados (Jest/Vitest) com 126 testes implementados (51 backend + 75 frontend) e análise estática contínua via SonarCloud, integrada em pipeline de CI/CD. A plataforma é segura, com autenticação OAuth via Google e controle de acesso baseado em roles (RBAC), capaz de gerenciar todo o ciclo de vida de contas e pagamentos com monitoramento de métricas de negócio em tempo real.
 
-### Imagens Sugeridas:
-- Screenshot da tela principal do sistema (se disponível)
-- Ícone representando bares/estabelecimentos
+### Screenshot Sugerido:
+**"Painel de gestão de contas"**
+- Interface web mostrando:
+  - Menu lateral (Dashboard, Contas, Clientes, Itens, Dívidas, Relatórios)
+  - Área principal com:
+    - Lista de contas abertas
+    - Detalhes de uma conta (itens, total, pagamentos)
+    - Controle de dívidas
+    - Relatórios mensais
+
+### Texto abaixo do screenshot:
+O módulo de gestão permite controle autônomo de contas, clientes e pagamentos. A interface reflete a arquitetura do banco de dados, garantindo que cada conta esteja corretamente vinculada a um cliente e validada por middleware de segurança para prevenir acesso não autorizado aos recursos.
 
 ---
 
-## 📋 **SEÇÃO 3: PROBLEMA E JUSTIFICATIVA**
+## 📱 **SEÇÃO 5: QR CODE**
+
+### Título:
+**"QR code para acessar a aplicação"**
+
+### Conteúdo:
+- QR Code grande (preto e branco) apontando para a URL de produção do sistema
+- URL visível abaixo do QR Code
+
+---
+
+## 📊 **SEÇÃO 6: PRINCIPAL CASO DE USO**
+
+### Título:
+**"Principal caso de uso"**
+
+### Diagrama UML:
+**"BarTab - Atendente/Gerente"**
+
+**Ator:** "Usuário Atendente/Gerente" (lado esquerdo)
+
+**Casos de Uso:**
+- "Abrir conta" (abre nova conta/mesa)
+- "Adicionar item" (inclui item na conta)
+- "Remover item" (remove item da conta) - extends "Adicionar item"
+- "Registrar pagamento" (dinheiro, débito, crédito, pix, pagar depois)
+- "Fechar conta" (finaliza conta) - includes "Registrar pagamento"
+- "Consultar dívidas" (visualiza saldo devedor)
+- "Gerar relatório" (relatórios mensais)
+
+### Imagens:
+- Diagrama UML de casos de uso gerado (PlantUML ou similar)
+
+---
+
+## 🏗️ **SEÇÃO 7: ARQUITETURA**
+
+### Título:
+**"Arquitetura"**
+
+### Diagrama:
+**CI/CD Pipeline (GitHub Actions) e Google Cloud Platform (Infraestrutura)**
+
+**CI/CD Pipeline (GitHub Actions):**
+- "Código (GitHub)" → "Build & Testes" → "SonarCloud (Qualidade)" → "Deploy Frontend" e "Deploy Backend"
+
+**Google Cloud Platform (Infraestrutura):**
+- "Deploy Frontend" → "Cloud Run (Frontend)"
+- "Deploy Backend" → "Cloud Run (Backend)"
+- "Cloud Run (Backend)" → "Cloud SQL (PostgreSQL)"
+- "Cloud Run (Frontend)" e "Cloud Run (Backend)" (via "API Requests (JSON)") → "Usuário" via "Browser (HTTPS)"
+
+### Imagens:
+- Diagrama de arquitetura mostrando o fluxo completo de CI/CD e infraestrutura
+
+---
+
+## 🎓 **SEÇÃO 8: CONCLUSÃO**
 
 ### Texto:
-**Problema:**
-- Controle manual de consumo (papel, cadernos, calculadoras)
-- Risco de perda de informações
-- Erros no cálculo final da conta
-- Falta de controle sobre pendências ("marcar depois")
-- Dificuldade na organização do atendimento
-- Ausência de histórico estruturado
-- Falta de visão financeira
-
-**Justificativa:**
-Lacuna entre sistemas existentes (desenvolvidos para restaurantes maiores) e necessidades reais de estabelecimentos menores com rotinas mais simples e informais.
-
-### Imagens Sugeridas:
-- Diagrama comparativo (antes/depois)
-- Ilustração representando o problema (papel/cadernos vs sistema digital)
+O desenvolvimento da plataforma BarTab validou a aplicação prática de conceitos avançados de Engenharia de Software em uma solução real. O objetivo principal de criar um sistema escalável de gestão de contas foi alcançado através de uma arquitetura em camadas e segura. As principais lições aprendidas incluem a complexidade de orquestrar ambientes em nuvem (GCP) e a importância crítica da automação (CI/CD) para manter a qualidade do software. Conclui-se que a adoção de padrões de projeto (como Repository Pattern) e estratégias rigorosas de testes são fundamentais para garantir a robustez e manutenibilidade de sistemas modernos multi-tenant.
 
 ---
 
-## 📋 **SEÇÃO 4: OBJETIVOS**
+## 📚 **SEÇÃO 9: REFERÊNCIAS**
 
 ### Texto:
-**Objetivo Principal:**
-Desenvolver solução digital para registrar, gerenciar e finalizar contas abertas em bares e botecos, reduzindo erros manuais e simplificando a rotina.
+1. NESTJS. NestJS - A progressive Node.js framework. Disponível em: https://nestjs.com/. Acesso em: nov. 2025.
 
-**Objetivos Secundários:**
-- Organizar lançamentos de consumo por cliente
-- Permitir diferentes métodos de pagamento
-- Facilitar acesso ao histórico
-- Reduzir tempo de fechamento de contas
-- Fornecer visão geral sobre contas ativas
-- Implementar controle de dívidas
-- Fornecer relatórios mensais financeiros
+2. REACT. React: The library for web and native user interfaces. Disponível em: https://react.dev/. Acesso em: nov. 2025.
 
-### Imagens Sugeridas:
-- Ícones representando cada objetivo
-- Fluxograma simplificado do processo
+3. GOOGLE CLOUD PLATFORM. Cloud Run Documentation. Disponível em: https://cloud.google.com/run/docs. Acesso em: nov. 2025.
 
----
+4. POSTGRESQL. PostgreSQL: The World's Most Advanced Open Source Relational Database. Disponível em: https://www.postgresql.org/. Acesso em: nov. 2025.
 
-## 📋 **SEÇÃO 5: ARQUITETURA E SOLUÇÃO**
+5. TYPEORM. TypeORM - Data Mapper, Active Record patterns. Disponível em: https://typeorm.io/. Acesso em: nov. 2025.
 
-### Texto:
-**Arquitetura:**
-- Frontend: React 18.3 + TypeScript + Vite + TailwindCSS
-- Backend: NestJS 11 + TypeORM + Express
-- Banco de Dados: PostgreSQL (Cloud SQL no GCP)
-- Autenticação: OAuth Google + JWT
-- Deploy: Google Cloud Platform (Cloud Run)
-- CI/CD: GitHub Actions
+6. JEST. Jest - Delightful JavaScript Testing. Disponível em: https://jestjs.io/. Acesso em: nov. 2025.
 
-**Padrões Aplicados:**
-- Clean Code e SOLID
-- Arquitetura em camadas
-- DTOs para validação
-- Guards para controle de acesso
+7. VITEST. Vitest - Next Generation Testing Framework. Disponível em: https://vitest.dev/. Acesso em: nov. 2025.
 
-### Imagens Sugeridas:
-✅ **DIAGRAMA DE CONTEXTO C4** (`diagrama-c4-contexto.puml` - gerar como PNG)
-- Mostra a visão geral do sistema e seus relacionamentos externos
-
-✅ **DIAGRAMA DE CONTÊINERES C4** (`diagrama-c4-conteineres.puml` - gerar como PNG)
-- Mostra os principais componentes: Frontend, Backend, Banco de Dados
-
-✅ **DIAGRAMA DE COMPONENTES C4** (`diagrama-c4-componentes.puml` ou versão simplificada)
-- Mostra a estrutura interna do backend
+8. SONARCLOUD. SonarCloud - Clean Code. Disponível em: https://www.sonarsource.com/products/sonarcloud/. Acesso em: nov. 2025.
 
 ---
 
-## 📋 **SEÇÃO 6: FUNCIONALIDADES**
+## 📋 **CHECKLIST DE ELEMENTOS VISUAIS**
 
-### Texto:
-**Funcionalidades Implementadas:**
-- ✅ CRUD Completo: Clientes, Itens, Despesas
-- ✅ Gestão de Contas: Abertura, adição/remoção de itens, fechamento
-- ✅ Pagamentos: Dinheiro, débito, crédito, pix e "pagar depois"
-- ✅ Controle de Dívidas: Tela dedicada com histórico completo
-- ✅ Autenticação: OAuth Google para proprietários e gerentes
-- ✅ Administração: Sistema multi-estabelecimento
-- ✅ Relatórios: Mensais de consumo, receitas, despesas e lucro
-- ✅ Conformidade: LGPD e OWASP implementadas
+### Imagens Obrigatórias:
+- [ ] Logo da Católica de Santa Catarina
+- [ ] Logo do BarTab (opcional no cabeçalho)
+- [ ] Screenshot da interface principal do sistema
+- [ ] QR Code para acesso à aplicação
+- [ ] Diagrama de Casos de Uso (UML)
+- [ ] Diagrama de Arquitetura (CI/CD + GCP)
+- [ ] Logos das tecnologias (React, NestJS, PostgreSQL, GCP, Jest, Vitest, SonarCloud)
 
-### Imagens Sugeridas:
-✅ **DIAGRAMA DE CASOS DE USO** (`diagrama-casos-uso-final.puml` ou `diagrama-casos-uso-simples.puml` - gerar como PNG)
-- Mostra todas as funcionalidades do sistema de forma visual
+### Formato do Banner:
+- **Tamanho:** A0 (90cm x 120cm vertical ou 120cm x 90cm horizontal)
+- **Resolução:** 300 DPI
+- **Hierarquia Visual:**
+  - Título: Maior destaque (fonte grande e negrito)
+  - Seções: Títulos em vermelho/negrito (seguindo exemplo)
+  - Diagramas: Tamanho médio-grande
+  - Texto: Legível de 1-2 metros de distância
+  - Logos: Tamanho pequeno
 
-- Screenshots das principais telas:
-  - Tela de contas abertas
-  - Tela de detalhes da conta
-  - Tela de controle de dívidas
-  - Tela de relatórios
-
----
-
-## 📋 **SEÇÃO 7: STACK TECNOLÓGICA**
-
-### Texto:
-**Tecnologias Utilizadas:**
-- **Linguagem:** TypeScript
-- **Frontend:** React 18.3 + Vite + TailwindCSS + React Router
-- **Backend:** NestJS 11 + TypeORM 0.3 + Express
-- **Banco de Dados:** PostgreSQL (Cloud SQL)
-- **Autenticação:** OAuth Google (Passport.js) + JWT
-- **Testes:** Jest (backend) + Vitest (frontend)
-- **CI/CD:** GitHub Actions
-- **Cloud:** Google Cloud Platform (Cloud Run, Cloud SQL, Secret Manager)
-- **Containerização:** Docker
-
-### Imagens Sugeridas:
-- Logos das tecnologias (React, NestJS, PostgreSQL, GCP, etc.)
-- Diagrama de stack tecnológica (camadas)
+### Cores e Estilo:
+- Manter consistência com o tema do BarTab
+- Usar cores contrastantes para boa legibilidade
+- Títulos de seções em vermelho/negrito (seguindo exemplo ThriveCorp)
+- Evitar sobrecarga de informações
 
 ---
 
-## 📋 **SEÇÃO 8: QUALIDADE E TESTES**
+## 📝 **NOTAS ADICIONAIS**
 
-### Texto:
-**Testes Implementados:**
-- ✅ 126 testes automatizados
-- ✅ 51 testes no backend (Jest)
-- ✅ 75 testes no frontend (Vitest)
-- ✅ Cobertura de código documentada
+### Adaptações do Exemplo ThriveCorp:
+1. **Estrutura Simplificada:** Reduzido de 10 seções para 9 seções principais, seguindo o formato do exemplo
+2. **Foco Visual:** Maior ênfase em diagramas e screenshots
+3. **Tecnologias Agrupadas:** Organizadas por categoria (Front-end, Back-end, Qualidade, Infraestrutura)
+4. **Casos de Uso:** Diagrama UML simplificado focado no fluxo principal
+5. **Arquitetura:** Diagrama mostrando CI/CD e infraestrutura GCP de forma clara
 
-**Conformidade:**
-- ✅ LGPD: Políticas de privacidade e termos de uso
-- ✅ OWASP Top 10: Proteção contra SQL Injection, validação de inputs, headers de segurança, CORS, rate limiting
-
-### Imagens Sugeridas:
-- Gráfico de cobertura de testes
-- Badge de conformidade LGPD/OWASP
-- Screenshot dos relatórios de teste
-
----
-
-## 📋 **SEÇÃO 9: STATUS E RESULTADOS**
-
-### Texto:
-**Status da Implementação:**
-✅ Sistema 100% implementado e em produção
-
-**Deploy e Infraestrutura:**
-- ✅ Backend: Cloud Run com escalabilidade automática
-- ✅ Frontend: Cloud Run servindo aplicação React
-- ✅ Banco de Dados: Cloud SQL (PostgreSQL) gerenciado
-- ✅ Secrets: Secret Manager para credenciais
-- ✅ CI/CD: GitHub Actions para deploy automático
-
-**Metodologia:**
-- Desenvolvido utilizando SCRUM com 10 sprints quinzenais
-- Entregas incrementais
-- Documentação viva em Wiki
-
-### Imagens Sugeridas:
-- Screenshot do dashboard do GCP
-- Logo do Google Cloud Platform
-- Gráfico de progresso das sprints
-- Badge "Em Produção"
-
----
-
-## 📋 **SEÇÃO 10: CONCLUSÃO E PRÓXIMOS PASSOS**
-
-### Texto:
-Sistema completo e funcional, atendendo todos os objetivos estabelecidos. Solução pronta para uso em estabelecimentos reais, com arquitetura escalável e boas práticas de engenharia de software implementadas.
-
-### Imagens Sugeridas:
-- QR Code para acesso ao sistema (se disponível)
-- Screenshot final da interface
-
----
-
-## 🎨 **RESUMO DE IMAGENS RECOMENDADAS PARA O BANNER**
-
-### **Imagens Principais (Prioridade Alta):**
-
-1. ✅ **Diagrama de Contexto C4** 
-   - Arquivo: `diagrama-c4-contexto.puml`
-   - Mostra a visão geral do sistema
-   - **Recomendação:** Gerar como PNG e usar na seção de Arquitetura
-
-2. ✅ **Diagrama de Contêineres C4**
-   - Arquivo: `diagrama-c4-conteineres.puml`
-   - Mostra Frontend, Backend e Banco de Dados
-   - **Recomendação:** Gerar como PNG e usar na seção de Arquitetura
-
-3. ✅ **Diagrama de Casos de Uso**
-   - Arquivo: `diagrama-casos-uso-final.puml` ou `diagrama-casos-uso-simples.puml`
-   - Mostra todas as funcionalidades
-   - **Recomendação:** Gerar como PNG e usar na seção de Funcionalidades
-
-4. ✅ **Logo do BarTab**
-   - Arquivo: `frontend/public/BarTab.svg` ou `frontend/dist/BarTab.svg`
-   - **Recomendação:** Usar no cabeçalho do banner
-
-### **Imagens Secundárias (Prioridade Média):**
-
-5. **Diagrama de Componentes C4**
-   - Arquivo: `diagrama-c4-componentes.puml` ou versão simplificada
-   - Mostra estrutura interna do backend
-   - **Recomendação:** Usar se houver espaço, na seção técnica detalhada
-
-6. **Screenshots da Interface**
-   - Tela principal, detalhes da conta, controle de dívidas
-   - **Recomendação:** Capturar do sistema em produção
-
-7. **Logos das Tecnologias**
-   - React, NestJS, PostgreSQL, GCP
-   - **Recomendação:** Usar na seção de Stack Tecnológica
-
-### **Imagens Opcionais (Prioridade Baixa):**
-
-8. **Gráficos e Estatísticas**
-   - Cobertura de testes, progresso das sprints
-   - **Recomendação:** Criar se necessário para visualização
-
----
-
-## 📝 **NOTAS IMPORTANTES**
-
-
-2. **Formato do Banner (A0):**
-   - Tamanho típico: 90cm x 120cm (vertical) ou 120cm x 90cm (horizontal)
-   - Resolução recomendada: 300 DPI
-   - Manter texto legível de 1-2 metros de distância
-
-3. **Hierarquia Visual:**
-   - Título: Maior destaque
-   - Diagramas principais: Tamanho médio-grande
-   - Texto explicativo: Tamanho legível
-   - Logos e badges: Tamanho pequeno
-
-4. **Cores e Estilo:**
-   - Manter consistência com o tema do BarTab
-   - Usar cores contrastantes para boa legibilidade
-   - Evitar sobrecarga de informações
-
-
+### Próximos Passos:
+1. Gerar diagramas UML (casos de uso e arquitetura)
+2. Capturar screenshots da interface em produção
+3. Criar QR Code para acesso à aplicação
+4. Coletar logos das tecnologias
+5. Revisar textos para ajuste de tamanho no banner A0
